@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AM - formularz</title>
+  <!-- Bulma -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+  <!-- Fontawesome -->
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <!-- Vue -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+
+  <!-- Quill Editor-->
+  <!-- Include the Quill library -->
+  <script src="https://cdn.quilljs.com/1.3.4/quill.js"></script>
+  <!-- Quill JS Vue -->
+  <script src="https://cdn.jsdelivr.net/npm/vue-quill-editor@3.0.4/dist/vue-quill-editor.js"></script>
+  <!-- Include stylesheet -->
+  <link href="https://cdn.quilljs.com/1.3.4/quill.core.css" rel="stylesheet">
+  <link href="https://cdn.quilljs.com/1.3.4/quill.snow.css" rel="stylesheet">
+  <link href="https://cdn.quilljs.com/1.3.4/quill.bubble.css" rel="stylesheet">
+
+  <!-- Style -->
+  <style><?!= include('style.html'); ?></style>
+</head>
+
+<body>
+  <div id="app">
+    <a :href="'#' + selectedId" ref="foo"></a>
+
+    <div class="modal" :class="{'is-active': newTopicFormVisible}">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Nowe pytanie</p>
+        </header>
+        <section class="modal-card-body">
+          <div class="field">
+            <label class="label">Temat</label>
+            <div class="control">
+              <input class="input" :class="{'is-danger': !topicTitleLengthIsValid}" type="text"
+                placeholder="Temat pytania" v-model="newTopicData.title">
+            </div>
+          </div>
+          <p class="help is-danger" v-if="!topicTitleLengthIsValid">Za długi tekst</p>
+          <div class="field">
+            <label class="label">Pytanie</label>
+            <div class="control">
+              <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="editorOption">
+              </quill-editor>
+            </div>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <div class="field is-grouped">
+            <div class="control">
+              <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
+                :disabled="saving || !topicTitleLengthIsValid || !newTopicData.text">Wyślij</button>
+            </div>
+            <div class="control">
+              <button class="button" @click="cancelAddNewTopic" :disabled="saving">Anuluj</button>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <div class="modal" :class="{'is-active': editItem}">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Edycja</p>
+        </header>
+        <section class="modal-card-body">
+          <div class="field">
+            <div class="control" v-if="editItem">
+              <quill-editor v-model="editItem.body" ref="quillEditorA" :options="editorOption"
+                v-if="editItem.type !== 'comment'"></quill-editor>
+              <input class="input" type="text" v-model="editItem.body" v-else>
+            </div>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <div class="field is-grouped">
+            <div class="control">
+              <button class="button is-info" :class="{'is-loading': saving}" @click="editSave">Zapisz</button>
+            </div>
+            <div class="control">
+              <button class="button" @click="editClose" :disabled="saving">Anuluj</button>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <nav class="navbar is-white" role="navigation" aria-label="main navigation"
+      style="border-bottom: 1px solid lightgray;">
+      <div class="navbar-brand">
+        <strong class="navbar-item">
+          G Suite Stack Overflow
+        </strong>
+        <span class="navbar-item" @click="showQuestions" style="cursor:pointer;">{{ am.name }}</span>
+      </div>
+      <div id="navbarBasicExample" class="navbar-menu">
+        <div class="navbar-start">
+          <div class="buttons">
+
+          </div>
+        </div>
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <div class="buttons">
+              <a class="button is-light">
+                {{ user.email }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div v-if="pageId == 'questions'">
+      <div class="forum-page">
+        <div class="container">
+          <nav class="level">
+            <nav class="level-level">
+              Pytania
+            </nav>
+            <nav class="level-level">
+              <div class="button is-info" @click="showAddNewTopic" v-if="!am.isClosed">Nowe pytanie</div>
+            </nav>
+          </nav>
+          <div class="forum-list" v-if="data.questions.length">
+            <div class="forum-list-row" v-for="question in sortedQuestions" @click="showAns(question)">
+              <div class="forum-list-row-left">
+                <div class="forum-list-row-summary">
+                  <div class="forum-list-row-summary-count">
+                    <span>{{ question.vote }}</span>
+                  </div>
+                  <div>głosów</div>
+                </div>
+                <div class="forum-list-row-summary"
+                  :class="{'forum-list-row-summary-bestAns': data.bestAns[question.id]}">
+                  <div class="forum-list-row-summary-count">
+                    <span>{{ data.answers[question.id] ? data.answers[question.id].length : 0 }}</span>
+                  </div>
+                  <div>odpowiedzi</div>
+                </div>
+                <div class="forum-list-row-summary">
+                  <div class="forum-list-row-summary-count">
+                    <span>{{ data.views[question.id] ? data.views[question.id] : 0 }}</span>
+                  </div>
+                  <div>wejść</div>
+                </div>
+              </div>
+              <div class="forum-list-row-content">
+                <div>{{ question.title }}</div>
+                <div class="forum-ans-row-content-info">
+                  <div class="forum-ans-row-content-info-left">Ostatnia zmiana:
+                    {{ data.lastChange[question.id] }}</div>
+                  <div class="forum-ans-row-content-info-right">{{ question.time }} <span
+                      class="user-name">{{ question.userName }}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            Brak pytań
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-if="pageId == 'answers'">
+      <div class="forum-page">
+        <div class="container forum-ans">
+          <div class="field">
+            <div class="button is-info" @click="showQuestions">Powrót do listy pytań</div>
+          </div>
+          <div class="forum-ans-title">{{ selectedQuestion.title }}</div>
+          <div class="forum-ans-list">
+            <div class="forum-ans-row forum-ans-question">
+              <div class="forum-ans-row-left">
+                <div><span class="icon forum-ans-row-left-vote" @click="vote(selectedQuestion, 1)"
+                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}"><i class="fas fa-caret-up"
+                      title="Pytanie jest przydatne"></i></span></div>
+                <div>{{ selectedQuestion.vote }}</div>
+                <div><span class="icon forum-ans-row-left-vote" @click="vote(selectedQuestion, -1)"
+                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}"><i
+                      class="fas fa-caret-down" title="Pytanie nie jest przydatne"></i></span>
+                </div>
+              </div>
+              <div class="forum-ans-row-content">
+                <div v-html="selectedQuestion.body"></div>
+                <div class="forum-ans-row-content-info">
+                  <edit-icon :user="user" :item="selectedQuestion" @edit="editOpen"></edit-icon>
+                </div>
+                <div class="forum-ans-comments">
+                  <div class="forum-ans-comments-list">
+                    <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId}"
+                      v-for="comment in data.comments[selectedQuestion.id]">
+                      <span></span>{{ comment.body }} - </span>
+                      <edit-icon :user="user" :item="comment" @edit="editOpen"></edit-icon>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="forum-ans-comments-add" @click="showAddNewComment(selectedQuestion.id)"
+                      v-if="!am.isClosed">dodaj
+                      komentarz</span>
+                  </div>
+                  <div class="forum-ans-comments-new" v-show="addNewCommentParentId == selectedQuestion.id">
+                    <div class="field">
+                      <div class="control">
+                        <input class="input" type="text" v-model="newCommentData.text"
+                          :ref="'comment_' + selectedQuestion.id">
+                      </div>
+                    </div>
+                    <div class="field is-grouped">
+                      <div class="control">
+                        <button class="button is-info" :class="{'is-loading': saving}" @click="addComment"
+                          :disabled="saving">Wyślij</button>
+                      </div>
+                      <div class="control">
+                        <button class="button" @click="cancelAddNewComment" :disabled="saving">Anuluj</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="forum-ans-separator">
+            {{ data.answers[selectedQuestion.id] ? data.answers[selectedQuestion.id].length : 0 }}
+            Odpowiedzi</div>
+          <div class="forum-ans-list">
+            <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId}"
+              v-for="ans in sortedAnswers">
+              <div class="forum-ans-row-left">
+                <div><span class="icon forum-ans-row-left-vote" @click="vote(ans, 1)"
+                    :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}"><i class="fas fa-caret-up"
+                      title="Odpowiedź jest przydatna"></i></span></div>
+                <div>{{ ans.vote }}</div>
+                <div><span class="icon forum-ans-row-left-vote" @click="vote(ans, -1)"
+                    :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}"><i class="fas fa-caret-down"
+                      title="Odpowiedź nie jest przydatna"></i></span>
+                </div>
+                <div v-if="!data.bestAns[selectedQuestion.id] && user.email == selectedQuestion.userId">
+                  <span class="icon forum-ans-row-left-bestAns" @click="bestAns(ans)"><i
+                      class="fas fa-check"></i></span></div>
+                <div v-if="data.bestAns[selectedQuestion.id] && data.bestAns[selectedQuestion.id] == ans.id">
+                  <span class="icon forum-ans-row-left-bestAns-selected"><i class="fas fa-check"
+                      title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i></span>
+                </div>
+              </div>
+              <div class="forum-ans-row-content">
+                <div v-html="ans.body"></div>
+                <div class="forum-ans-row-content-info">
+                  <edit-icon :user="user" :item="ans" @edit="editOpen"></edit-icon>
+                </div>
+                <div class="forum-ans-comments">
+                  <div class="forum-ans-comments-list">
+                    <div class="forum-ans-comments-list-row" :id="comment.id"
+                      :class="{'forum-selected-item': comment.id == selectedId}"
+                      v-for="comment in data.comments[ans.id]">
+                      <span></span>{{ comment.body }} - </span>
+                      <edit-icon :user="user" :item="comment" @edit="editOpen"></edit-icon>
+                    </div>
+                  </div>
+                  <div>
+                    <span class="forum-ans-comments-add" @click="showAddNewComment(ans.id)" v-if="!am.isClosed">dodaj
+                      komentarz</span>
+                  </div>
+                  <div class="forum-ans-comments-new" v-show="addNewCommentParentId == ans.id">
+                    <div class="field">
+                      <div class="control">
+                        <input class="input" type="text" v-model="newCommentData.text" :ref="'comment_' + ans.id">
+                      </div>
+                    </div>
+                    <div class="field is-grouped">
+                      <div class="control">
+                        <button class="button is-info" :class="{'is-loading': saving}" @click="addComment"
+                          :disabled="saving">Wyślij</button>
+                      </div>
+                      <div class="control">
+                        <button class="button" @click="cancelAddNewComment" :disabled="saving">Anuluj</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-if="!am.isClosed">
+            <div class="forum-ans-text">Twoja odpowiedź</div>
+            <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="editorOption">
+            </quill-editor>
+            <div class="forum-ans-add">
+              <div class="button is-info" :class="{'is-loading': saving}" @click="addAnswer" :disabled="saving">Wyślij
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var dataFromServer = <?!= JSON.stringify(dataFromServerTemplate) ?>;
+    console.log(dataFromServer);
+
+    function jsUcfirst(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    Vue.use(VueQuillEditor);
+
+    Vue.component('edit-icon', {
+      props: ['user','item'],
+      data: function(){
+        return {
+        }
+      },
+      computed: {
+        isEnabled() {
+          return this.user.id === this.item.userId;
+        },
+        title() {
+          return this.item.edited ? 'Edited: ' + this.item.edited : 'Edit'
+        }
+      },
+      methods: {
+        edit() {
+          if (this.isEnabled){
+            this.$emit('edit', this.item);
+          }
+        }
+      },
+      template: 
+      `<span>
+        <span class="user-name"> {{ item.userName }}</span>
+        <span> {{ item.time }}</span>
+        <span :class="[isEnabled ? 'edit-icon' : 'edit-icon-disabled']" @click="edit" :title="title"> <i class="fas fa-pen"></i></span>
+        <span v-if="item.status == 'Deleted'">Deleted</span>
+      </span>
+      `
+    });
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        user: dataFromServer.user,
+        am: dataFromServer.am,
+        data: dataFromServer.data,
+        questionId: dataFromServer.qId,
+        selectedId: dataFromServer.sId,
+        pageId: 'questions',
+        selectedQuestion: null,
+        editorOption: {
+          theme: 'snow',
+          modules: {
+            toolbar: [
+              ['bold', 'italic', 'underline', 'strike'], // toggled buttons
+              ['blockquote', 'code-block'],
+
+              [{
+                'header': 1
+              }, {
+                'header': 2
+              }], // custom button values
+              [{
+                'list': 'ordered'
+              }, {
+                'list': 'bullet'
+              }],
+              [{
+                'script': 'sub'
+              }, {
+                'script': 'super'
+              }], // superscript/subscript
+              [{
+                'indent': '-1'
+              }, {
+                'indent': '+1'
+              }], // outdent/indent
+              [{
+                'direction': 'rtl'
+              }], // text direction
+
+              [{
+                'size': ['small', false, 'large', 'huge']
+              }], // custom dropdown
+              [{
+                'header': [1, 2, 3, 4, 5, 6, false]
+              }],
+
+              [{
+                'color': []
+              }, {
+                'background': []
+              }], // dropdown with defaults from theme
+              [{
+                'font': []
+              }],
+              [{
+                'align': []
+              }],
+
+              ['clean'] // remove formatting button
+            ]
+          },
+          placeholder: 'Opis...',
+        },
+        newTopicFormVisible: false,
+        newTopicData: {
+          title: '',
+          text: ''
+        },
+        newAnswerData: {
+          text: ''
+        },
+        addNewCommentParentId: null,
+        newCommentData: {
+          text: ''
+        },
+        saving: false,
+        editItem: null,
+        editItemTmp: null
+      },
+      created: function () {
+        if (this.questionId) {
+          var q = this.getQuestionById(this.questionId);
+          this.showAns(q);
+        }
+
+        this.onClickLog(this.am.id, 'forum opened', 'forum');
+      },
+      mounted() {
+        // Show given entry
+        if (this.selectedId) {
+          this.$refs['foo'].click();
+        }
+      },
+      computed: {
+        topicTitleLengthIsValid() {
+          if (this.newTopicData.title.length > 100) {
+            return false;
+          }
+
+          return true;
+        },
+        sortedAnswers() {
+          var items = this.data.answers[this.selectedQuestion.id];
+          items.sort(function (a, b) {
+            var aKey = a.vote;
+            var bKey = b.vote;
+            return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
+          });
+
+          return items;
+        },
+        sortedQuestions() {
+          this.data.questions.sort(function (a, b) {
+            var aKey = a.time;
+            var bKey = b.time;
+            return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
+          });
+
+          return this.data.questions;
+        }
+      },
+      methods: {
+        getQuestionById(id) {
+          var out = this.data.questions.filter((x) => {
+            return x.id == id
+          });
+
+          if (out.length) {
+            return out[0];
+          }
+
+          return;
+        },
+        showAns(q) {
+          this.selectedQuestion = q;
+          this.pageId = 'answers';
+
+          this.onClickLog(this.am.id, 'forum', q.id);
+
+          if (!this.data.views[q.id]) {
+            this.data.views[q.id] = 0;
+          }
+          this.data.views[q.id] += 1;
+        },
+        showQuestions() {
+          this.pageId = 'questions';
+        },
+        showAddNewTopic() {
+          this.newTopicFormVisible = true;
+        },
+        cancelAddNewTopic() {
+          this.newTopicFormVisible = false;
+        },
+        showAddNewComment(id) {
+          if (this.addNewCommentParentId == id) {
+            this.addNewCommentParentId = null;
+          } else {
+            this.addNewCommentParentId = id;
+            this.newCommentData = {
+              text: ''
+            };
+
+            var refId = 'comment_' + id;
+
+            this.$nextTick(() => {
+              if (Array.isArray(this.$refs[refId])) {
+                this.$refs[refId][0].focus()
+              } else {
+                this.$refs[refId].focus()
+              }
+            })
+          }
+        },
+        cancelAddNewComment() {
+          this.addNewCommentParentId = null;
+        },
+        addComment() {
+          var self = this;
+
+          var data = {
+            forumId: this.am.id,
+            qId: this.selectedQuestion.id,
+            aId: this.addNewCommentParentId,
+            text: this.newCommentData.text,
+          };
+
+          this.saving = true;
+          google.script.run.withSuccessHandler(function (data) {
+            console.log(data);
+            if (!self.data.comments[self.addNewCommentParentId]) {
+              self.data.comments[self.addNewCommentParentId] = [];
+            }
+            self.data.comments[self.addNewCommentParentId].push(data);
+            self.addNewCommentParentId = null;
+            self.saving = false;
+            self.data.lastChange[self.selectedQuestion.id] = data.time;
+
+            google.script.run.withSuccessHandler(function (data) {}).withFailureHandler(
+              function (e) {
+                console.log('error');
+                console.log(e.message);
+              }).forumAddEntryNotification('comment', {
+              am: self.am,
+              qId: data.qId,
+              sId: data.id
+            })
+          }).withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).forumAddEntry('comment', data);
+        },
+        addAnswer() {
+          var self = this;
+
+          var data = {
+            forumId: this.am.id,
+            qId: this.selectedQuestion.id,
+            text: this.newAnswerData.text
+          };
+
+          if (data.text === '') {
+            console.log('Empty answer!');
+            return;
+          }
+
+          this.saving = true;
+          google.script.run.withSuccessHandler(function (data) {
+            if (!self.data.answers[self.selectedQuestion.id]) {
+              self.data.answers[self.selectedQuestion.id] = [];
+            }
+            self.data.answers[self.selectedQuestion.id].push(data);
+            self.data.comments[data.id] = [];
+
+            self.newAnswerData.text = '';
+            self.saving = false;
+            self.data.lastChange[self.selectedQuestion.id] = data.time;
+
+            google.script.run.withSuccessHandler(function (data) {}).withFailureHandler(
+              function (e) {
+                console.log('error');
+                console.log(e.message);
+              }).forumAddEntryNotification('answer', {
+              am: self.am,
+              qId: data.qId,
+              sId: data.id
+            })
+          }).withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).forumAddEntry('answer', data);
+        },
+        addQuestion() {
+          var self = this;
+
+          var data = {
+            forumId: this.am.id,
+            title: this.newTopicData.title,
+            text: this.newTopicData.text
+          };
+
+          this.saving = true;
+          google.script.run.withSuccessHandler(function (data) {
+            self.data.questions.push(data);
+            self.newTopicData.title = '';
+            self.newTopicData.text = '';
+            self.saving = false;
+            self.data.answers[data.id] = [];
+            self.newTopicFormVisible = false;
+            self.data.lastChange[data.id] = data.time;
+
+            google.script.run.withSuccessHandler()
+              .withFailureHandler(function (e) {
+                console.log('error');
+                console.log(e);
+                console.log(e.message);
+              }).forumAddEntryNotification('question', {
+                am: self.am,
+                qId: data.id
+              })
+          }).withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).forumAddEntry('question', data);
+        },
+        vote(item, value) {
+          var self = this;
+
+          if (!this.canVote(item)) {
+            return;
+          }
+
+          Vue.set(item, 'vote', item.vote + value);
+          item.votedBy.push(self.user.email);
+
+          google.script.run.withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e);
+              self.saving = false;
+            }).forumVote(this.am.id, item.id, value);
+        },
+        canVote(item) {
+          if (item.userId == this.user.email || item.votedBy.indexOf(this.user.email) != -1) {
+            return false;
+          }
+
+          return true;
+        },
+        bestAns(item) {
+          Vue.set(this.data.bestAns, this.selectedQuestion.id, item.id);
+          // this.data.bestAns[this.selectedQuestion.id] = item.id;
+
+          google.script.run.withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e);
+            }).forumBestAns(this.am.id, item.id);
+        },
+        onClickLog(amId, type, source) {
+          google.script.run.withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e);
+            }).onClickLog(amId, type, source);
+        },
+        editOpen(item) {
+          this.editItem = item;
+          this.editItemTmp = JSON.parse(JSON.stringify(item));
+        },
+        editSave() {
+          var self = this;
+          this.saving = true;
+          console.log(this.editItem);
+          google.script.run.withSuccessHandler(function (item) {
+              Vue.set(self.editItem, 'edited', item.edited);
+              Vue.set(self.editItem, 'status', item.status);
+              if (item.status == 'Deleted'){
+                self.editItem.body = self.editItemTmp.body;
+              }
+              self.editItem = null;
+              self.editItemTmp = null;
+              self.saving = false;
+            })
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e.message);
+              self.saving = false;
+            }).editSave(this.editItem);
+        },
+        editClose() {
+          this.editItem.body = this.editItemTmp.body;
+          this.editItem = null;
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
