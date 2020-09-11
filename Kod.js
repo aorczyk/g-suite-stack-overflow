@@ -22,23 +22,38 @@ function handleResponse(reqeust) {
 
   var user = getUser();
   var forumId = reqeust.parameter.id;
+  // var forumId = 'css';
 
-  var am = getForum(forumId);
+  // var am = getForum(forumId);
 
-  if (!am) {
-    return HtmlService.createHtmlOutput("Undefined forum!");
-  }
+  // if (!am) {
+  //   return HtmlService.createHtmlOutput("Undefined forum!");
+  // }
 
-  var data = getForumData(forumId);
+  // var data = getForumData(forumId);
 
   htmlTemplate.dataFromServerTemplate = {
-    user: getUser(),
-    data: data,
-    am: am,
-    qId: reqeust.parameter.qId,
-    sId: reqeust.parameter.sId,
+    user: user,
+    data: {},
+    am: {},
+    // qId: reqeust.parameter.qId,
+    // sId: reqeust.parameter.sId,
   };
-  return htmlTemplate.evaluate().setTitle('GAS Simple Stack Overflow');
+  
+  var response = htmlTemplate.evaluate();
+  
+  // if ('pageTitle' in am){
+  //   response.setTitle(am.pageTitle);
+  // }
+  // else {
+  //   response.setTitle('GAS Simple Stack Overflow');
+  // }
+
+  // if ('faviconUrl' in am){
+  //   response.setFaviconUrl(am.faviconUrl);
+  // }
+  
+  return response;
 }
 
 function getForum(forumId) {
@@ -58,16 +73,15 @@ function getForum(forumId) {
   var settingsJSON = DocumentApp.openByUrl(APP_CONFIG.settingsUrl).getBody().getText();
   var forumsById = JSON.parse(settingsJSON);
 
-  var out = forumsById[forumId];
+  var forum = forumsById[forumId];
 
-  if (out) {
-    forumsById[forumId].sql = {};
-    forumsById[forumId].id = forumId;
-    forumsById[forumId].url = APP_CONFIG.appUrl + "?id=" + forumId;
+  if (forum) {
+    forum.sql = {};
+    forum.id = forumId;
 
-    forumsById[forumId].sql = new SqlAbstract({
+    forum.sql = new SqlAbstract({
       spreadsheets: [{
-        url: forumsById[forumId].forumDataUrl,
+        url: forum.forumDataUrl,
         tables: {
           'Forum': {
             as: 'Forum',
@@ -96,7 +110,7 @@ function getForum(forumId) {
     });
   }
 
-  return out;
+  return forum;
 }
 
 
@@ -150,7 +164,12 @@ function jsUcfirst(string) {
 function getForumData(id) {
   var am = getForum(id);
 
+  if (!am){
+    return {}
+  }
+
   var out = {
+    am: am,
     questions: [],
     answers: {},
     comments: {},
@@ -395,7 +414,9 @@ function forumAddEntryNotification(type, data) {
 
   sendTo.push(data.am.userId);
 
-  var link = APP_CONFIG.appUrl + "?action=forum&id=" + data.am.id;
+  var appUrl = ScriptApp.getService().getUrl();
+
+  var link = appUrl + "?action=forum&id=" + data.am.id;
   if (data.qId) {
     link += "&qId=" + data.qId;
   }
