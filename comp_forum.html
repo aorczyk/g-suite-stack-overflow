@@ -1,0 +1,73 @@
+<script>
+var compForum = Vue.component('forum', {
+    props: ['user', 'forumId'],
+    components: {
+      //questions: compQuestions,
+      //question: compQuestion,
+    },
+    data() {
+      return {
+        am: {},
+        data: null,
+        saving: false,
+        loading: false
+      }
+    },
+    created() {
+      console.log('getForumData');
+      this.loading = true;
+
+      google.script.run.withSuccessHandler((data) => {
+        console.log(data);
+        Vue.set(this, 'data', data);
+        Vue.set(this, 'am', data.am);
+        this.loading = false;
+      })
+      .withFailureHandler((e) => {
+        this.loading = false;
+        console.log('error');
+        console.log(e);
+        console.log(e.message);
+      }).getForumData(this.forumId);
+    },
+    computed: {
+    },
+    methods: {
+      showQuestions() {
+        this.pageId = 'questions';
+        router.push(`/forum/${this.am.id}/list`);
+      },
+    },
+    template:
+    `
+    <div>
+      <spinner v-if="loading"></spinner>
+      <nav class="navbar is-white" role="navigation" aria-label="main navigation" style="border-bottom: 1px solid lightgray;">
+        <div class="navbar-brand">
+          <strong class="navbar-item">
+            G Suite Stack Overflow
+          </strong>
+          <span class="navbar-item" @click="showQuestions" style="cursor:pointer;">{{ am.name }}</span>
+        </div>
+        <div id="navbarBasicExample" class="navbar-menu">
+          <div class="navbar-start">
+            <div class="buttons">
+
+            </div>
+          </div>
+          <div class="navbar-end">
+            <div class="navbar-item">
+              <div class="buttons">
+                <a class="button is-light">
+                  {{ user.email }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <router-view :user="user" :am="am" :data="data"></router-view>
+    </div>
+    `
+});
+</script>

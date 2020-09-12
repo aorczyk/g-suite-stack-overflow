@@ -1,0 +1,200 @@
+<script>
+var compQuestions = Vue.component('questions', {
+  props: ['am', 'data', 'forumId'],
+  data() {
+    return {
+      editorOption: quillSettings,
+      newTopicFormVisible: false,
+      questions: [],
+      newTopicData: {
+        title: '',
+        text: ''
+      },
+      saving: false,
+    }
+  },
+  created() {
+    console.log('forumId');
+    console.log(this.forumId);
+    var self = this;
+  },
+  computed: {
+    sortedQuestions() {
+      if (this.data){
+        this.data.questions.sort(function (a, b) {
+          var aKey = a.time;
+          var bKey = b.time;
+          return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
+        });
+
+        return this.data.questions;
+      }
+
+      return [];
+    },
+    topicTitleLengthIsValid() {
+      if (this.newTopicData.title.length > 100) {
+        return false;
+      }
+
+      return true;
+    },
+  },
+  methods: {
+    onClickLog(amId, type, source) {
+      google.script.run.withSuccessHandler()
+        .withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e);
+        }).onClickLog(amId, type, source);
+    },
+    showAddNewTopic() {
+      this.newTopicFormVisible = true;
+    },
+    showAns(q) {
+      this.selectedQuestion = q;
+
+      this.onClickLog(this.am.id, 'forum', q.id);
+
+      if (!this.data.views[q.id]) {
+        this.data.views[q.id] = 0;
+      }
+
+      this.data.views[q.id] += 1;
+
+      router.push(`/forum/${this.am.id}/question/${q.id}`);
+    },
+    showAddNewTopic() {
+      this.newTopicFormVisible = true;
+    },
+    cancelAddNewTopic() {
+      this.newTopicFormVisible = false;
+    },
+    addQuestion() {
+      var self = this;
+
+      var data = {
+        forumId: this.am.id,
+        title: this.newTopicData.title,
+        text: this.newTopicData.text
+      };
+
+      this.saving = true;
+      google.script.run.withSuccessHandler(function (data) {
+        self.data.questions.push(data);
+        self.newTopicData.title = '';
+        self.newTopicData.text = '';
+        self.saving = false;
+        self.data.answers[data.id] = [];
+        self.newTopicFormVisible = false;
+        self.data.lastChange[data.id] = data.time;
+
+        google.script.run.withSuccessHandler()
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e);
+            console.log(e.message);
+          }).forumAddEntryNotification('question', {
+            am: self.am,
+            qId: data.id
+          })
+      }).withFailureHandler(function (e) {
+        console.log('error');
+        console.log(e.message);
+        self.saving = false;
+      }).forumAddEntry('question', data);
+    },
+  },
+  template:
+  `
+  <div>
+    <div class="modal" :class="{'is-active': newTopicFormVisible}">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">New Question</p>
+        </header>
+        <section class="modal-card-body">
+          <div class="field">
+            <label class="label">Topic</label>
+            <div class="control">
+              <input class="input" :class="{'is-danger': !topicTitleLengthIsValid}" type="text"
+                placeholder="Be specific and imagine you’re asking a question to another person" v-model="newTopicData.title">
+            </div>
+          </div>
+          <p class="help is-danger" v-if="!topicTitleLengthIsValid">Text too long</p>
+          <div class="field">
+            <label class="label">Question</label>
+            <div class="control">
+              <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="editorOption">
+              </quill-editor>
+            </div>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <div class="field is-grouped">
+            <div class="control">
+              <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
+                :disabled="saving || !topicTitleLengthIsValid || !newTopicData.text">Save</button>
+            </div>
+            <div class="control">
+              <button class="button" @click="cancelAddNewTopic" :disabled="saving">Cancel</button>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  
+    <div class="forum-page">
+      <div class="container">
+        <nav class="level">
+          <nav class="level-level">
+            Questions
+          </nav>
+          <nav class="level-level">
+            <div class="button is-info" @click="showAddNewTopic" v-if="!am.isClosed">Ask Question</div>
+          </nav>
+        </nav>
+        <div class="forum-list" v-if="1">
+          <div class="forum-list-row" v-for="question in sortedQuestions" @click="showAns(question)">
+            <div class="forum-list-row-left">
+              <div class="forum-list-row-summary">
+                <div class="forum-list-row-summary-count">
+                  <span>{{ question.vote }}</span>
+                </div>
+                <div>głosów</div>
+              </div>
+              <div class="forum-list-row-summary"
+                :class="{'forum-list-row-summary-bestAns': data.bestAns[question.id]}">
+                <div class="forum-list-row-summary-count">
+                  <span>{{ data.answers[question.id] ? data.answers[question.id].length : 0 }}</span>
+                </div>
+                <div>odpowiedzi</div>
+              </div>
+              <div class="forum-list-row-summary">
+                <div class="forum-list-row-summary-count">
+                  <span>{{ data.views[question.id] ? data.views[question.id] : 0 }}</span>
+                </div>
+                <div>wejść</div>
+              </div>
+            </div>
+            <div class="forum-list-row-content">
+              <div>{{ question.title }}</div>
+              <div class="forum-ans-row-content-info">
+                <div class="forum-ans-row-content-info-left">Ostatnia zmiana:
+                  {{ data.lastChange[question.id] }}</div>
+                <div class="forum-ans-row-content-info-right">{{ question.time }} <span
+                    class="user-name">{{ question.userName }}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          No Questions
+        </div>
+      </div>
+    </div>
+  </div>
+  `
+});
+</script>
