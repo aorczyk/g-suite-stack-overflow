@@ -91,7 +91,7 @@ function getForum(forumId) {
                   return Utilities.formatDate(x, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
                 }
               },
-              'Edited': {
+              'ChangedTime': {
                 get: function (x) {
                   return x ? Utilities.formatDate(x, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : ''
                 }
@@ -104,6 +104,14 @@ function getForum(forumId) {
           },
           'DocOpenLog': {
             as: 'Log'
+          },
+          'History': {
+            as: 'History',
+            serializer: {
+              'Vote': {
+                set: JSON.stringify
+              },
+            }
           }
         }
       }]
@@ -219,7 +227,7 @@ function getForumData(id) {
       votedBy: votedBy,
       userId: row['UserId'],
       bestAns: row['BestAns'],
-      edited: row['Edited'],
+      edited: row['ChangedTime'],
       userName: getUserNameFromEmail(row['UserId'])
     }
 
@@ -457,6 +465,7 @@ function sendEmail(email, sendTo) {
 
 
 function editSave(item) {
+  var user = getUser();
   var am = getForum(item.forumId);
 
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
@@ -468,6 +477,20 @@ function editSave(item) {
     item.status = '';
   }
 
+  // History
+
+  var itemRow = am.sql.select({
+    table: 'Forum',
+    where: {
+      'Id': item.id,
+    }
+  })[0].get();
+
+  am.sql.insert({
+    table: 'History',
+    values: itemRow
+  });
+
   am.sql.update({
     table: 'Forum',
     where: {
@@ -475,8 +498,9 @@ function editSave(item) {
     },
     set: {
       'Text': item.body,
-      'Edited': new Date(),
-      'Status': item.status
+      'Status': item.status,
+      'ChangedTime': new Date(),
+      'ChangedBy': user.email,
     }
   });
 
