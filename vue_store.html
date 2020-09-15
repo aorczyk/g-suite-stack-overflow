@@ -1,0 +1,14 @@
+<script>
+
+  var store = {
+    debug: true,
+    state: {
+      user: dataFromServer.user,
+      forum: null
+    },
+    setForum(newValue) {
+      if (this.debug) console.log('setForum triggered with', newValue)
+      this.state.forum = newValue
+    },
+  };
+</script>

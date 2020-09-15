@@ -7,6 +7,8 @@ var compForum = Vue.component('forum', {
     },
     data() {
       return {
+        sharedState: store.state,
+        privateState: {},
         am: {},
         data: null,
         saving: false,
@@ -19,6 +21,8 @@ var compForum = Vue.component('forum', {
 
       google.script.run.withSuccessHandler((data) => {
         console.log(data);
+        this.sharedState.forum = data;
+        
         Vue.set(this, 'data', data);
         Vue.set(this, 'am', data.am);
         this.loading = false;
@@ -42,30 +46,7 @@ var compForum = Vue.component('forum', {
     `
     <div>
       <spinner v-if="loading"></spinner>
-      <nav class="navbar is-white" role="navigation" aria-label="main navigation" style="border-bottom: 1px solid lightgray;">
-        <div class="navbar-brand">
-          <strong class="navbar-item">
-            G Suite Stack Overflow
-          </strong>
-          <span class="navbar-item" @click="showQuestions" style="cursor:pointer;">{{ am.name }}</span>
-        </div>
-        <div id="navbarBasicExample" class="navbar-menu">
-          <div class="navbar-start">
-            <div class="buttons">
 
-            </div>
-          </div>
-          <div class="navbar-end">
-            <div class="navbar-item">
-              <div class="buttons">
-                <a class="button is-light">
-                  {{ user.email }}
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
       <router-view :user="user" :am="am" :data="data"></router-view>
     </div>
     `

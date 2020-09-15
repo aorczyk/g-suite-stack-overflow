@@ -1,0 +1,37 @@
+<script>
+  Vue.component('top-bar', {
+  data() {
+    return {
+      sharedState: store.state,
+      privateState: {},
+    }
+  },
+  template: `
+  <nav class="navbar is-white" role="navigation" aria-label="main navigation"
+    style="border-bottom: 1px solid lightgray;">
+    <div class="navbar-brand">
+      <strong class="navbar-item">
+        G Suite Stack Overflow
+      </strong>
+      <span class="navbar-item" v-if="sharedState.forum">{{ sharedState.forum.name }}</span>
+    </div>
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <div class="buttons">
+
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="buttons">
+            <a class="button is-light">
+              {{ sharedState.user.email }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  `
+  });
+</script>

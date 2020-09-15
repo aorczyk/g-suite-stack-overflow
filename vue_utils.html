@@ -1,0 +1,53 @@
+<script>
+  function jsUcfirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  Vue.component('spinner', {
+    template: `
+      <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-content" style="overflow: hidden;">
+          <div class="sk-folding-cube">
+            <div class="sk-cube1 sk-cube"></div>
+            <div class="sk-cube2 sk-cube"></div>
+            <div class="sk-cube4 sk-cube"></div>
+            <div class="sk-cube3 sk-cube"></div>
+          </div>
+        </div>
+      </div>
+      `
+  });
+
+
+  Vue.component('edit-icon', {
+    props: ['user','item'],
+    data: function(){
+      return {
+      }
+    },
+    computed: {
+      isEnabled() {
+        return this.user.id === this.item.userId;
+      },
+      title() {
+        return this.item.edited ? 'Edited: ' + this.item.edited : 'Edit'
+      }
+    },
+    methods: {
+      edit() {
+        if (this.isEnabled){
+          this.$emit('edit', this.item);
+        }
+      }
+    },
+    template: 
+    `<span>
+      <span class="user-name"> {{ item.userName }}</span>
+      <span> {{ item.time }}</span>
+      <span :class="[isEnabled ? 'edit-icon' : 'edit-icon-disabled']" @click="edit" :title="title"> <i class="fas fa-pen"></i></span>
+      <span v-if="item.status == 'Deleted'">Deleted</span>
+    </span>
+    `
+  });
+</script>

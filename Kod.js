@@ -1,6 +1,7 @@
 var APP_CONFIG = {
   appUrl: 'https://script.google.com/macros/s/AKfycby_IcuOQnHbUKIWTzrXIezfqMNrN48xnaLI9URn7ANZ/dev',
-  settingsUrl: 'https://docs.google.com/document/d/1Qa_VekOfxVB8IcD3FTA60p6zrTtUlbEuFlrTQ9xDhUM/edit'
+//  settingsUrl: 'https://docs.google.com/document/d/1Qa_VekOfxVB8IcD3FTA60p6zrTtUlbEuFlrTQ9xDhUM/edit'
+  settingsUrl: 'https://docs.google.com/spreadsheets/d/18ltuthWnkN4lTBR3L_79S206Wn2oQ7yNhjOnn9uS6sk/edit#gid=0'
 };
 
 
@@ -17,11 +18,11 @@ function include(filename) {
     .getContent();
 }
 
-function handleResponse(reqeust) {
+function handleResponse(request) {
   var htmlTemplate = HtmlService.createTemplateFromFile('Forum');
 
   var user = getUser();
-  var forumId = reqeust.parameter.id;
+//  var forumId = reqeust.parameter.id;
   // var forumId = 'css';
 
   // var am = getForum(forumId);
@@ -36,6 +37,7 @@ function handleResponse(reqeust) {
     user: user,
     data: {},
     am: {},
+//    requestPath: request.queryString
     // qId: reqeust.parameter.qId,
     // sId: reqeust.parameter.sId,
   };
@@ -69,11 +71,26 @@ function getForum(forumId) {
   //  };
   //  DocumentApp.openByUrl(APP_CONFIG.settingsUrl).getBody().setText(JSON.stringify(forumsById));
   //  return;
+ 
+//  var settingsJSON = DocumentApp.openByUrl(APP_CONFIG.settingsUrl).getBody().getText();
+//  var forumsById = JSON.parse(settingsJSON);
+//  var forum = forumsById[forumId];
+  
+  var forumsSql = new SqlAbstract({
+      spreadsheets: [{
+        url: APP_CONFIG.settingsUrl,
+        tables: {
+          'Forums': {
+            as: 'Forums',
+          }
+        }
+      }]
+  });
 
-  var settingsJSON = DocumentApp.openByUrl(APP_CONFIG.settingsUrl).getBody().getText();
-  var forumsById = JSON.parse(settingsJSON);
-
-  var forum = forumsById[forumId];
+  var forum = forumsSql.select({
+    table: 'Forums',
+    where: {name: forumId}
+  })[0].get();
 
   if (forum) {
     forum.sql = {};
@@ -178,6 +195,8 @@ function getForumData(id) {
 
   var out = {
     am: am,
+    name: am.name,
+    id: am.id,
     questions: [],
     answers: {},
     comments: {},
@@ -424,12 +443,12 @@ function forumAddEntryNotification(type, data) {
 
   var appUrl = ScriptApp.getService().getUrl();
 
-  var link = appUrl + "?action=forum&id=" + data.am.id;
+  var link = appUrl + "#/forum/" + data.am.id + "/question/";
   if (data.qId) {
-    link += "&qId=" + data.qId;
+    link += data.qId;
   }
   if (data.sId) {
-    link += "&sId=" + data.sId;
+    link += data.sId;
   }
 
   var email = {};
@@ -484,24 +503,20 @@ function editSave(item) {
     where: {
       'Id': item.id,
     }
-  })[0].get();
+  })[0];
 
   am.sql.insert({
     table: 'History',
-    values: itemRow
+    values: itemRow.get()
   });
+  
+  // --
 
-  am.sql.update({
-    table: 'Forum',
-    where: {
-      'Id': item.id,
-    },
-    set: {
-      'Text': item.body,
-      'Status': item.status,
-      'ChangedTime': new Date(),
-      'ChangedBy': user.email,
-    }
+  itemRow.set({
+    'Text': item.body,
+    'Status': item.status,
+    'ChangedTime': new Date(),
+    'ChangedBy': user.email,
   });
 
   item.edited = now;

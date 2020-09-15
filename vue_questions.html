@@ -3,6 +3,7 @@ var compQuestions = Vue.component('questions', {
   props: ['am', 'data', 'forumId'],
   data() {
     return {
+      sharedState: store.state,
       editorOption: quillSettings,
       newTopicFormVisible: false,
       questions: [],

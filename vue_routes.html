@@ -1,0 +1,27 @@
+<script>
+  const routes = [{
+    path: '/forum/:forumId',
+    component: compForum,
+    props: true,
+    children: [{
+        path: 'list',
+        component: compQuestions,
+        props: true,
+      },
+      {
+        path: 'question/:questionId',
+        component: compQuestion,
+        props: true,
+      },
+      {
+        path: 'question/:questionId/:selectedId',
+        component: compQuestion,
+        props: true,
+      },
+    ]
+  }, ];
+
+  const router = new VueRouter({
+    routes
+  });
+</script>

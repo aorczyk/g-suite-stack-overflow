@@ -30,156 +30,27 @@
 
 <body>
   <div id="app">
+    <top-bar></top-bar>
     <router-view :user="user"></router-view>
   </div>
 
-  <?!= include('comp_questions.html'); ?>
-  <?!= include('comp_question.html'); ?>
-  <?!= include('comp_forum.html'); ?>
+  <script>
+    var dataFromServer = <?!= JSON.stringify(dataFromServerTemplate) ?>;
+    console.log(dataFromServer);
+  </script>
+
+  <?!= include('vue_questions.html'); ?>
+  <?!= include('vue_question.html'); ?>
+  <?!= include('vue_forum.html'); ?>
+  <?!= include('vue_topbar.html'); ?>
+  <?!= include('vue_utils.html'); ?>
+  <?!= include('vue_quill.html'); ?>
+  <?!= include('vue_routes.html'); ?>
+  <?!= include('vue_store.html'); ?>
 
   <script>
     // TODO: quill image loader
     // https://stackoverflow.com/questions/43857373/quill-editor-vuejs2-image-upload-base64-image-to-url
-
-    const routes = [
-      {
-        path: '/forum/:forumId',
-        component: compForum,
-        props: true,
-        children: [
-          {
-            path: 'list',
-            component: compQuestions,
-            props: true,
-          },
-          {
-            path: 'question/:questionId',
-            component: compQuestion,
-            props: true,
-          },
-          {
-            path: 'question/:questionId/:selectedId',
-            component: compQuestion,
-            props: true,
-          },
-        ]
-      },
-    ];
-
-    const router = new VueRouter({
-      routes
-    })
-
-    var dataFromServer = <?!= JSON.stringify(dataFromServerTemplate) ?>;
-    console.log(dataFromServer);
-
-    function jsUcfirst(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-
-    Vue.use(VueQuillEditor);
-
-    Vue.component('spinner', {
-      template: `
-      <div class="modal is-active">
-        <div class="modal-background"></div>
-        <div class="modal-content" style="overflow: hidden;">
-            <div class="sk-folding-cube">
-            <div class="sk-cube1 sk-cube"></div>
-            <div class="sk-cube2 sk-cube"></div>
-            <div class="sk-cube4 sk-cube"></div>
-            <div class="sk-cube3 sk-cube"></div>
-            </div>
-        </div>
-      </div>
-      `
-    });
-
-    Vue.component('edit-icon', {
-      props: ['user','item'],
-      data: function(){
-        return {
-        }
-      },
-      computed: {
-        isEnabled() {
-          return this.user.id === this.item.userId;
-        },
-        title() {
-          return this.item.edited ? 'Edited: ' + this.item.edited : 'Edit'
-        }
-      },
-      methods: {
-        edit() {
-          if (this.isEnabled){
-            this.$emit('edit', this.item);
-          }
-        }
-      },
-      template: 
-      `<span>
-        <span class="user-name"> {{ item.userName }}</span>
-        <span> {{ item.time }}</span>
-        <span :class="[isEnabled ? 'edit-icon' : 'edit-icon-disabled']" @click="edit" :title="title"> <i class="fas fa-pen"></i></span>
-        <span v-if="item.status == 'Deleted'">Deleted</span>
-      </span>
-      `
-    });
-
-    var quillSettings = {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline', 'strike'], // toggled buttons
-          ['blockquote', 'code-block'],
-          [{
-            'header': 1
-          }, {
-            'header': 2
-          }], // custom button values
-          [{
-            'list': 'ordered'
-          }, {
-            'list': 'bullet'
-          }],
-          [{
-            'script': 'sub'
-          }, {
-            'script': 'super'
-          }], // superscript/subscript
-          [{
-            'indent': '-1'
-          }, {
-            'indent': '+1'
-          }], // outdent/indent
-          [{
-            'direction': 'rtl'
-          }], // text direction
-
-          [{
-            'size': ['small', false, 'large', 'huge']
-          }], // custom dropdown
-          [{
-            'header': [1, 2, 3, 4, 5, 6, false]
-          }],
-
-          [{
-            'color': []
-          }, {
-            'background': []
-          }], // dropdown with defaults from theme
-          [{
-            'font': []
-          }],
-          [{
-            'align': []
-          }],
-
-          ['clean'] // remove formatting button
-        ]
-      },
-      placeholder: 'Text...',
-    };
 
     var app = new Vue({
       el: '#app',
@@ -187,31 +58,9 @@
       data: {
         router: router,
         user: dataFromServer.user,
-        // am: dataFromServer.am,
-        // data: dataFromServer.data,
-        // questionId: dataFromServer.qId,
-        // selectedId: dataFromServer.sId,
-        // pageId: 'questions',
-        // selectedQuestion: null,
-        // editorOption: quillSettings,
-        // newTopicFormVisible: false,
-        // newTopicData: {
-        //   title: '',
-        //   text: ''
-        // },
-        // newAnswerData: {
-        //   text: ''
-        // },
-        // addNewCommentParentId: null,
-        // newCommentData: {
-        //   text: ''
-        // },
-        // saving: false,
-        // editItem: null,
-        // editItemTmp: null
       },
       created: function () {
-        // Get the path from the string URL fragment appearing after the '#' character.
+        // Router - Get the path from the string URL fragment appearing after the '#' character.
         google.script.url.getLocation(function(location) {
           var path = location.hash;
           if (path){
@@ -222,7 +71,7 @@
         });
       },
       watch: {
-        // Watching router's current route.
+        // Router - Watching router's current route.
         'router.currentRoute.path' () {
            var path = router.currentRoute.path;
            var now = new Date();
@@ -230,7 +79,6 @@
              'timestamp': now.getTime()
            };
            google.script.history.push(state, {}, path);
-          console.log(path);
         }
       },
       methods: {
