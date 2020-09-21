@@ -1,8 +1,9 @@
 <script>
 var compQuestion = Vue.component('question', {
-    props: ['user', 'am', 'data', 'questionId', 'selectedId'],
+    props: ['questionId', 'selectedId'],
     data() {
       return {
+        sharedState: store.state,
         editorOption: quillSettings,
         newAnswerData: {
           text: ''
@@ -19,6 +20,7 @@ var compQuestion = Vue.component('question', {
     created() {
       console.log('question');
       console.log('questionId', this.questionId);
+      console.log('sharedState.user', this.sharedState.user);
     },
     mounted() {
       // Show given entry
@@ -26,8 +28,8 @@ var compQuestion = Vue.component('question', {
     },
     computed: {
       selectedQuestion() {
-        if (this.data){
-          var out = this.data.questions.filter((x) => {
+        if (this.sharedState.forum){
+          var out = this.sharedState.forum.questions.filter((x) => {
             return x.id == this.questionId;
           });
 
@@ -44,7 +46,7 @@ var compQuestion = Vue.component('question', {
         return;
       },
       sortedAnswers() {
-          var items = this.data.answers[this.selectedQuestion.id];
+          var items = this.sharedState.forum.answers[this.selectedQuestion.id];
           items.sort(function (a, b) {
             var aKey = a.vote;
             var bKey = b.vote;
@@ -57,7 +59,7 @@ var compQuestion = Vue.component('question', {
     methods: {
         showQuestions() {
           this.pageId = 'questions';
-          router.push(`/forum/${this.am.id}/list`);
+          router.push(`/f/${this.sharedState.forum.id}`);
         },
         showAddNewComment(id) {
           if (this.addNewCommentParentId == id) {
@@ -86,7 +88,7 @@ var compQuestion = Vue.component('question', {
           var self = this;
 
           var data = {
-            forumId: this.am.id,
+            forumId: this.sharedState.forum.id,
             qId: this.selectedQuestion.id,
             aId: this.addNewCommentParentId,
             text: this.newCommentData.text,
@@ -95,23 +97,28 @@ var compQuestion = Vue.component('question', {
           this.saving = true;
           google.script.run.withSuccessHandler(function (data) {
             console.log(data);
-            if (!self.data.comments[self.addNewCommentParentId]) {
-              self.data.comments[self.addNewCommentParentId] = [];
+            if (!self.sharedState.forum.comments[self.addNewCommentParentId]) {
+              self.sharedState.forum.comments[self.addNewCommentParentId] = [];
             }
-            self.data.comments[self.addNewCommentParentId].push(data);
+            self.sharedState.forum.comments[self.addNewCommentParentId].push(data);
             self.addNewCommentParentId = null;
             self.saving = false;
-            self.data.lastChange[self.selectedQuestion.id] = data.time;
+            self.sharedState.forum.lastChange[self.selectedQuestion.id] = data.time;
 
-            google.script.run.withSuccessHandler(function (data) {}).withFailureHandler(
-              function (e) {
-                console.log('error');
-                console.log(e.message);
-              }).forumAddEntryNotification('comment', {
-              am: self.am,
+            var notificationData = {
+              forumId: self.sharedState.forum.id,
+              forumName: self.sharedState.forum.name,
+              userId: self.selectedQuestion.userId,
               qId: data.qId,
               sId: data.id
+            };
+
+            google.script.run.withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e.message);
             })
+            .forumAddEntryNotification('comment', notificationData)
           }).withFailureHandler(function (e) {
             console.log('error');
             console.log(e.message);
@@ -122,7 +129,7 @@ var compQuestion = Vue.component('question', {
           var self = this;
 
           var data = {
-            forumId: this.am.id,
+            forumId: this.sharedState.forum.id,
             qId: this.selectedQuestion.id,
             text: this.newAnswerData.text
           };
@@ -134,25 +141,30 @@ var compQuestion = Vue.component('question', {
 
           this.saving = true;
           google.script.run.withSuccessHandler(function (data) {
-            if (!self.data.answers[self.selectedQuestion.id]) {
-              self.data.answers[self.selectedQuestion.id] = [];
+            if (!self.sharedState.forum.answers[self.selectedQuestion.id]) {
+              self.sharedState.forum.answers[self.selectedQuestion.id] = [];
             }
-            self.data.answers[self.selectedQuestion.id].push(data);
-            self.data.comments[data.id] = [];
+            self.sharedState.forum.answers[self.selectedQuestion.id].push(data);
+            self.sharedState.forum.comments[data.id] = [];
 
             self.newAnswerData.text = '';
             self.saving = false;
-            self.data.lastChange[self.selectedQuestion.id] = data.time;
+            self.sharedState.forum.lastChange[self.selectedQuestion.id] = data.time;
 
-            google.script.run.withSuccessHandler(function (data) {}).withFailureHandler(
-              function (e) {
-                console.log('error');
-                console.log(e.message);
-              }).forumAddEntryNotification('answer', {
-              am: self.am,
+            var notificationData = {
+              forumId: self.sharedState.forum.id,
+              forumName: self.sharedState.forum.name,
+              userId: self.selectedQuestion.userId,
               qId: data.qId,
               sId: data.id
-            })
+            };
+
+            google.script.run
+            .withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e.message);
+            }).forumAddEntryNotification('answer', notificationData)
           }).withFailureHandler(function (e) {
             console.log('error');
             console.log(e.message);
@@ -167,31 +179,31 @@ var compQuestion = Vue.component('question', {
           }
 
           Vue.set(item, 'vote', item.vote + value);
-          item.votedBy.push(self.user.email);
+          item.votedBy.push(self.sharedState.user.email);
 
           google.script.run.withSuccessHandler()
             .withFailureHandler(function (e) {
               console.log('error');
               console.log(e);
               self.saving = false;
-            }).forumVote(this.am.id, item.id, value);
+            }).forumVote(this.sharedState.forum.id, item.id, value);
         },
         canVote(item) {
-          if (item.userId == this.user.email || item.votedBy.indexOf(this.user.email) != -1) {
+          if (item.userId == this.sharedState.user.email || item.votedBy.indexOf(this.sharedState.user.email) != -1) {
             return false;
           }
 
           return true;
         },
         bestAns(item) {
-          Vue.set(this.data.bestAns, this.selectedQuestion.id, item.id);
-          // this.data.bestAns[this.selectedQuestion.id] = item.id;
+          Vue.set(this.sharedState.forum.bestAns, this.selectedQuestion.id, item.id);
+          // this.sharedState.forum.bestAns[this.selectedQuestion.id] = item.id;
 
           google.script.run.withSuccessHandler()
             .withFailureHandler(function (e) {
               console.log('error');
               console.log(e);
-            }).forumBestAns(this.am.id, item.id);
+            }).forumBestAns(this.sharedState.forum.id, item.id);
         },
         editOpen(item) {
           this.editItem = item;
@@ -223,41 +235,45 @@ var compQuestion = Vue.component('question', {
         },
         newRef(p1, p2){
           return String(p1) + String(p2);
+        },
+        getItemLink(item){
+          return `${this.sharedState.forum.appUrl}#/f/${this.sharedState.forum.id}/q/${this.questionId}/${item.id}`;
         }
     },
     template:
     `
     <div>
-    <a :href="'#' + selectedId" ref="foo"></a>
-    <div class="modal" :class="{'is-active': editItem}">
-      <div class="modal-background"></div>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">Edit</p>
-        </header>
-        <section class="modal-card-body">
-          <div class="field">
-            <div class="control" v-if="editItem">
-              <quill-editor v-model="editItem.body" ref="quillEditorA" :options="editorOption"
-                v-if="editItem.type !== 'comment'"></quill-editor>
-              <input class="input" type="text" v-model="editItem.body" v-else>
+      <a :href="'#' + selectedId" ref="foo"></a>
+      
+      <div class="modal" :class="{'is-active': editItem}">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+          <header class="modal-card-head">
+            <p class="modal-card-title">Edit</p>
+          </header>
+          <section class="modal-card-body">
+            <div class="field">
+              <div class="control" v-if="editItem">
+                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="editorOption"
+                  v-if="editItem.type !== 'comment'"></quill-editor>
+                <input class="input" type="text" v-model="editItem.body" v-else>
+              </div>
             </div>
-          </div>
-        </section>
-        <footer class="modal-card-foot">
-          <div class="field is-grouped">
-            <div class="control">
-              <button class="button is-info" :class="{'is-loading': saving}" @click="editSave">Save</button>
+          </section>
+          <footer class="modal-card-foot">
+            <div class="field is-grouped">
+              <div class="control">
+                <button class="button is-info" :class="{'is-loading': saving}" @click="editSave">Save</button>
+              </div>
+              <div class="control">
+                <button class="button" @click="editClose" :disabled="saving">Cancel</button>
+              </div>
             </div>
-            <div class="control">
-              <button class="button" @click="editClose" :disabled="saving">Cancel</button>
-            </div>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </div>
-    </div>
     
-      <div class="forum-page">
+      <div class="forum-page" if="sharedState.forum">
         <div class="container forum-ans" v-if="selectedQuestion">
           <div class="field">
             <div class="button is-info" @click="showQuestions">Back To Questions</div>
@@ -266,31 +282,35 @@ var compQuestion = Vue.component('question', {
           <div class="forum-ans-list">
             <div class="forum-ans-row forum-ans-question">
               <div class="forum-ans-row-left">
-                <div><span class="icon forum-ans-row-left-vote" @click="vote(selectedQuestion, 1)"
-                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}"><i class="fas fa-caret-up"
-                      title="Pytanie jest przydatne"></i></span></div>
-                <div>{{ selectedQuestion.vote }}</div>
-                <div><span class="icon forum-ans-row-left-vote" @click="vote(selectedQuestion, -1)"
-                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}"><i
-                      class="fas fa-caret-down" title="Pytanie nie jest przydatne"></i></span>
+                <div class="forum-ans-row-left-vote" @click="vote(selectedQuestion, 1)"
+                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
+                  <i class="fas fa-caret-up" title="Pytanie jest przydatne"></i>
+                </div>
+                <div class="forum-ans-row-left-vote-value">
+                  {{ selectedQuestion.vote }}
+                </div>
+                <div class="forum-ans-row-left-vote" @click="vote(selectedQuestion, -1)"
+                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
+                  <i class="fas fa-caret-down" title="Pytanie nie jest przydatne"></i>
                 </div>
               </div>
               <div class="forum-ans-row-content">
                 <div v-html="selectedQuestion.body"></div>
                 <div class="forum-ans-row-content-info">
-                  <edit-icon :user="user" :item="selectedQuestion" @edit="editOpen"></edit-icon>
+                  <edit-icon :item="selectedQuestion" @edit="editOpen"></edit-icon>
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
                     <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId}"
-                      v-for="comment in data.comments[selectedQuestion.id]">
+                      v-for="comment in sharedState.forum.comments[selectedQuestion.id]">
                       <span></span>{{ comment.body }} - </span>
-                      <edit-icon :user="user" :item="comment" @edit="editOpen"></edit-icon>
+                      <edit-icon :item="comment" @edit="editOpen"></edit-icon>
+                      <a class="action-icon" :href="getItemLink(comment)" target="blank"><i class="fas fa-external-link-alt"></i></a>
                     </div>
                   </div>
                   <div>
                     <span class="forum-ans-comments-add" @click="showAddNewComment(selectedQuestion.id)"
-                      v-if="!am.isClosed">add a comment</span>
+                      v-if="!sharedState.forum.am.isClosed">add a comment</span>
                   </div>
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == selectedQuestion.id">
                     <div class="field">
@@ -312,43 +332,49 @@ var compQuestion = Vue.component('question', {
               </div>
             </div>
           </div>
-          <div class="forum-ans-separator">{{ data.answers[selectedQuestion.id] ? data.answers[selectedQuestion.id].length : 0 }} Answers</div>
+          <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} Answers</div>
           <div class="forum-ans-list">
             <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId}"
               v-for="ans in sortedAnswers">
               <div class="forum-ans-row-left">
-                <div><span class="icon forum-ans-row-left-vote" @click="vote(ans, 1)"
-                    :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}"><i class="fas fa-caret-up"
-                      title="Odpowiedź jest przydatna"></i></span></div>
-                <div>{{ ans.vote }}</div>
-                <div><span class="icon forum-ans-row-left-vote" @click="vote(ans, -1)"
-                    :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}"><i class="fas fa-caret-down"
-                      title="Odpowiedź nie jest przydatna"></i></span>
+                <div class="forum-ans-row-left-vote" @click="vote(ans, 1)"
+                :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
+                  <i class="fas fa-caret-up"
+                  title="Odpowiedź jest przydatna"></i>
                 </div>
-                <div v-if="!data.bestAns[selectedQuestion.id] && user.email == selectedQuestion.userId">
-                  <span class="icon forum-ans-row-left-bestAns" @click="bestAns(ans)"><i
-                      class="fas fa-check"></i></span></div>
-                <div v-if="data.bestAns[selectedQuestion.id] && data.bestAns[selectedQuestion.id] == ans.id">
-                  <span class="icon forum-ans-row-left-bestAns-selected"><i class="fas fa-check"
-                      title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i></span>
+                <div class="forum-ans-row-left-vote-value">
+                  {{ ans.vote }}
+                </div>
+                <div class="forum-ans-row-left-vote" @click="vote(ans, -1)"
+                :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
+                  <i class="fas fa-caret-down"
+                  title="Odpowiedź nie jest przydatna"></i>
+                </div>
+                <div class="forum-ans-row-left-bestAns" v-if="!sharedState.forum.bestAns[selectedQuestion.id] && sharedState.user.email == selectedQuestion.userId" @click="bestAns(ans)">
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="forum-ans-row-left-bestAns-selected" v-if="sharedState.forum.bestAns[selectedQuestion.id] && sharedState.forum.bestAns[selectedQuestion.id] == ans.id">
+                  <i class="fas fa-check" title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i>
                 </div>
               </div>
               <div class="forum-ans-row-content">
                 <div v-html="ans.body"></div>
                 <div class="forum-ans-row-content-info">
-                  <edit-icon :user="user" :item="ans" @edit="editOpen"></edit-icon>
+                  <edit-icon :item="ans" @edit="editOpen"></edit-icon>
+                  <a class="action-icon" :href="getItemLink(ans)" target="blank"><i class="fas fa-external-link-alt"></i></a>
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
                     <div class="forum-ans-comments-list-row" :id="comment.id"
                       :class="{'forum-selected-item': comment.id == selectedId}"
-                      v-for="comment in data.comments[ans.id]">
+                      v-for="comment in sharedState.forum.comments[ans.id]">
                       <span></span>{{ comment.body }} - </span>
-                      <edit-icon :user="user" :item="comment" @edit="editOpen"></edit-icon>
+                      <edit-icon :item="comment" @edit="editOpen"></edit-icon>
+                      <a class="action-icon" :href="getItemLink(comment)" target="blank"><i class="fas fa-external-link-alt"></i></a>
                     </div>
                   </div>
                   <div>
-                    <span class="forum-ans-comments-add" @click="showAddNewComment(ans.id)" v-if="!am.isClosed">add a comment</span>
+                    <span class="forum-ans-comments-add" @click="showAddNewComment(ans.id)" v-if="!sharedState.forum.am.isClosed">add a comment</span>
                   </div>
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == ans.id">
                     <div class="field">
@@ -370,7 +396,7 @@ var compQuestion = Vue.component('question', {
               </div>
             </div>
           </div>
-          <div v-if="!am.isClosed">
+          <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">Your Answer</div>
             <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="editorOption">
             </quill-editor>

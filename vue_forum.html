@@ -39,7 +39,7 @@ var compForum = Vue.component('forum', {
     methods: {
       showQuestions() {
         this.pageId = 'questions';
-        router.push(`/forum/${this.am.id}/list`);
+        router.push(`/f/${this.am.id}`);
       },
     },
     template:

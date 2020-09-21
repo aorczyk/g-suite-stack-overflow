@@ -24,11 +24,12 @@
     props: ['user','item'],
     data: function(){
       return {
+        sharedState: store.state,
       }
     },
     computed: {
       isEnabled() {
-        return this.user.id === this.item.userId;
+        return this.sharedState.user.id === this.item.userId;
       },
       title() {
         return this.item.edited ? 'Edited: ' + this.item.edited : 'Edit'
@@ -45,7 +46,7 @@
     `<span>
       <span class="user-name"> {{ item.userName }}</span>
       <span> {{ item.time }}</span>
-      <span :class="[isEnabled ? 'edit-icon' : 'edit-icon-disabled']" @click="edit" :title="title"> <i class="fas fa-pen"></i></span>
+      <span :class="[isEnabled ? 'action-icon' : 'action-icon-disabled']" @click="edit" :title="title" v-if="isEnabled"> <i class="fas fa-pen"></i></span>
       <span v-if="item.status == 'Deleted'">Deleted</span>
     </span>
     `

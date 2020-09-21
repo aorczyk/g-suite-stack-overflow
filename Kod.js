@@ -162,6 +162,10 @@ function onClickLog(forumId, type, source) {
 function getUser() {
   var email = Session.getActiveUser().getEmail();
 
+  if (!email){
+    email = 'Unknown visitor';
+  }
+
   return {
     id: email,
     email: email,
@@ -194,6 +198,7 @@ function getForumData(id) {
   }
 
   var out = {
+    appUrl: ScriptApp.getService().getUrl(),
     am: am,
     name: am.name,
     id: am.id,
@@ -435,24 +440,21 @@ function forumAddEntryNotification(type, data) {
   var user = getUser();
 
   // Do not send notification about owner entries
-  if (user.email === data.am.userId) {
+  if (user.email === data.userId) {
     return;
   }
 
-  sendTo.push(data.am.userId);
+  sendTo.push(data.userId);
 
   var appUrl = ScriptApp.getService().getUrl();
 
-  var link = appUrl + "#/forum/" + data.am.id + "/question/";
-  if (data.qId) {
-    link += data.qId;
-  }
+  var link = appUrl + "#/f/" + data.forumId + "/q/" + data.qId;
   if (data.sId) {
-    link += data.sId;
+    link += '/' + data.sId;
   }
 
   var email = {};
-  email.topic = data.am.name + Utilities.formatString("Forum %s - %s", data.am.name, entryType);
+  email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
   email.text = Utilities.formatString("Link do forum: <a href='%s'>link</a><br>", link);
 
   if (sendTo.length) {

@@ -1,20 +1,20 @@
 <script>
   const routes = [{
-    path: '/forum/:forumId',
+    path: '/f/:forumId',
     component: compForum,
     props: true,
     children: [{
-        path: 'list',
+        path: '',
         component: compQuestions,
         props: true,
       },
       {
-        path: 'question/:questionId',
+        path: 'q/:questionId',
         component: compQuestion,
         props: true,
       },
       {
-        path: 'question/:questionId/:selectedId',
+        path: 'q/:questionId/:selectedId',
         component: compQuestion,
         props: true,
       },

@@ -161,7 +161,7 @@
     }
 }
 
-.edit-icon {
+.action-icon {
     color: #848d95;
     cursor: pointer;
 
@@ -170,7 +170,7 @@
     }
 }
 
-.edit-icon-disabled {
+.action-icon-disabled {
     color: #848d95;
     cursor: default;
 }
@@ -321,12 +321,6 @@
                 column-gap: 10px;
     
                 .forum-ans-row-left {
-                    display: grid;
-                    grid-auto-flow: row;
-                    grid-template-rows: 30px 30px 30px auto;
-                    justify-items: center;
-                    align-items: center;
-    
                     font-size: 1.61538462rem;
                     color: #6a737c;
     
@@ -342,6 +336,15 @@
     
                     .forum-ans-row-left-vote {
                         cursor: pointer;
+                        text-align: center;
+                        vertical-align: middle;
+                        line-height: normal;
+                    }
+
+                    .forum-ans-row-left-vote-value {
+                        text-align: center; 
+                        vertical-align: middle;
+                        line-height: normal;
                     }
     
                     .forum-ans-row-left-vote-disabled {
@@ -352,7 +355,10 @@
                     .forum-ans-row-left-bestAns {
                         color: #aebbc7;
                         cursor: pointer;
-    
+                        text-align: center;
+                        vertical-align: middle;
+                        line-height: normal;
+
                         &:hover {
                             color: green;
                         }
@@ -360,6 +366,10 @@
     
                     .forum-ans-row-left-bestAns-selected {
                         color: green;
+                        cursor: auto;
+                        text-align: center;
+                        vertical-align: middle;
+                        line-height: normal;
                     }
                 }
     
