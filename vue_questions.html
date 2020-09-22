@@ -4,7 +4,7 @@ var compQuestions = Vue.component('questions', {
   data() {
     return {
       sharedState: store.state,
-      editorOption: quillSettings,
+      quillSettings: quillSettings,
       newTopicFormVisible: false,
       questions: [],
       newTopicData: {
@@ -63,7 +63,7 @@ var compQuestions = Vue.component('questions', {
 
       this.sharedState.forum.views[q.id] += 1;
 
-      router.push(`/f/${this.sharedState.forum.id}/q/${q.id}`);
+      router.push(`/${this.sharedState.forum.id}/${q.id}`);
     },
     showAddNewTopic() {
       this.newTopicFormVisible = true;
@@ -127,7 +127,7 @@ var compQuestions = Vue.component('questions', {
           <div class="field">
             <label class="label">Question</label>
             <div class="control">
-              <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="editorOption">
+              <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="quillSettings">
               </quill-editor>
             </div>
           </div>
@@ -182,7 +182,7 @@ var compQuestions = Vue.component('questions', {
             <div class="forum-list-row-content">
               <div>{{ question.title }}</div>
               <div class="forum-ans-row-content-info">
-                <div class="forum-ans-row-content-info-left">Ostatnia zmiana:
+                <div class="forum-ans-row-content-info-left">Last change:
                   {{ sharedState.forum.lastChange[question.id] }}</div>
                 <div class="forum-ans-row-content-info-right">{{ question.time }} <span
                     class="user-name">{{ question.userName }}</span></div>

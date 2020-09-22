@@ -4,7 +4,7 @@ var compQuestion = Vue.component('question', {
     data() {
       return {
         sharedState: store.state,
-        editorOption: quillSettings,
+        quillSettings: quillSettings,
         newAnswerData: {
           text: ''
         },
@@ -59,7 +59,7 @@ var compQuestion = Vue.component('question', {
     methods: {
         showQuestions() {
           this.pageId = 'questions';
-          router.push(`/f/${this.sharedState.forum.id}`);
+          router.push(`/${this.sharedState.forum.id}`);
         },
         showAddNewComment(id) {
           if (this.addNewCommentParentId == id) {
@@ -237,7 +237,7 @@ var compQuestion = Vue.component('question', {
           return String(p1) + String(p2);
         },
         getItemLink(item){
-          return `${this.sharedState.forum.appUrl}#/f/${this.sharedState.forum.id}/q/${this.questionId}/${item.id}`;
+          return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}/${item.id}`;
         }
     },
     template:
@@ -254,7 +254,7 @@ var compQuestion = Vue.component('question', {
           <section class="modal-card-body">
             <div class="field">
               <div class="control" v-if="editItem">
-                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="editorOption"
+                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings"
                   v-if="editItem.type !== 'comment'"></quill-editor>
                 <input class="input" type="text" v-model="editItem.body" v-else>
               </div>
@@ -275,9 +275,14 @@ var compQuestion = Vue.component('question', {
     
       <div class="forum-page" if="sharedState.forum">
         <div class="container forum-ans" v-if="selectedQuestion">
-          <div class="field">
-            <div class="button is-info" @click="showQuestions">Back To Questions</div>
-          </div>
+          <nav class="level">
+            <nav class="level-level">
+              <div class="button is-info" @click="showQuestions">Back To Questions</div>
+            </nav>
+            <nav class="level-level">
+              <div class="button is-info" @click=""><i class="fas fa-eye"></i> {{ selectedQuestion.viewers.length }}</div>
+            </nav>
+          </nav>
           <div class="forum-ans-title">{{ selectedQuestion.title }}</div>
           <div class="forum-ans-list">
             <div class="forum-ans-row forum-ans-question">
@@ -398,7 +403,7 @@ var compQuestion = Vue.component('question', {
           </div>
           <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">Your Answer</div>
-            <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="editorOption">
+            <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings">
             </quill-editor>
             <div class="forum-ans-add">
               <div class="button is-info" :class="{'is-loading': saving}" @click="addAnswer" :disabled="saving">Post Your Answer</div>

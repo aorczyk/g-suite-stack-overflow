@@ -117,6 +117,10 @@ function getForum(forumId) {
                 get: JSON.parse,
                 set: JSON.stringify
               },
+              'Viewers': {
+                get: JSON.parse,
+                set: JSON.stringify
+              },
             }
           },
           'DocOpenLog': {
@@ -126,6 +130,9 @@ function getForum(forumId) {
             as: 'History',
             serializer: {
               'Vote': {
+                set: JSON.stringify
+              },
+              'Viewers': {
                 set: JSON.stringify
               },
             }
@@ -252,6 +259,7 @@ function getForumData(id) {
       userId: row['UserId'],
       bestAns: row['BestAns'],
       edited: row['ChangedTime'],
+      viewers: isArray(row['Viewers']) ? row['Viewers'] : [],
       userName: getUserNameFromEmail(row['UserId'])
     }
 
@@ -325,7 +333,8 @@ function forumAddEntry(type, data) {
     'Id': Utilities.getUuid(),
     'Czas': new Date(),
     'UserId': user.email,
-    'Vote': []
+    'Vote': [],
+    'Viewers': []
   };
 
   var entryType = '';
@@ -345,7 +354,7 @@ function forumAddEntry(type, data) {
   } else if (type == 'question') {
     row['Tytuł'] = data.title;
     row['Text'] = data.text;
-
+    row['Viewers'] = [user.email];
     entryType = 'nowe pytanie';
     questionId = row.Id;
   }
@@ -369,7 +378,8 @@ function forumAddEntry(type, data) {
     userName: getUserNameFromEmail(row['UserId']),
     vote: 0,
     votedBy: [],
-    edited: ''
+    edited: '',
+    viewers: row['Viewers']
   };
 
   for (var key in out){
@@ -435,20 +445,35 @@ function forumAddEntryNotification(type, data) {
     entryType = 'nowe pytanie';
   }
 
-  var sendTo = [];
 
   var user = getUser();
 
   // Do not send notification about owner entries
-  if (user.email === data.userId) {
-    return;
+  // if (user.email === data.userId) {
+  //   return;
+  // }
+
+  var am = getForum(data.forumId);
+  var question = am.sql.select({
+    table: 'Forum',
+    where: {
+      'Id': data.qId
+    }
+  })[0];
+
+  var viewers = question.get('Viewers');
+
+  if (!viewers.includes(user.email)){
+    viewers.push(user.email);
+    question.set({'Viewers': viewers});
   }
 
-  sendTo.push(data.userId);
+  // var sendTo = question.get('Viewers').filter(funciton(x){return x !== user.email});
+  // sendTo.push(data.userId);
 
   var appUrl = ScriptApp.getService().getUrl();
 
-  var link = appUrl + "#/f/" + data.forumId + "/q/" + data.qId;
+  var link = appUrl + "#/" + data.forumId + "/" + data.qId;
   if (data.sId) {
     link += '/' + data.sId;
   }
@@ -457,11 +482,11 @@ function forumAddEntryNotification(type, data) {
   email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
   email.text = Utilities.formatString("Link do forum: <a href='%s'>link</a><br>", link);
 
-  if (sendTo.length) {
-    sendEmail(email, sendTo);
+  if (viewers.length) {
+    sendEmail(email, viewers);
   }
 
-  return sendTo;
+  return viewers;
 }
 
 
