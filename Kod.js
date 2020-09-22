@@ -117,7 +117,7 @@ function getForum(forumId) {
                 get: JSON.parse,
                 set: JSON.stringify
               },
-              'Viewers': {
+              'watchers': {
                 get: JSON.parse,
                 set: JSON.stringify
               },
@@ -132,7 +132,7 @@ function getForum(forumId) {
               'Vote': {
                 set: JSON.stringify
               },
-              'Viewers': {
+              'watchers': {
                 set: JSON.stringify
               },
             }
@@ -259,7 +259,7 @@ function getForumData(id) {
       userId: row['UserId'],
       bestAns: row['BestAns'],
       edited: row['ChangedTime'],
-      viewers: isArray(row['Viewers']) ? row['Viewers'] : [],
+      watchers: isArray(row['watchers']) ? row['watchers'] : [],
       userName: getUserNameFromEmail(row['UserId'])
     }
 
@@ -334,7 +334,7 @@ function forumAddEntry(type, data) {
     'Czas': new Date(),
     'UserId': user.email,
     'Vote': [],
-    'Viewers': []
+    'watchers': []
   };
 
   var entryType = '';
@@ -354,7 +354,7 @@ function forumAddEntry(type, data) {
   } else if (type == 'question') {
     row['Tytuł'] = data.title;
     row['Text'] = data.text;
-    row['Viewers'] = [user.email];
+    row['watchers'] = [user.email];
     entryType = 'nowe pytanie';
     questionId = row.Id;
   }
@@ -379,7 +379,7 @@ function forumAddEntry(type, data) {
     vote: 0,
     votedBy: [],
     edited: '',
-    viewers: row['Viewers']
+    watchers: row['watchers']
   };
 
   for (var key in out){
@@ -461,14 +461,14 @@ function forumAddEntryNotification(type, data) {
     }
   })[0];
 
-  var viewers = question.get('Viewers');
+  var watchers = question.get('watchers');
 
-  if (!viewers.includes(user.email)){
-    viewers.push(user.email);
-    question.set({'Viewers': viewers});
+  if (!watchers.includes(user.email)){
+    watchers.push(user.email);
+    question.set({'watchers': watchers});
   }
 
-  // var sendTo = question.get('Viewers').filter(funciton(x){return x !== user.email});
+  // var sendTo = question.get('watchers').filter(funciton(x){return x !== user.email});
   // sendTo.push(data.userId);
 
   var appUrl = ScriptApp.getService().getUrl();
@@ -482,11 +482,11 @@ function forumAddEntryNotification(type, data) {
   email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
   email.text = Utilities.formatString("Link do forum: <a href='%s'>link</a><br>", link);
 
-  if (viewers.length) {
-    sendEmail(email, viewers);
+  if (watchers.length) {
+    sendEmail(email, watchers);
   }
 
-  return viewers;
+  return watchers;
 }
 
 
