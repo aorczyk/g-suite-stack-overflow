@@ -436,14 +436,18 @@
     display: grid;
     grid-template-columns: auto 50px;
 
-    .remove {
-        justify-self: center;
+    .watchers-dropdown-item-remove {
+        justify-self: end;
         cursor: pointer;
-        padding: 0 10px 0 10px;
         color: gray;
 
         &:hover {
             color: black;
         }
+    }
+
+    .watchers-dropdown-item-progress {
+        justify-self: end;
+        color: black;
     }
 }

@@ -480,7 +480,7 @@ function forumAddEntryNotification(type, data) {
 
   var email = {};
   email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
-  email.text = Utilities.formatString("Link do forum: <a href='%s'>link</a><br>", link);
+  email.text = Utilities.formatString("Link: <a href='%s'>link</a><br>", link);
 
   if (watchers.length) {
     sendEmail(email, watchers);
@@ -549,4 +549,49 @@ function editSave(item) {
   item.edited = now;
 
   return item;
+}
+
+
+function addWatchers(forumId, qId, newWatchers) {
+  var am = getForum(forumId);
+
+  var question = am.sql.select({
+    table: 'Forum',
+    where: {
+      'Id': qId,
+    }
+  })[0];
+
+  var watchers = question.get('watchers');
+
+  for (var n in newWatchers){
+    var email = newWatchers[n];
+    if (watchers.indexOf(email) == -1){
+      watchers.push(email);
+    }
+  }
+
+  question.set({'watchers': watchers});
+
+  return true;
+}
+
+function removeWatcher(forumId, qId, email) {
+  var am = getForum(forumId);
+
+  var question = am.sql.select({
+    table: 'Forum',
+    where: {
+      'Id': qId,
+    }
+  })[0];
+
+  var watchers = question.get('watchers');
+
+  var index = watchers.indexOf(email);
+  watchers.splice(index, 1);
+
+  question.set({'watchers': watchers});
+
+  return true;
 }

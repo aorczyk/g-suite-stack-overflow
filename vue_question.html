@@ -23,8 +23,11 @@ var compQuestion = Vue.component('question', {
         watchersVisible: false,
         addWatcherVisible: false,
         newWatcher: '',
-        addWatcherError: false
-
+        addWatcherError: false,
+        addWatcherProgress: false,
+        removeWatcherProgress: [],
+        startWatchingProgress: false,
+        stopWatchingProgress: false,
       }
     },
     created() {
@@ -57,11 +60,11 @@ var compQuestion = Vue.component('question', {
       },
       sortedAnswers() {
           var items = this.sharedState.forum.answers[this.selectedQuestion.id];
-          items.sort(function (a, b) {
-            var aKey = a.vote;
-            var bKey = b.vote;
-            return (aKey > bKey) ? -1 : (aKey < bKey) ? 1 : 0;
-          });
+          // items.sort(function (a, b) {
+          //   var aKey = a.vote;
+          //   var bKey = b.vote;
+          //   return (aKey > bKey) ? -1 : (aKey < bKey) ? 1 : 0;
+          // });
 
           return items;
         },
@@ -260,28 +263,121 @@ var compQuestion = Vue.component('question', {
         openAddWatcher() {
           this.newWatcher = '';
           this.addWatcherVisible = true;
+          this.addWatcherError = false;
         },
-        addWatcher() {
-          if (validateEmail(this.newWatcher)){
-            this.selectedQuestion.watchers.push(this.newWatcher);
-            console.log(this.newWatcher);
+        addWatcher(emails, onAfter, onError) {
+          emails = emails.split(',');
+
+          var emailsFailed = [];
+          var emailsNew = [];
+
+          for (var email of emails){
+            if (validateEmail(email)){
+              if (!this.selectedQuestion.watchers.includes(email)){
+                emailsNew.push(email);
+                console.log(email);
+              }
+            }
+            else {
+              this.addWatcherError = true;
+              emailsFailed.push(email);
+            }
+          }
+
+          if (!this.addWatcherError){
             this.newWatcher = '';
-            this.addWatcherVisible = false;
             this.addWatcherError = false;
           }
           else {
-            this.addWatcherError = true;
+            this.newWatcher = emailsFailed.join(',');
+          }
+
+          if (emailsNew.length){
+            this.addWatcherProgress = true;
+
+            google.script.run.withSuccessHandler(() => {
+              this.addWatcherProgress = false;
+
+              if (!this.addWatcherError){
+                this.addWatcherVisible = false;
+              }
+
+              for (let email of emailsNew){
+                this.selectedQuestion.watchers.push(email);
+              }
+
+              if (onAfter){
+                onAfter();
+              }
+            })
+            .withFailureHandler((e) => {
+              this.addWatcherProgress = false;
+              this.addWatcherVisible = false;
+
+              if (!this.addWatcherError){
+                this.addWatcherVisible = false;
+              }
+
+              if (onError){
+                onError();
+              }
+
+              console.log('error');
+              console.log(e);
+            }).addWatchers(this.selectedQuestion.forumId, this.selectedQuestion.id, emailsNew);
           }
         },
-        removeWatcher(email) {
+        removeWatcher(email, onAfter, onError) {
           var index = this.selectedQuestion.watchers.indexOf(email);
-          this.selectedQuestion.watchers.splice(index,1);
+          this.removeWatcherProgress.push(email);
+
+          var i = this.removeWatcherProgress.indexOf(email);
+
+          google.script.run.withSuccessHandler(() => {
+            this.selectedQuestion.watchers.splice(index,1);
+            this.removeWatcherProgress.splice(i, 1);
+
+            if (onAfter){
+              onAfter();
+            }
+          })
+          .withFailureHandler((e) => {
+            this.removeWatcherProgress.splice(i, 1);
+
+            if (onError){
+              onError();
+            }
+
+            console.log('error');
+            console.log(e);
+          }).removeWatcher(this.selectedQuestion.forumId, this.selectedQuestion.id, email);
         },
         stopWatching() {
-          this.removeWatcher(this.sharedState.user.email);
+          if (this.stopWatchingProgress){
+            return;
+          }
+
+          this.stopWatchingProgress = true;
+
+          var onAfter = () => {
+            this.stopWatchingProgress = false;
+          }
+
+          this.removeWatcher(this.sharedState.user.email, onAfter, onAfter);
         },
         startWatching() {
-          this.selectedQuestion.watchers.push(this.sharedState.user.email);
+          if (this.startWatchingProgress){
+            return;
+          }
+
+          this.startWatchingProgress = true;
+
+          var onAfter = () => {
+            this.startWatchingProgress = false;
+            // this.selectedQuestion.watchers.push(this.sharedState.user.email);
+          }
+
+          this.addWatcher(this.sharedState.user.email, onAfter, onAfter)
         }
     },
     template:
@@ -307,53 +403,58 @@ var compQuestion = Vue.component('question', {
           <footer class="modal-card-foot">
             <div class="field is-grouped">
               <div class="control">
-                <button class="button is-info" :class="{'is-loading': saving}" @click="editSave">Save</button>
+                <button class="button is-info" :class="{'is-loading': saving}" @click.stop="editSave">Save</button>
               </div>
               <div class="control">
-                <button class="button" @click="editClose" :disabled="saving">Cancel</button>
+                <button class="button" @click.stop="editClose" :disabled="saving">Cancel</button>
               </div>
             </div>
           </footer>
         </div>
       </div>
     
-      <div class="forum-page" if="sharedState.forum">
+      <div class="forum-page" v-if="sharedState.forum">
         <div class="container forum-ans" v-if="selectedQuestion">
           <nav class="level">
             <nav class="level-level">
-              <div class="button is-info" @click="showQuestions">Back To Questions</div>
+              <div class="button is-info" @click.stop="showQuestions">Back To Questions</div>
             </nav>
             <nav class="level-level">
               <div class="dropdown is-right" :class="{'is-active': watchersVisible}">
                 <div class="dropdown-trigger">
-                  <button class="button" :class="{'is-info': selectedQuestion.watchers.includes(sharedState.user.email)}" aria-haspopup="true" aria-controls="dropdown-menu" @click="toggleWatchers">
+                  <button class="button" :class="{'is-info': selectedQuestion.watchers.includes(sharedState.user.email)}" aria-haspopup="true" aria-controls="dropdown-menu" @click.stop="toggleWatchers">
                     <span><i class="fas fa-eye"></i> {{ selectedQuestion.watchers.length }}</span>
                   </button>
                 </div>
                 <div class="dropdown-menu" id="dropdown-menu" role="menu">
                   <div class="dropdown-content">
-                    <a href="#" class="dropdown-item" @click="startWatching" v-if="!selectedQuestion.watchers.includes(sharedState.user.email)">
-                      Start watching
+                    <a href="#" class="dropdown-item" @click.stop="startWatching" v-if="!selectedQuestion.watchers.includes(sharedState.user.email)">
+                      Start watching <span v-if="startWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
                     </a>
-                    <a href="#" class="dropdown-item" @click="stopWatching" v-else>
-                      Stop watching
+                    <a href="#" class="dropdown-item" @click.stop="stopWatching" v-else>
+                      Stop watching <span v-if="stopWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
                     </a>
                     <hr class="dropdown-divider" v-if="selectedQuestion.watchers.length">
                     <div class="dropdown-item watchers-dropdown-item" v-for="email in selectedQuestion.watchers">
                       <div>{{ email }}</div>
-                      <div class="remove" @click="removeWatcher(email)"><i class="fas fa-times"></i></div>
+                      <div class="watchers-dropdown-item-progress" v-if="removeWatcherProgress.includes(email)">
+                        <span><i class="fas fa-spinner fa-pulse"></i></span>
+                      </div>
+                      <div class="watchers-dropdown-item-remove" @click.stop="removeWatcher(email)" v-else>
+                        <span><i class="fas fa-times"></i></span>
+                      </div>
                     </div>
                     <hr class="dropdown-divider">
-                    <a href="#" class="dropdown-item" @click="openAddWatcher" v-if="!addWatcherVisible">
+                    <a href="#" class="dropdown-item" @click.stop="openAddWatcher" v-if="!addWatcherVisible">
                       <i class="fas fa-plus"></i> Add watcher
                     </a>
                     <div class="dropdown-item" v-if="addWatcherVisible">
                       <div class="field is-grouped">
                         <p class="control is-expanded">
-                          <input class="input" :class="{'is-danger': addWatcherError}" type="text" placeholder="Enter email" v-model="newWatcher">
+                          <input class="input" :class="{'is-danger': addWatcherError}" type="text" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress">
                         </p>
                         <p class="control">
-                          <a class="button is-info" @click="addWatcher">
+                          <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)">
                             <i class="fas fa-plus"></i>
                           </a>
                         </p>
@@ -368,14 +469,14 @@ var compQuestion = Vue.component('question', {
           <div class="forum-ans-list">
             <div class="forum-ans-row forum-ans-question">
               <div class="forum-ans-row-left">
-                <div class="forum-ans-row-left-vote" @click="vote(selectedQuestion, 1)"
+                <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, 1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
                   <i class="fas fa-caret-up" title="Pytanie jest przydatne"></i>
                 </div>
                 <div class="forum-ans-row-left-vote-value">
                   {{ selectedQuestion.vote }}
                 </div>
-                <div class="forum-ans-row-left-vote" @click="vote(selectedQuestion, -1)"
+                <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, -1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
                   <i class="fas fa-caret-down" title="Pytanie nie jest przydatne"></i>
                 </div>
@@ -395,7 +496,7 @@ var compQuestion = Vue.component('question', {
                     </div>
                   </div>
                   <div>
-                    <span class="forum-ans-comments-add" @click="showAddNewComment(selectedQuestion.id)"
+                    <span class="forum-ans-comments-add" @click.stop="showAddNewComment(selectedQuestion.id)"
                       v-if="!sharedState.forum.am.isClosed">add a comment</span>
                   </div>
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == selectedQuestion.id">
@@ -406,11 +507,11 @@ var compQuestion = Vue.component('question', {
                     </div>
                     <div class="field is-grouped">
                       <div class="control">
-                        <button class="button is-info" :class="{'is-loading': saving}" @click="addComment"
+                        <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
                           :disabled="saving">Save</button>
                       </div>
                       <div class="control">
-                        <button class="button" @click="cancelAddNewComment" :disabled="saving">Cancel</button>
+                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">Cancel</button>
                       </div>
                     </div>
                   </div>
@@ -423,7 +524,7 @@ var compQuestion = Vue.component('question', {
             <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId}"
               v-for="ans in sortedAnswers">
               <div class="forum-ans-row-left">
-                <div class="forum-ans-row-left-vote" @click="vote(ans, 1)"
+                <div class="forum-ans-row-left-vote" @click.stop="vote(ans, 1)"
                 :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
                   <i class="fas fa-caret-up"
                   title="Odpowiedź jest przydatna"></i>
@@ -431,12 +532,12 @@ var compQuestion = Vue.component('question', {
                 <div class="forum-ans-row-left-vote-value">
                   {{ ans.vote }}
                 </div>
-                <div class="forum-ans-row-left-vote" @click="vote(ans, -1)"
+                <div class="forum-ans-row-left-vote" @click.stop="vote(ans, -1)"
                 :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
                   <i class="fas fa-caret-down"
                   title="Odpowiedź nie jest przydatna"></i>
                 </div>
-                <div class="forum-ans-row-left-bestAns" v-if="!sharedState.forum.bestAns[selectedQuestion.id] && sharedState.user.email == selectedQuestion.userId" @click="bestAns(ans)">
+                <div class="forum-ans-row-left-bestAns" v-if="!sharedState.forum.bestAns[selectedQuestion.id] && sharedState.user.email == selectedQuestion.userId" @click.stop="bestAns(ans)">
                   <i class="fas fa-check"></i>
                 </div>
                 <div class="forum-ans-row-left-bestAns-selected" v-if="sharedState.forum.bestAns[selectedQuestion.id] && sharedState.forum.bestAns[selectedQuestion.id] == ans.id">
@@ -460,7 +561,7 @@ var compQuestion = Vue.component('question', {
                     </div>
                   </div>
                   <div>
-                    <span class="forum-ans-comments-add" @click="showAddNewComment(ans.id)" v-if="!sharedState.forum.am.isClosed">add a comment</span>
+                    <span class="forum-ans-comments-add" @click.stop="showAddNewComment(ans.id)" v-if="!sharedState.forum.am.isClosed">add a comment</span>
                   </div>
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == ans.id">
                     <div class="field">
@@ -470,11 +571,11 @@ var compQuestion = Vue.component('question', {
                     </div>
                     <div class="field is-grouped">
                       <div class="control">
-                        <button class="button is-info" :class="{'is-loading': saving}" @click="addComment"
+                        <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
                           :disabled="saving">Save</button>
                       </div>
                       <div class="control">
-                        <button class="button" @click="cancelAddNewComment" :disabled="saving">Cancel</button>
+                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">Cancel</button>
                       </div>
                     </div>
                   </div>
@@ -487,7 +588,7 @@ var compQuestion = Vue.component('question', {
             <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings">
             </quill-editor>
             <div class="forum-ans-add">
-              <div class="button is-info" :class="{'is-loading': saving}" @click="addAnswer" :disabled="saving">Post Your Answer</div>
+              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving">Post Your Answer</div>
             </div>
           </div>
         </div>
