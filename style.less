@@ -379,9 +379,20 @@
     
                     .forum-ans-row-content-info {
                         font-size: 13px;
-                        justify-self: end;
+                        
                         align-self: center;
-                        padding: 0px 10px;
+                        display: grid;
+                        grid-auto-flow: column;
+                        grid-template-columns: 1fr 1fr;
+
+                        .forum-ans-row-content-info-left {
+                            justify-self: start;
+                        }
+
+                        .forum-ans-row-content-info-right {
+                            justify-self: end;
+                            padding: 0px 10px;
+                        }
                     }
     
                     ol {

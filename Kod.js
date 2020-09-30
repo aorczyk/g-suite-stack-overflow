@@ -58,24 +58,7 @@ function handleResponse(request) {
   return response;
 }
 
-function getForum(forumId) {
-  // Example data:
-
-  //  var forumsById = {
-  //    '123': {
-  //      userId: 'adam.orczyk@gmail.com', // is user email
-  //      name: 'Test',
-  //      forumDataId: '12r0I-MqSmY1OB4zkB1LcqJVQb_ltbEjamYDmyT-x6W8',
-  //      forumDataUrl: 'https://docs.google.com/spreadsheets/d/12r0I-MqSmY1OB4zkB1LcqJVQb_ltbEjamYDmyT-x6W8/edit#gid=0'
-  //    }
-  //  };
-  //  DocumentApp.openByUrl(APP_CONFIG.settingsUrl).getBody().setText(JSON.stringify(forumsById));
-  //  return;
- 
-//  var settingsJSON = DocumentApp.openByUrl(APP_CONFIG.settingsUrl).getBody().getText();
-//  var forumsById = JSON.parse(settingsJSON);
-//  var forum = forumsById[forumId];
-  
+function getForum(forumId) { 
   var forumsSql = new SqlAbstract({
       spreadsheets: [{
         url: APP_CONFIG.settingsUrl,
@@ -89,16 +72,15 @@ function getForum(forumId) {
 
   var forum = forumsSql.select({
     table: 'Forums',
-    where: {name: forumId}
+    where: {id: forumId}
   })[0].get();
 
   if (forum) {
     forum.sql = {};
-    forum.id = forumId;
 
     forum.sql = new SqlAbstract({
       spreadsheets: [{
-        url: forum.forumDataUrl,
+        url: forum.forum_data_url,
         tables: {
           'Forum': {
             as: 'Forum',
@@ -152,7 +134,7 @@ function onClickLog(forumId, type, source) {
   var am = getForum(forumId);
 
   var row = {
-    'ForumId': forumId,
+    'forum_id': forumId,
     'Time': new Date(),
     'UserId': user.email,
     'Action': type,
@@ -215,13 +197,19 @@ function getForumData(id) {
     bestAns: {},
     lastChange: {},
     forumLastChange: '-',
-    views: {}
+    views: {},
+    isClosed: false
   };
+
+  if (am.is_closed){
+    out.isClosed = true;
+    return out;
+  }
 
   var forumData = am.sql.select({
     table: 'Forum',
     where: {
-      'ForumId': id
+      'forum_id': id
     }
   });
 
@@ -297,7 +285,7 @@ function getForumData(id) {
   var viewsData = am.sql.select({
     table: 'Log',
     where: {
-      'ForumId': id,
+      'forum_id': id,
       'Action': 'forum'
     },
     groupBy: ['Source']
@@ -328,7 +316,7 @@ function forumAddEntry(type, data) {
   var am = getForum(data.forumId);
 
   var row = {
-    'ForumId': data.forumId,
+    'forum_id': data.forumId,
     'Type': type,
     'Id': Utilities.getUuid(),
     'Czas': new Date(),
@@ -468,21 +456,27 @@ function forumAddEntryNotification(type, data) {
     question.set({'watchers': watchers});
   }
 
+  // Send to question owner
+  var questionUserId = question.get('UserId');
+
+  if (!watchers.includes(questionUserId)){
+    watchers.push(questionUserId);
+  }
   // var sendTo = question.get('watchers').filter(funciton(x){return x !== user.email});
   // sendTo.push(data.userId);
 
-  var appUrl = ScriptApp.getService().getUrl();
-
-  var link = appUrl + "#/" + data.forumId + "/" + data.qId;
-  if (data.sId) {
-    link += '/' + data.sId;
-  }
-
-  var email = {};
-  email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
-  email.text = Utilities.formatString("Link: <a href='%s'>link</a><br>", link);
-
   if (watchers.length) {
+    var appUrl = ScriptApp.getService().getUrl();
+
+    var link = appUrl + "#/" + data.forumId + "/" + data.qId;
+    if (data.sId) {
+      link += '/' + data.sId;
+    }
+  
+    var email = {};
+    email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
+    email.text = Utilities.formatString("Link: <a href='%s'>link</a><br>", link);
+
     sendEmail(email, watchers);
   }
 

@@ -313,8 +313,16 @@
 }
 .forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-content .forum-ans-row-content-info {
   font-size: 13px;
-  justify-self: end;
   align-self: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: 1fr 1fr;
+}
+.forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-content .forum-ans-row-content-info .forum-ans-row-content-info-left {
+  justify-self: start;
+}
+.forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-content .forum-ans-row-content-info .forum-ans-row-content-info-right {
+  justify-self: end;
   padding: 0px 10px;
 }
 .forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-content ol {

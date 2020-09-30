@@ -484,15 +484,22 @@ var compQuestion = Vue.component('question', {
               <div class="forum-ans-row-content">
                 <div v-html="selectedQuestion.body"></div>
                 <div class="forum-ans-row-content-info">
-                  <edit-icon :item="selectedQuestion" @edit="editOpen"></edit-icon>
+                  <div class="forum-ans-row-content-info-left">
+                    <edit :item="selectedQuestion" @edit="editOpen"></edit>
+                  </div>
+                  <div class="forum-ans-row-content-info-right">
+                    <span class="user-name"> {{ selectedQuestion.userName }}</span>
+                    <span> {{ selectedQuestion.time }}</span>
+                  </div>
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
                     <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId}"
                       v-for="comment in sharedState.forum.comments[selectedQuestion.id]">
                       <span></span>{{ comment.body }} - </span>
-                      <edit-icon :item="comment" @edit="editOpen"></edit-icon>
-                      <a class="action-icon" :href="getItemLink(comment)" target="blank"><i class="fas fa-external-link-alt"></i></a>
+                      <span class="user-name"> {{ comment.userName }}</span>
+                      <span> {{ comment.time }}</span>
+                      <edit :item="comment" type="icon" @edit="editOpen"></edit>
                     </div>
                   </div>
                   <div>
@@ -547,8 +554,14 @@ var compQuestion = Vue.component('question', {
               <div class="forum-ans-row-content">
                 <div v-html="ans.body"></div>
                 <div class="forum-ans-row-content-info">
-                  <edit-icon :item="ans" @edit="editOpen"></edit-icon>
-                  <a class="action-icon" :href="getItemLink(ans)" target="blank"><i class="fas fa-external-link-alt"></i></a>
+                  <div class="forum-ans-row-content-info-left">
+                    <edit :item="ans" @edit="editOpen"></edit>
+                  </div>
+                  <div class="forum-ans-row-content-info-right">
+                    <span class="user-name"> {{ ans.userName }}</span>
+                    <span> {{ ans.time }}</span>
+                    <a class="action-icon" :href="getItemLink(ans)" target="blank"><i class="fas fa-external-link-alt"></i></a>
+                  </div>
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
@@ -556,8 +569,9 @@ var compQuestion = Vue.component('question', {
                       :class="{'forum-selected-item': comment.id == selectedId}"
                       v-for="comment in sharedState.forum.comments[ans.id]">
                       <span></span>{{ comment.body }} - </span>
-                      <edit-icon :item="comment" @edit="editOpen"></edit-icon>
-                      <a class="action-icon" :href="getItemLink(comment)" target="blank"><i class="fas fa-external-link-alt"></i></a>
+                      <span class="user-name"> {{ comment.userName }}</span>
+                      <span> {{ comment.time }}</span>
+                      <edit :item="comment" type="icon" @edit="editOpen"></edit>
                     </div>
                   </div>
                   <div>
