@@ -228,7 +228,7 @@ var compQuestion = Vue.component('question', {
         editSave() {
           var self = this;
           this.saving = true;
-          console.log(this.editItem);
+
           google.script.run.withSuccessHandler(function (item) {
               Vue.set(self.editItem, 'edited', item.edited);
               Vue.set(self.editItem, 'status', item.status);
@@ -238,6 +238,22 @@ var compQuestion = Vue.component('question', {
               self.editItem = null;
               self.editItemTmp = null;
               self.saving = false;
+
+              var notificationData = {
+                forumId: self.sharedState.forum.id,
+                forumName: self.sharedState.forum.name,
+                userId: item.userId,
+                qId: item.id,
+              };
+
+              google.script.run
+              .withSuccessHandler((watchers)=>{
+                Vue.set(item, 'watchers', watchers);
+              }).withFailureHandler(function (e) {
+                console.log('error');
+                console.log(e.message);
+              }).forumAddEntryNotification('question_edit', notificationData)
+              
             })
             .withFailureHandler(function (e) {
               console.log('error');
@@ -482,7 +498,7 @@ var compQuestion = Vue.component('question', {
                 </div>
               </div>
               <div class="forum-ans-row-content">
-                <div v-html="selectedQuestion.body"></div>
+                <div v-html="selectedQuestion.body" :class="{'forum-selected-item': selectedQuestion.id == selectedId}"></div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="selectedQuestion" @edit="editOpen"></edit>

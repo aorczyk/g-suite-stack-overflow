@@ -65,6 +65,12 @@ function getForum(forumId) {
         tables: {
           'Forums': {
             as: 'Forums',
+            serializer: {
+              'moderators': {
+                get: JSON.parse,
+                set: JSON.stringify
+              },
+            }
           }
         }
       }]
@@ -85,17 +91,17 @@ function getForum(forumId) {
           'Forum': {
             as: 'Forum',
             serializer: {
-              'Czas': {
+              'time': {
                 get: function (x) {
                   return Utilities.formatDate(x, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
                 }
               },
-              'ChangedTime': {
+              'changed_time': {
                 get: function (x) {
                   return x ? Utilities.formatDate(x, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss") : ''
                 }
               },
-              'Vote': {
+              'vote': {
                 get: JSON.parse,
                 set: JSON.stringify
               },
@@ -111,7 +117,7 @@ function getForum(forumId) {
           'History': {
             as: 'History',
             serializer: {
-              'Vote': {
+              'vote': {
                 set: JSON.stringify
               },
               'watchers': {
@@ -135,10 +141,10 @@ function onClickLog(forumId, type, source) {
 
   var row = {
     'forum_id': forumId,
-    'Time': new Date(),
-    'UserId': user.email,
-    'Action': type,
-    'Source': source
+    'time': new Date(),
+    'user_id': user.email,
+    'action': type,
+    'source': source
   };
 
   am.sql.insert({
@@ -216,13 +222,13 @@ function getForumData(id) {
   for (var n in forumData) {
     var row = forumData[n].get();
 
-    if (row['Status']) {
+    if (row['status']) {
       continue;
     }
 
-    var type = row['Type'];
+    var type = row['type'];
 
-    var votes = row['Vote'];
+    var votes = row['vote'];
     var votedBy = [];
     var voteValue = 0;
 
@@ -235,20 +241,20 @@ function getForumData(id) {
     var rowData = {
       forumId: id,
       type: type,
-      id: row['Id'],
-      qId: row['QuestionId'],
-      ansId: row['AnswerId'],
-      title: row['Tytuł'],
-      body: row['Text'],
-      status: row['Status'],
-      time: row['Czas'],
+      id: row['id'],
+      qId: row['question_id'],
+      ansId: row['answer_id'],
+      title: row['title'],
+      body: row['body'],
+      status: row['status'],
+      time: row['time'],
       vote: voteValue,
       votedBy: votedBy,
-      userId: row['UserId'],
-      bestAns: row['BestAns'],
-      edited: row['ChangedTime'],
+      userId: row['user_id'],
+      bestAns: row['best_ans'],
+      edited: row['changed_time'],
       watchers: isArray(row['watchers']) ? row['watchers'] : [],
-      userName: getUserNameFromEmail(row['UserId'])
+      userName: getUserNameFromEmail(row['user_id'])
     }
 
     out.forumLastChange = rowData.time;
@@ -286,9 +292,9 @@ function getForumData(id) {
     table: 'Log',
     where: {
       'forum_id': id,
-      'Action': 'forum'
+      'action': 'forum'
     },
-    groupBy: ['Source']
+    groupBy: ['source']
   });
 
   for (var qId in viewsData) {
@@ -317,11 +323,11 @@ function forumAddEntry(type, data) {
 
   var row = {
     'forum_id': data.forumId,
-    'Type': type,
-    'Id': Utilities.getUuid(),
-    'Czas': new Date(),
-    'UserId': user.email,
-    'Vote': [],
+    'type': type,
+    'id': Utilities.getUuid(),
+    'time': new Date(),
+    'user_id': user.email,
+    'vote': [],
     'watchers': []
   };
 
@@ -329,46 +335,46 @@ function forumAddEntry(type, data) {
   var questionId = data.qId;
 
   if (type == 'comment') {
-    row['QuestionId'] = data.qId;
-    row['AnswerId'] = data.aId;
-    row['Text'] = data.text;
+    row['question_id'] = data.qId;
+    row['answer_id'] = data.aId;
+    row['body'] = data.text;
 
     entryType = 'nowy komentarz';
   } else if (type == 'answer') {
-    row['QuestionId'] = data.qId;
-    row['Text'] = data.text;
+    row['question_id'] = data.qId;
+    row['body'] = data.text;
 
     entryType = 'nowa odpowiedź';
   } else if (type == 'question') {
-    row['Tytuł'] = data.title;
-    row['Text'] = data.text;
-    row['watchers'] = [user.email];
+    row['title'] = data.title;
+    row['body'] = data.text;
+    row['watchers'].push(user.email);
     entryType = 'nowe pytanie';
-    questionId = row.Id;
+    questionId = row.id;
   }
-
-  am.sql.insert({
-    table: 'Forum',
-    values: row
-  });
 
   var out = {
     forumId: data.forumId,
     type: type,
-    id: row['Id'],
-    qId: row['QuestionId'],
-    ansId: row['AnswerId'],
-    title: row['Tytuł'],
-    body: row['Text'],
-    status: row['Status'],
-    time: Utilities.formatDate(row['Czas'], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
-    userId: row['UserId'],
-    userName: getUserNameFromEmail(row['UserId']),
+    id: row['id'],
+    qId: row['question_id'],
+    ansId: row['answer_id'],
+    title: row['title'],
+    body: row['body'],
+    status: row['status'],
+    time: Utilities.formatDate(row['time'], Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss"),
+    userId: row['user_id'],
+    userName: getUserNameFromEmail(row['user_id']),
     vote: 0,
     votedBy: [],
     edited: '',
     watchers: row['watchers']
   };
+
+  am.sql.insert({
+    table: 'Forum',
+    values: row
+  });
 
   for (var key in out){
     if (out[key] === undefined){
@@ -387,11 +393,11 @@ function forumVote(forumId, id, value) {
   var row = am.sql.select({
     table: 'Forum',
     where: {
-      'Id': id
+      'id': id
     }
   })[0];
 
-  var votes = row.get('Vote');
+  var votes = row.get('vote');
 
   votes.push({
     time: new Date(),
@@ -400,7 +406,7 @@ function forumVote(forumId, id, value) {
   });
 
   row.set({
-    'Vote': votes
+    'vote': votes
   });
 }
 
@@ -412,12 +418,12 @@ function forumBestAns(forumId, id) {
   var row = am.sql.select({
     table: 'Forum',
     where: {
-      'Id': id
+      'id': id
     }
   })[0];
 
   row.set({
-    'BestAns': true
+    'best_ans': true
   });
 }
 
@@ -431,37 +437,49 @@ function forumAddEntryNotification(type, data) {
     entryType = 'nowa odpowiedź';
   } else if (type == 'question') {
     entryType = 'nowe pytanie';
+  } else if (type == 'question_edit') {
+    entryType = 'edycja pytania';
   }
-
-
-  var user = getUser();
-
-  // Do not send notification about owner entries
-  // if (user.email === data.userId) {
-  //   return;
-  // }
 
   var am = getForum(data.forumId);
-  var question = am.sql.select({
-    table: 'Forum',
-    where: {
-      'Id': data.qId
-    }
-  })[0];
 
-  var watchers = question.get('watchers');
+  var watchers = [];
 
-  if (!watchers.includes(user.email)){
-    watchers.push(user.email);
-    question.set({'watchers': watchers});
+  if (type == 'question'){
+    watchers = am.moderators;
   }
+  else {
+    var user = getUser();
+
+    // Do not send notification about owner entries
+    if (user.email === data.userId) {
+      return;
+    }
+
+    var question = am.sql.select({
+      table: 'Forum',
+      where: {
+        'id': data.qId
+      }
+    })[0];
+  
+    var watchers = question.get('watchers');
+  
+    if (!watchers.includes(user.email)){
+      watchers.push(user.email);
+      question.set({'watchers': watchers});
+    }
+  }
+
+
 
   // Send to question owner
-  var questionUserId = question.get('UserId');
+  // var questionUserId = question.get('user_id');
 
-  if (!watchers.includes(questionUserId)){
-    watchers.push(questionUserId);
-  }
+  // if (!watchers.includes(questionUserId)){
+  //   watchers.push(questionUserId);
+  // }
+
   // var sendTo = question.get('watchers').filter(funciton(x){return x !== user.email});
   // sendTo.push(data.userId);
 
@@ -472,7 +490,10 @@ function forumAddEntryNotification(type, data) {
     if (data.sId) {
       link += '/' + data.sId;
     }
-  
+    if (type == 'question_edit') {
+      link += '/' + data.qId;
+    }
+
     var email = {};
     email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
     email.text = Utilities.formatString("Link: <a href='%s'>link</a><br>", link);
@@ -522,7 +543,7 @@ function editSave(item) {
   var itemRow = am.sql.select({
     table: 'Forum',
     where: {
-      'Id': item.id,
+      'id': item.id,
     }
   })[0];
 
@@ -534,10 +555,10 @@ function editSave(item) {
   // --
 
   itemRow.set({
-    'Text': item.body,
-    'Status': item.status,
-    'ChangedTime': new Date(),
-    'ChangedBy': user.email,
+    'body': item.body,
+    'status': item.status,
+    'changed_time': new Date(),
+    'changed_by': user.email,
   });
 
   item.edited = now;
@@ -552,7 +573,7 @@ function addWatchers(forumId, qId, newWatchers) {
   var question = am.sql.select({
     table: 'Forum',
     where: {
-      'Id': qId,
+      'id': qId,
     }
   })[0];
 
@@ -576,7 +597,7 @@ function removeWatcher(forumId, qId, email) {
   var question = am.sql.select({
     table: 'Forum',
     where: {
-      'Id': qId,
+      'id': qId,
     }
   })[0];
 
