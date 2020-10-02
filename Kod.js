@@ -429,59 +429,49 @@ function forumBestAns(forumId, id) {
 
 // Sending email after new entry
 function forumAddEntryNotification(type, data) {
-  var entryType = '';
+  var actionName = '';
 
   if (type == 'comment') {
-    entryType = 'nowy komentarz';
+    actionName = 'New comment';
   } else if (type == 'answer') {
-    entryType = 'nowa odpowiedź';
+    actionName = 'New answer';
   } else if (type == 'question') {
-    entryType = 'nowe pytanie';
-  } else if (type == 'question_edit') {
-    entryType = 'edycja pytania';
+    actionName = 'New question';
+  } else if (type == 'edit') {
+    actionName = 'Editted ' + data.type;
   }
 
   var am = getForum(data.forumId);
 
   var watchers = [];
 
-  if (type == 'question'){
-    watchers = am.moderators;
-  }
-  else {
-    var user = getUser();
+  watchers = watchers.concat(am.moderators);
 
-    // Do not send notification about owner entries
-    if (user.email === data.userId) {
-      return;
+  var question = am.sql.select({
+    table: 'Forum',
+    where: {
+      'id': data.qId
     }
+  })[0];
 
-    var question = am.sql.select({
-      table: 'Forum',
-      where: {
-        'id': data.qId
-      }
-    })[0];
-  
-    var watchers = question.get('watchers');
-  
-    if (!watchers.includes(user.email)){
-      watchers.push(user.email);
-      question.set({'watchers': watchers});
+  var qWatchers = question.get('watchers');
+  var qTitle = question.get('title');
+
+  for (var n in qWatchers){
+    var watcher = qWatchers[n];
+
+    if (!watchers.includes(watcher)){
+      watchers.push(watcher);
     }
   }
 
+  var user = getUser();
 
-
-  // Send to question owner
-  // var questionUserId = question.get('user_id');
-
-  // if (!watchers.includes(questionUserId)){
-  //   watchers.push(questionUserId);
-  // }
-
-  // var sendTo = question.get('watchers').filter(funciton(x){return x !== user.email});
-  // sendTo.push(data.userId);
+  // Do not send notification about current user changes
+  var index = watchers.indexOf(user.email);
+  if (index != -1){
+    watchers.splice(index, 1);
+  }
 
   if (watchers.length) {
     var appUrl = ScriptApp.getService().getUrl();
@@ -490,13 +480,13 @@ function forumAddEntryNotification(type, data) {
     if (data.sId) {
       link += '/' + data.sId;
     }
-    if (type == 'question_edit') {
+    if (type == 'edit' && data.type == 'question') {
       link += '/' + data.qId;
     }
 
     var email = {};
-    email.topic = Utilities.formatString("Forum %s - %s", data.forumName, entryType);
-    email.text = Utilities.formatString("Link: <a href='%s'>link</a><br>", link);
+    email.topic = Utilities.formatString("Forum %s - %s", data.forumName, actionName);
+    email.text = Utilities.formatString("New changes in topic: <b>%s</b><br>%s:<br><div style='background-color: #fffbec;'>%s</div><br>Show: <a href='%s'>link</a><br>", qTitle, actionName, data.body,link);
 
     sendEmail(email, watchers);
   }

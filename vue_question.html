@@ -123,13 +123,13 @@ var compQuestion = Vue.component('question', {
               forumName: self.sharedState.forum.name,
               userId: self.selectedQuestion.userId,
               qId: data.qId,
-              sId: data.id
+              sId: data.id,
+              body: self.newCommentData.text
             };
 
             google.script.run
-            .withSuccessHandler((watchers)=>{
-              Vue.set(self.selectedQuestion, 'watchers', watchers);
-            }).withFailureHandler(function (e) {
+            .withSuccessHandler()
+            .withFailureHandler(function (e) {
               console.log('error');
               console.log(e.message);
             })
@@ -143,10 +143,12 @@ var compQuestion = Vue.component('question', {
         addAnswer() {
           var self = this;
 
+          var text = this.newAnswerData.text;
+          
           var data = {
             forumId: this.sharedState.forum.id,
             qId: this.selectedQuestion.id,
-            text: this.newAnswerData.text
+            text: text
           };
 
           if (data.text === '') {
@@ -171,13 +173,13 @@ var compQuestion = Vue.component('question', {
               forumName: self.sharedState.forum.name,
               userId: self.selectedQuestion.userId,
               qId: data.qId,
-              sId: data.id
+              sId: data.id,
+              body: text
             };
 
             google.script.run
-            .withSuccessHandler((watchers)=>{
-              Vue.set(self.selectedQuestion, 'watchers', watchers);
-            }).withFailureHandler(function (e) {
+            .withSuccessHandler()
+            .withFailureHandler(function (e) {
               console.log('error');
               console.log(e.message);
             }).forumAddEntryNotification('answer', notificationData)
@@ -243,17 +245,17 @@ var compQuestion = Vue.component('question', {
                 forumId: self.sharedState.forum.id,
                 forumName: self.sharedState.forum.name,
                 userId: item.userId,
-                qId: item.id,
+                qId: item.qId,
+                type: item.type,
+                body: item.body
               };
 
               google.script.run
-              .withSuccessHandler((watchers)=>{
-                Vue.set(item, 'watchers', watchers);
-              }).withFailureHandler(function (e) {
+              .withSuccessHandler()
+              .withFailureHandler(function (e) {
                 console.log('error');
                 console.log(e.message);
-              }).forumAddEntryNotification('question_edit', notificationData)
-              
+              }).forumAddEntryNotification('edit', notificationData)
             })
             .withFailureHandler(function (e) {
               console.log('error');
