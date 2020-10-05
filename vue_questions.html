@@ -172,7 +172,7 @@ var compQuestions = Vue.component('questions', {
                 <div>głosów</div>
               </div>
               <div class="forum-list-row-summary"
-                :class="{'forum-list-row-summary-bestAns': sharedState.forum.bestAns[question.id]}">
+                :class="{'forum-list-row-summary-bestAns': question.bestAns}">
                 <div class="forum-list-row-summary-count">
                   <span>{{ sharedState.forum.answers[question.id] ? sharedState.forum.answers[question.id].length : 0 }}</span>
                 </div>

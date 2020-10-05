@@ -200,7 +200,6 @@ function getForumData(id) {
     questions: [],
     answers: {},
     comments: {},
-    bestAns: {},
     lastChange: {},
     forumLastChange: '-',
     views: {},
@@ -258,10 +257,6 @@ function getForumData(id) {
     }
 
     out.forumLastChange = rowData.time;
-
-    if (rowData.bestAns) {
-      out.bestAns[rowData.qId] = rowData.id;
-    }
 
     if (type == 'question') {
       out.lastChange[rowData.id] = rowData.time;
@@ -411,19 +406,18 @@ function forumVote(forumId, id, value) {
 }
 
 
-function forumBestAns(forumId, id) {
-  var user = getUser();
+function forumBestAns(forumId, qId, id) {
   var am = getForum(forumId);
 
   var row = am.sql.select({
     table: 'Forum',
     where: {
-      'id': id
+      'id': qId
     }
   })[0];
 
   row.set({
-    'best_ans': true
+    'best_ans': id
   });
 }
 

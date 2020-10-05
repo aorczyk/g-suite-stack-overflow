@@ -214,14 +214,13 @@ var compQuestion = Vue.component('question', {
           return true;
         },
         bestAns(item) {
-          Vue.set(this.sharedState.forum.bestAns, this.selectedQuestion.id, item.id);
-          // this.sharedState.forum.bestAns[this.selectedQuestion.id] = item.id;
+          this.selectedQuestion.bestAns = item.id;
 
           google.script.run.withSuccessHandler()
             .withFailureHandler(function (e) {
               console.log('error');
               console.log(e);
-            }).forumBestAns(this.sharedState.forum.id, item.id);
+            }).forumBestAns(this.sharedState.forum.id, this.selectedQuestion.id, item.id);
         },
         editOpen(item) {
           this.editItem = item;
@@ -498,6 +497,14 @@ var compQuestion = Vue.component('question', {
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
                   <i class="fas fa-caret-down" title="Pytanie nie jest przydatne"></i>
                 </div>
+                <div v-if="sharedState.user.email == selectedQuestion.userId">
+                  <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : selectedQuestion.bestAns == selectedQuestion.id}" @click.stop="bestAns(selectedQuestion)">
+                    <i class="fas fa-check"></i>
+                  </div>
+                </div>
+                <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == selectedQuestion.id">
+                  <i class="fas fa-check" title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i>
+                </div>
               </div>
               <div class="forum-ans-row-content">
                 <div v-html="selectedQuestion.body" :class="{'forum-selected-item': selectedQuestion.id == selectedId}"></div>
@@ -562,10 +569,12 @@ var compQuestion = Vue.component('question', {
                   <i class="fas fa-caret-down"
                   title="Odpowiedź nie jest przydatna"></i>
                 </div>
-                <div class="forum-ans-row-left-bestAns" v-if="!sharedState.forum.bestAns[selectedQuestion.id] && sharedState.user.email == selectedQuestion.userId" @click.stop="bestAns(ans)">
-                  <i class="fas fa-check"></i>
+                <div v-if="sharedState.user.email == selectedQuestion.userId">
+                  <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : selectedQuestion.bestAns == ans.id}" @click.stop="bestAns(ans)">
+                    <i class="fas fa-check"></i>
+                  </div>
                 </div>
-                <div class="forum-ans-row-left-bestAns-selected" v-if="sharedState.forum.bestAns[selectedQuestion.id] && sharedState.forum.bestAns[selectedQuestion.id] == ans.id">
+                <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == ans.id">
                   <i class="fas fa-check" title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i>
                 </div>
               </div>
