@@ -1,10 +1,3 @@
-var APP_CONFIG = {
-  appUrl: 'https://script.google.com/macros/s/AKfycby_IcuOQnHbUKIWTzrXIezfqMNrN48xnaLI9URn7ANZ/dev',
-//  settingsUrl: 'https://docs.google.com/document/d/1Qa_VekOfxVB8IcD3FTA60p6zrTtUlbEuFlrTQ9xDhUM/edit'
-  settingsUrl: 'https://docs.google.com/spreadsheets/d/18ltuthWnkN4lTBR3L_79S206Wn2oQ7yNhjOnn9uS6sk/edit#gid=0'
-};
-
-
 function doGet(e) {
   return handleResponse(e);
 }
@@ -44,16 +37,16 @@ function handleResponse(request) {
   
   var response = htmlTemplate.evaluate();
   
-  // if ('pageTitle' in am){
-  //   response.setTitle(am.pageTitle);
-  // }
-  // else {
-  //   response.setTitle('GAS Simple Stack Overflow');
-  // }
+  if ('pageTitle' in APP_CONFIG){
+    response.setTitle(APP_CONFIG.pageTitle);
+  }
+  else {
+    response.setTitle('G Suite Stack Overflow');
+  }
 
-  // if ('faviconUrl' in am){
-  //   response.setFaviconUrl(am.faviconUrl);
-  // }
+  if ('faviconUrl' in APP_CONFIG){
+    response.setFaviconUrl(APP_CONFIG.faviconUrl);
+  }
   
   return response;
 }
@@ -67,6 +60,10 @@ function getForum(forumId) {
             as: 'Forums',
             serializer: {
               'moderators': {
+                get: JSON.parse,
+                set: JSON.stringify
+              },
+              'users': {
                 get: JSON.parse,
                 set: JSON.stringify
               },
@@ -186,14 +183,27 @@ function jsUcfirst(string) {
 
 
 function getForumData(id) {
+  var user = getUser();
   var am = getForum(id);
 
   if (!am){
     return {}
   }
 
+  if (am.is_closed){
+    return {
+      isClosed: true
+    };
+  }
+
+  if (am.is_private && (!am.users || !am.users.includes(user.email))){
+    return {
+      accessDenied: true
+    };
+  }
+
   var out = {
-    appUrl: ScriptApp.getService().getUrl(),
+    appUrl: APP_CONFIG.appUrl,
     am: am,
     name: am.name,
     id: am.id,
@@ -203,13 +213,7 @@ function getForumData(id) {
     lastChange: {},
     forumLastChange: '-',
     views: {},
-    isClosed: false
   };
-
-  if (am.is_closed){
-    out.isClosed = true;
-    return out;
-  }
 
   var forumData = am.sql.select({
     table: 'Forum',
@@ -468,7 +472,7 @@ function forumAddEntryNotification(type, data) {
   }
 
   if (watchers.length) {
-    var appUrl = ScriptApp.getService().getUrl();
+    var appUrl = APP_CONFIG.appUrl;
 
     var link = appUrl + "#/" + data.forumId + "/" + data.qId;
     if (data.sId) {
@@ -492,14 +496,12 @@ function forumAddEntryNotification(type, data) {
 function sendEmail(email, sendTo) {
   var user = getUser();
 
-  var errors = 0;
-  var notSentTo = [];
-
   for (var n in sendTo) {
     var address = sendTo[n];
 
-    GmailApp.sendEmail(address, email.topic, '', {
-      replyTo: user.email,
+    GmailApp.sendEmail('', email.topic, '', {
+      bcc: address,
+      // replyTo: user.email,
       name: 'G Suite Stack Overflow',
       htmlBody: email.text
     });
@@ -562,15 +564,27 @@ function addWatchers(forumId, qId, newWatchers) {
   })[0];
 
   var watchers = question.get('watchers');
+  var addedWatchers = [];
 
   for (var n in newWatchers){
     var email = newWatchers[n];
     if (watchers.indexOf(email) == -1){
       watchers.push(email);
+      addedWatchers.push(email);
     }
   }
 
   question.set({'watchers': watchers});
+
+  var appUrl = APP_CONFIG.appUrl;
+
+  var link = appUrl + "#/" + am.id + "/" + qId;
+
+  var email = {};
+  email.topic = Utilities.formatString("Forum %s - %s", am.name, 'watching');
+  email.text = Utilities.formatString("You was added as a watcher of the topic: <b>%s</b><br><br>Show: <a href='%s'>link</a><br>", question.get('title'), link);
+
+  sendEmail(email, addedWatchers);
 
   return true;
 }
@@ -593,4 +607,60 @@ function removeWatcher(forumId, qId, email) {
   question.set({'watchers': watchers});
 
   return true;
+}
+
+function install() {
+  var user = getUser();
+  
+  var folderName = 'G Suite Stack Overflow';
+  
+  if (!DriveApp.getFoldersByName(folderName).hasNext()){
+    var folder = DriveApp.createFolder(folderName);
+    var ssForums = SpreadsheetApp.create('Forums');
+    var ssForumData = SpreadsheetApp.create('Forum Data');
+    
+    DriveApp.getFileById(ssForums.getId()).moveTo(folder);
+    DriveApp.getFileById(ssForumData.getId()).moveTo(folder);
+    
+    var sql = new SqlAbstract();
+    
+    sql.createDB({
+      spreadsheet: ssForums.getUrl(),
+      tables: [
+        {
+          name: 'Forums',
+          columns: ['id','user_id','name','forum_data_url','is_private','is_closed','users','moderators']
+        }
+      ]
+    })
+    
+    sql.insert({table: 'Forums', values: {id: 'demo', user_id: user.email, name: 'Demo', forum_data_url: ssForumData.getUrl(), users: '[]'}});
+    
+    var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers'];
+    sql.createDB({
+      spreadsheet: ssForumData.getUrl(),
+      tables: [
+        {
+          name: 'Forum',
+          columns: forumColumns
+        },
+        {
+          name: 'History',
+          columns: forumColumns
+        },
+        {
+          name: 'DocOpenLog',
+          columns: ['forum_id','time','user_id','action','source']
+        },
+      ]
+     });
+        
+     var scriptProperties = PropertiesService.getScriptProperties();
+     scriptProperties.setProperty('settingsUrl', ssForums.getUrl());
+        
+     forumAddEntry('question', {forumId: 'demo', title: 'First question', text: 'Question body'});
+  }
+       
+//  var scriptProperties = PropertiesService.getScriptProperties();
+//  scriptProperties.setProperty('settingsUrl', APP_CONFIG.settingsUrl);
 }

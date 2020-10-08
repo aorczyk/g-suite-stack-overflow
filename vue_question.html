@@ -145,6 +145,8 @@ var compQuestion = Vue.component('question', {
 
           var text = this.newAnswerData.text;
           
+          // var res = str.match(/<img.*?>/g);
+
           var data = {
             forumId: this.sharedState.forum.id,
             qId: this.selectedQuestion.id,
@@ -214,7 +216,7 @@ var compQuestion = Vue.component('question', {
           return true;
         },
         bestAns(item) {
-          this.selectedQuestion.bestAns = item.id;
+          Vue.set(this.selectedQuestion, 'bestAns', item.id);
 
           google.script.run.withSuccessHandler()
             .withFailureHandler(function (e) {
@@ -468,7 +470,7 @@ var compQuestion = Vue.component('question', {
                     <div class="dropdown-item" v-if="addWatcherVisible">
                       <div class="field is-grouped">
                         <p class="control is-expanded">
-                          <input class="input" :class="{'is-danger': addWatcherError}" type="text" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress">
+                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" type="text" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress">
                         </p>
                         <p class="control">
                           <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)">

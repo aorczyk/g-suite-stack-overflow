@@ -47,7 +47,14 @@ var compForum = Vue.component('forum', {
     <div>
       <spinner v-if="loading"></spinner>
 
-      <router-view :user="user" :am="am" :data="data"></router-view>
+      <router-view :user="user" :am="am" :data="data" v-if="data && data.id"></router-view>
+
+      <div class="notification is-warning" v-if="data && data.accessDenied">
+        This forum is private. To access it please ask the owner for access rights.
+      </div>
+      <div class="notification is-warning" v-if="data && data.isClosed">
+        This forum is closed.
+      </div>
     </div>
     `
 });
