@@ -34,10 +34,30 @@ var compQuestion = Vue.component('question', {
       console.log('question');
       console.log('questionId', this.questionId);
       console.log('sharedState.user', this.sharedState.user);
+      
+
     },
     mounted() {
       // Show given entry
+      // var quill = new Quill('.editor', this.quillSettings);
 
+      // quill.on('text-change', function(delta, oldDelta, source) {
+      //   if (source == 'api') {
+      //     console.log("An API call triggered this change.");
+      //   } else if (source == 'user') {
+      //     console.log("A user action triggered this change.");
+      //     console.log(delta);
+      //     let text = quill.getText();
+      //     console.log(quill.getContents());
+
+      //     // const regex = /(?<!<div.*?>)(<img.*?>)/g; 
+      //     // const found = regex.exec(text);
+      //     // if (found){
+      //     //   let changed = text.replace(regex, '<div class="quill-image">$&</div>')
+      //     //   quill.setText(text);
+      //     // }
+      //   }
+      // });
     },
     computed: {
       selectedQuestion() {
@@ -68,6 +88,27 @@ var compQuestion = Vue.component('question', {
 
           return items;
         },
+    },
+    watch: {
+      // 'newAnswerData.text' (newVal){
+      //   // const regex = /<div.*?>(<img.*?>)<\/div>/g;
+      //   // const found = regex.exec(paragraph);
+
+      //   const regex = /(?<!<div.*?>)(<img.*?>)/g; 
+      //   const found = regex.exec(newVal);
+      //   if (found){
+      //     console.log('changed');
+      //     // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
+      //     var changed = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
+      //     console.log(newVal);
+      //     console.log(changed);
+
+      //     // <div class="quill-image"><img src="></div>
+      //   }
+
+
+
+      // }
     },
     methods: {
         showQuestions() {
@@ -397,6 +438,11 @@ var compQuestion = Vue.component('question', {
           }
 
           this.addWatcher(this.sharedState.user.email, onAfter, onAfter)
+        },
+        textChange(editor, text) {
+          console.log('textChange');
+          console.log(editor);
+          console.log(text);
         }
     },
     template:
@@ -470,7 +516,7 @@ var compQuestion = Vue.component('question', {
                     <div class="dropdown-item" v-if="addWatcherVisible">
                       <div class="field is-grouped">
                         <p class="control is-expanded">
-                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" type="text" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress">
+                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress">
                         </p>
                         <p class="control">
                           <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)">
@@ -628,7 +674,8 @@ var compQuestion = Vue.component('question', {
           </div>
           <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">Your Answer</div>
-            <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings">
+            <!--<div class="editor"></div>-->
+            <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings" @change="textChange">
             </quill-editor>
             <div class="forum-ans-add">
               <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving">Post Your Answer</div>
