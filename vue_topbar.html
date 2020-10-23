@@ -4,6 +4,12 @@
     return {
       sharedState: store.state,
       privateState: {},
+      searchText: ''
+    }
+  },
+  methods: {
+    search() {
+      store.search();
     }
   },
   template: `
@@ -22,6 +28,20 @@
         </div>
       </div>
       <div class="navbar-end">
+        <div class="navbar-item">
+          <div class="field has-addons">
+            <div class="control">
+              <input class="input" type="text" placeholder="Search" v-model="sharedState.searchText" @keyup.enter="search">
+            </div>
+            <div class="control">
+              <a class="button is-info" @click="search">
+                <span class="icon is-small">
+                  <i class="fas fa-search"></i>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
         <div class="navbar-item">
           <div class="buttons">
             <a class="button is-light">

@@ -4,6 +4,12 @@ function validateEmail(email) {
     return re.test(String(email).toLowerCase());
 }
 
+function showImg(image){
+  console.log('showImg');
+  console.log(image.src);
+  window.open("").document.write(image.outerHTML);
+}
+
 var compQuestion = Vue.component('question', {
     props: ['questionId', 'selectedId'],
     data() {
@@ -60,6 +66,41 @@ var compQuestion = Vue.component('question', {
       // });
     },
     computed: {
+      // newAnsText: {
+      //   get() {
+
+      //     let string = this.newAnswerData.text;
+      //     // const regex = /(?<!<div.*?>)(<img.*?>)/g; 
+      //     // const found = regex.exec(string);
+
+      //     // if (found){
+      //     //   console.log('changed');
+      //     //   // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
+      //     //   string = string.replace(regex, '<div class="quill-image">$&</div>')
+      //     //   console.log(string);
+
+      //     //   // <div class="quill-image"><img src="></div>
+      //     // }
+      //     return string;
+      //   },
+      //   set(newValue) {
+
+      //     let out = newValue;
+
+      //     const regex = /(?<!<div.*?>)(<img.*?>)/g; 
+      //     const found = regex.exec(out);
+
+      //     if (found){
+      //       console.log('changed');
+      //       // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
+      //       out = newValue.replace(regex, '<div class="quill-image">$&</div>')
+      //       console.log(out);
+      //     }
+
+      //     // Vue.set(this.newAnswerData, 'text', out);
+      //     this.newAnswerData.text = out;
+      //   }
+      // },
       selectedQuestion() {
         if (this.sharedState.forum){
           var out = this.sharedState.forum.questions.filter((x) => {
@@ -90,6 +131,9 @@ var compQuestion = Vue.component('question', {
         },
     },
     watch: {
+      // newAnsText () {
+      //   this.rec
+      // }
       // 'newAnswerData.text' (newVal){
       //   // const regex = /<div.*?>(<img.*?>)<\/div>/g;
       //   // const found = regex.exec(paragraph);
@@ -181,10 +225,33 @@ var compQuestion = Vue.component('question', {
             self.saving = false;
           }).forumAddEntry('comment', data);
         },
+        showImage(e) {
+          console.log('showImage');
+          console.log(e);
+          console.log(e.target);
+        },
+        postProcessAnsText(text){
+          let out = text;
+          // return out;
+          // const regex = /(?<!<div.*?>)(<img.*?>)/g; 
+          const regex = /(<img.*?(?!onclick))[^>]*/g; 
+
+          const found = regex.exec(out);
+
+          if (found){
+            console.log('changed');
+            // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
+            // out = out.replace(regex, '<div class="quill-image" @click="showImage">$&</div>')
+            out = out.replace(regex, '$& onclick="showImg(this)"')
+            console.log(out);
+          }
+
+          return out;
+        },
         addAnswer() {
           var self = this;
 
-          var text = this.newAnswerData.text;
+          var text = this.postProcessAnsText(this.newAnswerData.text);
           
           // var res = str.match(/<img.*?>/g);
 
@@ -273,37 +340,40 @@ var compQuestion = Vue.component('question', {
           var self = this;
           this.saving = true;
 
+          this.editItem.body = this.postProcessAnsText(this.editItem.body);
+
           google.script.run.withSuccessHandler(function (item) {
-              Vue.set(self.editItem, 'edited', item.edited);
-              Vue.set(self.editItem, 'status', item.status);
-              if (item.status == 'Deleted'){
-                self.editItem.body = self.editItemTmp.body;
-              }
-              self.editItem = null;
-              self.editItemTmp = null;
-              self.saving = false;
+            Vue.set(self.editItem, 'body', item.body);
+            Vue.set(self.editItem, 'edited', item.edited);
+            Vue.set(self.editItem, 'status', item.status);
+            if (item.status == 'Deleted'){
+              self.editItem.body = self.editItemTmp.body;
+            }
+            self.editItem = null;
+            self.editItemTmp = null;
+            self.saving = false;
 
-              var notificationData = {
-                forumId: self.sharedState.forum.id,
-                forumName: self.sharedState.forum.name,
-                userId: item.userId,
-                qId: item.qId,
-                type: item.type,
-                body: item.body
-              };
+            var notificationData = {
+              forumId: self.sharedState.forum.id,
+              forumName: self.sharedState.forum.name,
+              userId: item.userId,
+              qId: item.qId,
+              type: item.type,
+              body: item.body
+            };
 
-              google.script.run
-              .withSuccessHandler()
-              .withFailureHandler(function (e) {
-                console.log('error');
-                console.log(e.message);
-              }).forumAddEntryNotification('edit', notificationData)
-            })
+            google.script.run
+            .withSuccessHandler()
             .withFailureHandler(function (e) {
               console.log('error');
               console.log(e.message);
-              self.saving = false;
-            }).editSave(this.editItem);
+            }).forumAddEntryNotification('edit', notificationData)
+          })
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).editSave(this.editItem);
         },
         editClose() {
           this.editItem.body = this.editItemTmp.body;
@@ -439,11 +509,6 @@ var compQuestion = Vue.component('question', {
 
           this.addWatcher(this.sharedState.user.email, onAfter, onAfter)
         },
-        textChange(editor, text) {
-          console.log('textChange');
-          console.log(editor);
-          console.log(text);
-        }
     },
     template:
     `
@@ -675,7 +740,7 @@ var compQuestion = Vue.component('question', {
           <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">Your Answer</div>
             <!--<div class="editor"></div>-->
-            <quill-editor v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings" @change="textChange">
+            <quill-editor class="quill-restyle" v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings">
             </quill-editor>
             <div class="forum-ans-add">
               <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving">Post Your Answer</div>

@@ -30,6 +30,7 @@
 
 <body>
   <div id="app">
+    <spinner v-if="sharedState.isSpinnerVisible"></spinner>
     <top-bar></top-bar>
     <router-view :user="user"></router-view>
   </div>
@@ -56,6 +57,7 @@
       el: '#app',
       router: router,
       data: {
+        sharedState: store.state,
         router: router,
         user: dataFromServer.user,
       },

@@ -264,6 +264,10 @@
   grid-template-columns: max-content 1fr;
   column-gap: 10px;
 }
+.forum-page .forum-ans .forum-ans-list .forum-ans-row img {
+  max-width: 300px !important;
+  cursor: pointer;
+}
 .forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-left {
   font-size: 1.61538462rem;
   color: #6a737c;
@@ -379,7 +383,10 @@
 }
 .quill-image {
   object-fit: cover;
-  width: 100px;
-  height: 100px;
+  max-width: 300px;
   overflow: hidden;
+}
+.quill-restyle img {
+  max-width: 100px !important;
+  max-height: 100px !important;
 }

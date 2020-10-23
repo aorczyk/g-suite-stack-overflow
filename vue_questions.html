@@ -28,6 +28,12 @@ var compQuestions = Vue.component('questions', {
           return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
         });
 
+        if (this.sharedState.searched){
+          return this.sharedState.forum.questions.filter((x)=>{
+            return this.sharedState.searched.includes(x.id);
+          })
+        }
+
         return this.sharedState.forum.questions;
       }
 

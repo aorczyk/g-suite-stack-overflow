@@ -12,12 +12,11 @@ var compForum = Vue.component('forum', {
         am: {},
         data: null,
         saving: false,
-        loading: false
       }
     },
     created() {
       console.log('getForumData');
-      this.loading = true;
+      this.sharedState.isSpinnerVisible = true;
 
       google.script.run.withSuccessHandler((data) => {
         console.log(data);
@@ -25,10 +24,10 @@ var compForum = Vue.component('forum', {
         
         Vue.set(this, 'data', data);
         Vue.set(this, 'am', data.am);
-        this.loading = false;
+        this.sharedState.isSpinnerVisible = false;
       })
       .withFailureHandler((e) => {
-        this.loading = false;
+        this.sharedState.isSpinnerVisible = false;
         console.log('error');
         console.log(e);
         console.log(e.message);
@@ -45,8 +44,6 @@ var compForum = Vue.component('forum', {
     template:
     `
     <div>
-      <spinner v-if="loading"></spinner>
-
       <router-view :user="user" :am="am" :data="data" v-if="data && data.id"></router-view>
 
       <div class="notification is-warning" v-if="data && data.accessDenied">
