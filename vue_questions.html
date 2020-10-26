@@ -125,20 +125,22 @@ var compQuestions = Vue.component('questions', {
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
-          <p class="modal-card-title">New Question</p>
+          <p class="modal-card-title">Ask a public question</p>
         </header>
         <section class="modal-card-body">
           <div class="field">
-            <label class="label">Topic</label>
+            <label class="label">Title</label>
             <div class="control">
+              <div>Be specific and imagine you’re asking a question to another person</div>
               <input class="input" :class="{'is-danger': !topicTitleLengthIsValid}" type="text"
-                placeholder="Be specific and imagine you’re asking a question to another person" v-model="newTopicData.title">
+                placeholder="" v-model="newTopicData.title">
             </div>
           </div>
           <p class="help is-danger" v-if="!topicTitleLengthIsValid">Text too long</p>
           <div class="field">
-            <label class="label">Question</label>
+            <label class="label">Body</label>
             <div class="control">
+              <div>Include all the information someone would need to answer your question</div>
               <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="quillSettings">
               </quill-editor>
             </div>
@@ -148,7 +150,7 @@ var compQuestions = Vue.component('questions', {
           <div class="field is-grouped">
             <div class="control">
               <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
-                :disabled="saving || !topicTitleLengthIsValid || !newTopicData.text">Save</button>
+                :disabled="saving || !topicTitleLengthIsValid || !newTopicData.title">Save</button>
             </div>
             <div class="control">
               <button class="button" @click="cancelAddNewTopic" :disabled="saving">Cancel</button>
