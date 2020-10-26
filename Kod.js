@@ -663,6 +663,9 @@ function install() {
         
      forumAddEntry('question', {forumId: 'demo', title: 'First question', text: 'Question body'});
   }
+  else {
+    throw 'Folder already exists.';
+  }
        
 //  var scriptProperties = PropertiesService.getScriptProperties();
 //  scriptProperties.setProperty('settingsUrl', APP_CONFIG.settingsUrl);
