@@ -1,7 +1,7 @@
 var APP_CONFIG = {
 //  appUrl: '',
 //  settingsUrl: ''
-//  faviconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Stack_Overflow_icon.svg/768px-Stack_Overflow_icon.svg.png',
+//  faviconUrl: 'https://icons-for-free.com/iconfiles/png/512/stackoverflow-1321215626484539706.png',
   pageTitle: 'G Suite Stack Overflow'
 };
 
