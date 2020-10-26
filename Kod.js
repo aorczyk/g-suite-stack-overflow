@@ -637,7 +637,7 @@ function install() {
       ]
     })
     
-    sql.insert({table: 'Forums', values: {id: 'demo', user_id: user.email, name: 'Demo', forum_data_url: ssForumData.getUrl(), users: '[]'}});
+    sql.insert({table: 'Forums', values: {id: 'demo', user_id: user.email, name: 'Demo', forum_data_url: ssForumData.getUrl(), users: '[]', moderators: '[]'}});
     
     var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers'];
     sql.createDB({
