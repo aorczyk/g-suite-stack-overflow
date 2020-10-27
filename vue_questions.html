@@ -175,20 +175,20 @@ var compQuestions = Vue.component('questions', {
                 <div class="forum-list-row-summary-count">
                   <span>{{ question.vote }}</span>
                 </div>
-                <div>głosów</div>
+                <div>votes</div>
               </div>
               <div class="forum-list-row-summary"
                 :class="{'forum-list-row-summary-bestAns': question.bestAns}">
                 <div class="forum-list-row-summary-count">
                   <span>{{ sharedState.forum.answers[question.id] ? sharedState.forum.answers[question.id].length : 0 }}</span>
                 </div>
-                <div>odpowiedzi</div>
+                <div>answers</div>
               </div>
               <div class="forum-list-row-summary">
                 <div class="forum-list-row-summary-count">
                   <span>{{ sharedState.forum.views[question.id] ? sharedState.forum.views[question.id] : 0 }}</span>
                 </div>
-                <div>wejść</div>
+                <div>views</div>
               </div>
             </div>
             <div class="forum-list-row-content">
