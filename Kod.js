@@ -15,24 +15,11 @@ function handleResponse(request) {
   var htmlTemplate = HtmlService.createTemplateFromFile('Forum');
 
   var user = getUser();
-//  var forumId = reqeust.parameter.id;
-  // var forumId = 'css';
-
-  // var am = getForum(forumId);
-
-  // if (!am) {
-  //   return HtmlService.createHtmlOutput("Undefined forum!");
-  // }
-
-  // var data = getForumData(forumId);
 
   htmlTemplate.dataFromServerTemplate = {
     user: user,
     data: {},
     am: {},
-//    requestPath: request.queryString
-    // qId: reqeust.parameter.qId,
-    // sId: reqeust.parameter.sId,
   };
   
   var response = htmlTemplate.evaluate();
@@ -300,7 +287,7 @@ function getForumData(id) {
     // var row = viewsData[n].get();
     // var qId = row['Url Source'];
 
-    // Unique
+    // Counting only unique views
     // if (!out.views[qId]){
     //   out.views[qId] = Object.keys(viewsData[qId]).length;
     // }
@@ -494,8 +481,6 @@ function forumAddEntryNotification(type, data) {
 
 
 function sendEmail(email, sendTo) {
-  var user = getUser();
-
   for (var n in sendTo) {
     var address = sendTo[n];
 
@@ -541,6 +526,7 @@ function editSave(item) {
   // --
 
   itemRow.set({
+    'title': item.title,
     'body': item.body,
     'status': item.status,
     'changed_time': new Date(),
@@ -666,7 +652,4 @@ function install() {
   else {
     throw 'Folder already exists.';
   }
-       
-//  var scriptProperties = PropertiesService.getScriptProperties();
-//  scriptProperties.setProperty('settingsUrl', APP_CONFIG.settingsUrl);
 }

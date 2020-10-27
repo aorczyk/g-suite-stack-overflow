@@ -15,8 +15,6 @@ var compQuestions = Vue.component('questions', {
     }
   },
   created() {
-    console.log('forumId');
-    console.log(this.forumId);
     var self = this;
   },
   computed: {
@@ -170,7 +168,7 @@ var compQuestions = Vue.component('questions', {
             <div class="button is-info" @click="showAddNewTopic" v-if="!sharedState.forum.am.isClosed">Ask Question</div>
           </nav>
         </nav>
-        <div class="forum-list" v-if="1">
+        <div class="forum-list">
           <div class="forum-list-row" v-for="question in sortedQuestions" @click="showAns(question)">
             <div class="forum-list-row-left">
               <div class="forum-list-row-summary">

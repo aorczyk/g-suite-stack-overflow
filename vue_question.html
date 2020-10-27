@@ -36,71 +36,10 @@ var compQuestion = Vue.component('question', {
         stopWatchingProgress: false,
       }
     },
-    created() {
-      console.log('question');
-      console.log('questionId', this.questionId);
-      console.log('sharedState.user', this.sharedState.user);
-      
-
-    },
-    mounted() {
-      // Show given entry
-      // var quill = new Quill('.editor', this.quillSettings);
-
-      // quill.on('text-change', function(delta, oldDelta, source) {
-      //   if (source == 'api') {
-      //     console.log("An API call triggered this change.");
-      //   } else if (source == 'user') {
-      //     console.log("A user action triggered this change.");
-      //     console.log(delta);
-      //     let text = quill.getText();
-      //     console.log(quill.getContents());
-
-      //     // const regex = /(?<!<div.*?>)(<img.*?>)/g; 
-      //     // const found = regex.exec(text);
-      //     // if (found){
-      //     //   let changed = text.replace(regex, '<div class="quill-image">$&</div>')
-      //     //   quill.setText(text);
-      //     // }
-      //   }
-      // });
+    mounted(){
+      window.scrollTo(0, 0);
     },
     computed: {
-      // newAnsText: {
-      //   get() {
-
-      //     let string = this.newAnswerData.text;
-      //     // const regex = /(?<!<div.*?>)(<img.*?>)/g; 
-      //     // const found = regex.exec(string);
-
-      //     // if (found){
-      //     //   console.log('changed');
-      //     //   // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
-      //     //   string = string.replace(regex, '<div class="quill-image">$&</div>')
-      //     //   console.log(string);
-
-      //     //   // <div class="quill-image"><img src="></div>
-      //     // }
-      //     return string;
-      //   },
-      //   set(newValue) {
-
-      //     let out = newValue;
-
-      //     const regex = /(?<!<div.*?>)(<img.*?>)/g; 
-      //     const found = regex.exec(out);
-
-      //     if (found){
-      //       console.log('changed');
-      //       // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
-      //       out = newValue.replace(regex, '<div class="quill-image">$&</div>')
-      //       console.log(out);
-      //     }
-
-      //     // Vue.set(this.newAnswerData, 'text', out);
-      //     this.newAnswerData.text = out;
-      //   }
-      // },
       selectedQuestion() {
         if (this.sharedState.forum){
           var out = this.sharedState.forum.questions.filter((x) => {
@@ -129,30 +68,6 @@ var compQuestion = Vue.component('question', {
 
           return items;
         },
-    },
-    watch: {
-      // newAnsText () {
-      //   this.rec
-      // }
-      // 'newAnswerData.text' (newVal){
-      //   // const regex = /<div.*?>(<img.*?>)<\/div>/g;
-      //   // const found = regex.exec(paragraph);
-
-      //   const regex = /(?<!<div.*?>)(<img.*?>)/g; 
-      //   const found = regex.exec(newVal);
-      //   if (found){
-      //     console.log('changed');
-      //     // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
-      //     var changed = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
-      //     console.log(newVal);
-      //     console.log(changed);
-
-      //     // <div class="quill-image"><img src="></div>
-      //   }
-
-
-
-      // }
     },
     methods: {
         showQuestions() {
@@ -252,8 +167,6 @@ var compQuestion = Vue.component('question', {
           var self = this;
 
           var text = this.postProcessAnsText(this.newAnswerData.text);
-          
-          // var res = str.match(/<img.*?>/g);
 
           var data = {
             forumId: this.sharedState.forum.id,
@@ -262,7 +175,6 @@ var compQuestion = Vue.component('question', {
           };
 
           if (data.text === '') {
-            console.log('Empty answer!');
             return;
           }
 
@@ -343,7 +255,6 @@ var compQuestion = Vue.component('question', {
           this.editItem.body = this.postProcessAnsText(this.editItem.body);
 
           google.script.run.withSuccessHandler(function (item) {
-            Vue.set(self.editItem, 'body', item.body);
             Vue.set(self.editItem, 'edited', item.edited);
             Vue.set(self.editItem, 'status', item.status);
             if (item.status == 'Deleted'){
@@ -521,12 +432,20 @@ var compQuestion = Vue.component('question', {
           <header class="modal-card-head">
             <p class="modal-card-title">Edit</p>
           </header>
-          <section class="modal-card-body">
-            <div class="field">
-              <div class="control" v-if="editItem">
-                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings"
-                  v-if="editItem.type !== 'comment'"></quill-editor>
-                <input class="input" type="text" v-model="editItem.body" v-else>
+          <section class="modal-card-body" v-if="editItem">
+            <div class="field" v-if="editItem.type == 'question'">
+              <label class="label">Title</label>
+              <input class="input" type="text" v-model="editItem.title">
+            </div>
+            <div class="field" v-if="editItem.type !== 'comment'">
+              <div class="control">
+                <label class="label">Body</label>
+                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings"></quill-editor>
+              </div>
+            </div>
+            <div class="field" v-else>
+              <div class="control">
+                <input class="input" type="text" v-model="editItem.body">
               </div>
             </div>
           </section>
