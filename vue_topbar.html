@@ -10,6 +10,12 @@
   methods: {
     search() {
       store.search();
+    },
+    clearSearch() {
+      store.clearSearch();
+    },
+    showForums() {
+      router.push(`/forums`);
     }
   },
   template: `
@@ -17,21 +23,29 @@
     style="border-bottom: 1px solid lightgray;">
     <div class="navbar-brand">
       <strong class="navbar-item">
-        G Suite Stack Overflow
+        G Suite Stack Overflow - <span class="navbar-item" v-if="sharedState.forum">{{ sharedState.forum.name }}</span>
       </strong>
-      <span class="navbar-item" v-if="sharedState.forum">{{ sharedState.forum.name }}</span>
     </div>
     <div id="navbarBasicExample" class="navbar-menu">
       <div class="navbar-start">
         <div class="buttons">
-
+          <a class="button is-light" @click="showForums" v-if="sharedState.forumsButtonVisible">
+            Forums
+          </a>
         </div>
       </div>
       <div class="navbar-end">
-        <div class="navbar-item">
+        <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
           <div class="field has-addons">
             <div class="control">
               <input class="input" type="text" placeholder="Search" v-model="sharedState.searchText" @keyup.enter="search">
+            </div>
+            <div class="control" v-if="sharedState.searched">
+              <a class="button is-info" @click="clearSearch">
+                <span class="icon is-small">
+                  <i class="fas fa-times"></i>
+                </span>
+              </a>
             </div>
             <div class="control">
               <a class="button is-info" @click="search">

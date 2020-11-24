@@ -6,7 +6,9 @@
       forum: null,
       isSpinnerVisible: false,
       searched: null,
-      searchText: ''
+      searchText: '',
+      searchVisible: true,
+      forumsButtonVisible: true,
     },
     setForum(newValue) {
       if (this.debug) console.log('setForum triggered with', newValue)
@@ -39,6 +41,24 @@
       if (router.currentRoute.path != `/${this.state.forum.id}`){
         router.push(`/${this.state.forum.id}`);
       }
+    },
+    clearSearch() {
+      this.state.searchText = '';
+      // this.search();
+      Vue.set(this.state, 'searched', null);
+    },
+    highlight(html){
+      var out = html;
+
+      // if (this.state.searchText && this.state.searched){
+      //   var reg = new RegExp('(?<=>)([\w\s]*)' + this.state.searchText + '([\w\s]*)(?=<\/)', 'ig');
+
+      //   if (html.match(reg)){
+      //     out = html.replace(reg, '<span class="highlight">$&</span>');
+      //   }
+      // }
+
+      return out;
     }
   };
 </script>

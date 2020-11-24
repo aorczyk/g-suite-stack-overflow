@@ -38,27 +38,95 @@ function handleResponse(request) {
   return response;
 }
 
-function getForum(forumId) { 
-  var forumsSql = new SqlAbstract({
-      spreadsheets: [{
-        url: APP_CONFIG.settingsUrl,
-        tables: {
-          'Forums': {
-            as: 'Forums',
-            serializer: {
-              'moderators': {
-                get: JSON.parse,
-                set: JSON.stringify
-              },
-              'users': {
-                get: JSON.parse,
-                set: JSON.stringify
-              },
-            }
+function getSqlForums(){
+  var sql = new SqlAbstract({
+    spreadsheets: [{
+      url: APP_CONFIG.settingsUrl,
+      tables: {
+        'Forums': {
+          as: 'Forums',
+          serializer: {
+            'moderators': {
+              get: JSON.parse,
+              set: JSON.stringify
+            },
+            'users': {
+              get: JSON.parse,
+              set: JSON.stringify
+            },
+            'time': {
+              get: function (x) {
+                return Utilities.formatDate(x, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
+              }
+            },
           }
         }
-      }]
+      }
+    }]
   });
+
+  return sql;
+}
+
+function getForums() {
+  var forumsSql = getSqlForums();
+
+  var forums = forumsSql.select({
+    table: 'Forums',
+    where: {}
+  }).map((x)=>{
+    var out = x.get();
+    out.userName = getUserNameFromEmail(out.user_id);
+    return out;
+  });
+
+  return forums;
+}
+
+function addForum(data){
+  var forumsSql = getSqlForums();
+  var user = getUser();
+
+  var row = {
+    'time': new Date(),
+    'id': Utilities.getUuid(),
+    'user_id': user.email,
+    'name': data.name,
+    'description': data.description,
+    'is_public': data.is_public,
+    'users': data.users.split(','),
+    'moderators': data.moderators.split(','),
+    'forum_data_url': data.forum_data_url
+  };
+
+  forumsSql.insert({
+    table: 'Forums',
+    values: row
+  });
+
+  return true;
+}
+
+function editForum(data){
+  var forumsSql = getSqlForums();
+
+  forumsSql.update({
+    table: 'Forums',
+    where: {id: data.id},
+    set: {
+      name: data.name,
+      description: data.description,
+      is_public: data.is_public,
+      users: data.users.split(','),
+      moderators: data.moderators.split(',')
+    }
+  });
+
+  return true;
+}
+
+function getForum(forumId) {
+  var forumsSql = getSqlForums();
 
   var forum = forumsSql.select({
     table: 'Forums',
@@ -183,7 +251,7 @@ function getForumData(id) {
     };
   }
 
-  if (am.is_private && (!am.users || !am.users.includes(user.email))){
+  if (!am.is_public && !(am.users.includes(user.email) || am.user_id === user.email)){
     return {
       accessDenied: true
     };
@@ -453,10 +521,9 @@ function forumAddEntryNotification(type, data) {
   var user = getUser();
 
   // Do not send notification about current user changes
-  var index = watchers.indexOf(user.email);
-  if (index != -1){
-    watchers.splice(index, 1);
-  }
+  watchers = watchers.filter((x)=>{
+    return x && x !== user.email;
+  });
 
   if (watchers.length) {
     var appUrl = APP_CONFIG.appUrl;
@@ -472,7 +539,7 @@ function forumAddEntryNotification(type, data) {
     var email = {};
     email.topic = Utilities.formatString("Forum %s - %s", data.forumName, actionName);
     email.text = Utilities.formatString("New changes in topic: <b>%s</b><br>%s:<br><div style='background-color: #fffbec;'>%s</div><br>Show: <a href='%s'>link</a><br>", qTitle, actionName, data.body,link);
-
+    
     sendEmail(email, watchers);
   }
 
@@ -481,16 +548,12 @@ function forumAddEntryNotification(type, data) {
 
 
 function sendEmail(email, sendTo) {
-  for (var n in sendTo) {
-    var address = sendTo[n];
-
-    GmailApp.sendEmail('', email.topic, '', {
-      bcc: address,
-      // replyTo: user.email,
-      name: 'G Suite Stack Overflow',
-      htmlBody: email.text
-    });
-  }
+  GmailApp.sendEmail('', email.topic, '', {
+    bcc: sendTo.join(','),
+    // replyTo: user.email,
+    name: 'G Suite Stack Overflow',
+    htmlBody: email.text
+  });
 
   return 1;
 }
@@ -618,7 +681,7 @@ function install() {
       tables: [
         {
           name: 'Forums',
-          columns: ['id','user_id','name','forum_data_url','is_private','is_closed','users','moderators']
+          columns: ['id','user_id','name','forum_data_url','is_public','is_closed','users','moderators']
         }
       ]
     })

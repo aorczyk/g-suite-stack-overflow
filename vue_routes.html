@@ -1,25 +1,30 @@
 <script>
   const routes = [{
-    path: '/:forumId',
-    component: compForum,
-    props: true,
-    children: [{
-        path: '',
-        component: compQuestions,
-        props: true,
-      },
-      {
-        path: ':questionId',
-        component: compQuestion,
-        props: true,
-      },
-      {
-        path: ':questionId/:selectedId',
-        component: compQuestion,
-        props: true,
-      },
-    ]
-  }, ];
+      path: '/forums',
+      component: compForums,
+    },
+    {
+      path: '/:forumId',
+      component: compForum,
+      props: true,
+      children: [{
+          path: '',
+          component: compQuestions,
+          props: true,
+        },
+        {
+          path: ':questionId',
+          component: compQuestion,
+          props: true,
+        },
+        {
+          path: ':questionId/:selectedId',
+          component: compQuestion,
+          props: true,
+        },
+      ]
+    },
+  ];
 
   const router = new VueRouter({
     routes

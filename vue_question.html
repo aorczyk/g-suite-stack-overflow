@@ -38,6 +38,11 @@ var compQuestion = Vue.component('question', {
     },
     mounted(){
       window.scrollTo(0, 0);
+      if (this.selectedId){
+        setTimeout(() => {
+          this.selectedId = null;
+        }, 3000);
+      }
     },
     computed: {
       selectedQuestion() {
@@ -200,7 +205,9 @@ var compQuestion = Vue.component('question', {
             };
 
             google.script.run
-            .withSuccessHandler()
+            .withSuccessHandler((recipients)=>{
+              // console.log('recipients', recipients);
+            })
             .withFailureHandler(function (e) {
               console.log('error');
               console.log(e.message);
@@ -295,6 +302,9 @@ var compQuestion = Vue.component('question', {
         },
         getItemLink(item){
           return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}/${item.id}`;
+        },
+        getQuestionLink(){
+          return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}`;
         },
         toggleWatchers() {
           this.watchersVisible = !this.watchersVisible;
@@ -420,6 +430,9 @@ var compQuestion = Vue.component('question', {
 
           this.addWatcher(this.sharedState.user.email, onAfter, onAfter)
         },
+        highlight(html){
+          return store.highlight(html);
+        }
     },
     template:
     `
@@ -514,7 +527,7 @@ var compQuestion = Vue.component('question', {
               </div>
             </nav>
           </nav>
-          <div class="forum-ans-title">{{ selectedQuestion.title }}</div>
+          <div class="forum-ans-title" v-html="highlight(selectedQuestion.title)"></div>
           <div class="forum-ans-list">
             <div class="forum-ans-row forum-ans-question">
               <div class="forum-ans-row-left">
@@ -539,7 +552,7 @@ var compQuestion = Vue.component('question', {
                 </div>
               </div>
               <div class="forum-ans-row-content">
-                <div v-html="selectedQuestion.body" :class="{'forum-selected-item': selectedQuestion.id == selectedId}"></div>
+                <div v-html="highlight(selectedQuestion.body)" :class="{'forum-selected-item': selectedQuestion.id == selectedId}"></div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="selectedQuestion" @edit="editOpen"></edit>
@@ -547,14 +560,15 @@ var compQuestion = Vue.component('question', {
                   <div class="forum-ans-row-content-info-right">
                     <span class="user-name"> {{ selectedQuestion.userName }}</span>
                     <span> {{ selectedQuestion.time }}</span>
+                    <a class="action-icon" :href="getQuestionLink()" target="blank"><i class="fas fa-external-link-alt"></i></a>
                   </div>
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
                     <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId}"
                       v-for="comment in sharedState.forum.comments[selectedQuestion.id]">
-                      <span></span>{{ comment.body }} - </span>
-                      <span class="user-name"> {{ comment.userName }}</span>
+                      <span v-html="highlight(comment.body)"></span>
+                      <span class="user-name"> - {{ comment.userName }}</span>
                       <span> {{ comment.time }}</span>
                       <edit :item="comment" type="icon" @edit="editOpen"></edit>
                     </div>
@@ -611,7 +625,7 @@ var compQuestion = Vue.component('question', {
                 </div>
               </div>
               <div class="forum-ans-row-content">
-                <div v-html="ans.body"></div>
+                <div v-html="highlight(ans.body)"></div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="ans" @edit="editOpen"></edit>
@@ -627,8 +641,8 @@ var compQuestion = Vue.component('question', {
                     <div class="forum-ans-comments-list-row" :id="comment.id"
                       :class="{'forum-selected-item': comment.id == selectedId}"
                       v-for="comment in sharedState.forum.comments[ans.id]">
-                      <span></span>{{ comment.body }} - </span>
-                      <span class="user-name"> {{ comment.userName }}</span>
+                      <span v-html="highlight(comment.body)"></span>
+                      <span class="user-name"> - {{ comment.userName }}</span>
                       <span> {{ comment.time }}</span>
                       <edit :item="comment" type="icon" @edit="editOpen"></edit>
                     </div>

@@ -16,10 +16,13 @@ var compForum = Vue.component('forum', {
     },
     created() {
       console.log('getForumData');
+      this.sharedState.searchVisible = true;
+      this.sharedState.forumsButtonVisible = true;
+
       this.sharedState.isSpinnerVisible = true;
 
       google.script.run.withSuccessHandler((data) => {
-        console.log(data);
+        console.log('getForumData out', data);
         this.sharedState.forum = data;
         
         Vue.set(this, 'data', data);
