@@ -47,16 +47,35 @@
       // this.search();
       Vue.set(this.state, 'searched', null);
     },
-    highlight(html){
-      var out = html;
+    highlight(string){
+      var out = string;
 
-      // if (this.state.searchText && this.state.searched){
-      //   var reg = new RegExp('(?<=>)([\w\s]*)' + this.state.searchText + '([\w\s]*)(?=<\/)', 'ig');
+      if (this.state.searchText && this.state.searched){
+        const regex = />([^><]*?)</gi;
+        const regexSearch = new RegExp(this.state.searchText, 'ig');
 
-      //   if (html.match(reg)){
-      //     out = html.replace(reg, '<span class="highlight">$&</span>');
-      //   }
-      // }
+        var match = regex.exec(string);
+
+        while (match != null) {
+          let outPart = '>' + match[1].replace(regexSearch, '<span class="highlight">$&</span>') + '<';
+
+          if (outPart){
+            out = out.replace(match[0], outPart);
+          }
+
+          match = regex.exec(string);
+        }
+      }
+      return out;
+    },
+    highlightText(string){
+      var out = string;
+
+      if (this.state.searchText && this.state.searched){
+        const regexSearch = new RegExp(this.state.searchText, 'ig');
+
+        out = string.replace(regexSearch, '<span class="highlight">$&</span>');
+      }
 
       return out;
     }

@@ -38,6 +38,7 @@
     console.log(dataFromServer);
   </script>
 
+  <?!= include('vue_store.html'); ?>
   <?!= include('vue_forums.html'); ?>
   <?!= include('vue_questions.html'); ?>
   <?!= include('vue_question.html'); ?>
@@ -46,7 +47,6 @@
   <?!= include('vue_utils.html'); ?>
   <?!= include('vue_quill.html'); ?>
   <?!= include('vue_routes.html'); ?>
-  <?!= include('vue_store.html'); ?>
 
   <script>
     var app = new Vue({
@@ -55,7 +55,7 @@
       data: {
         sharedState: store.state,
         router: router,
-        user: dataFromServer.user,
+        user: dataFromServer.user
       },
       created: function () {
         // Router - Get the path from the string URL fragment appearing after the '#' character.

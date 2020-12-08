@@ -70,10 +70,11 @@ function getSqlForums(){
 
 function getForums() {
   var forumsSql = getSqlForums();
+  var user = getUser();
 
   var forums = forumsSql.select({
     table: 'Forums',
-    where: {}
+    where: [{'is_public': true}, {'user_id': user.email}]
   }).map((x)=>{
     var out = x.get();
     out.userName = getUserNameFromEmail(out.user_id);
@@ -87,16 +88,20 @@ function addForum(data){
   var forumsSql = getSqlForums();
   var user = getUser();
 
+  var forumId = Utilities.getUuid();
+
+  var forumSheetUrl = forumSheetCreate(forumId);
+
   var row = {
     'time': new Date(),
-    'id': Utilities.getUuid(),
+    'id': forumId,
     'user_id': user.email,
     'name': data.name,
     'description': data.description,
     'is_public': data.is_public,
     'users': data.users.split(','),
     'moderators': data.moderators.split(','),
-    'forum_data_url': data.forum_data_url
+    'forum_data_url': forumSheetUrl
   };
 
   forumsSql.insert({
@@ -109,6 +114,15 @@ function addForum(data){
 
 function editForum(data){
   var forumsSql = getSqlForums();
+  var user = getUser();
+  var am = getForum(data.id);
+
+  var isModerator = am.moderators.includes(user.email);
+
+  // Only autor and moderator can edit
+  if (!(isModerator || am.user_id === user.email)){
+    return;
+  }
 
   forumsSql.update({
     table: 'Forums',
@@ -117,8 +131,8 @@ function editForum(data){
       name: data.name,
       description: data.description,
       is_public: data.is_public,
-      users: data.users.split(','),
-      moderators: data.moderators.split(',')
+      users: typeof data.users === 'string' ? data.users.split(',') : [],
+      moderators: typeof data.moderators === 'string' ? data.moderators.split(',') : []
     }
   });
 
@@ -239,6 +253,7 @@ function jsUcfirst(string) {
 
 function getForumData(id) {
   var user = getUser();
+  
   var am = getForum(id);
 
   if (!am){
@@ -251,11 +266,13 @@ function getForumData(id) {
     };
   }
 
-  if (!am.is_public && !(am.users.includes(user.email) || am.user_id === user.email)){
+  if (!am.is_public && !(am.moderators.includes(user.email) || am.users.includes(user.email) || am.user_id === user.email)){
     return {
       accessDenied: true
     };
   }
+
+  var isModerator = am.moderators.includes(user.email);
 
   var out = {
     appUrl: APP_CONFIG.appUrl,
@@ -312,7 +329,8 @@ function getForumData(id) {
       bestAns: row['best_ans'],
       edited: row['changed_time'],
       watchers: isArray(row['watchers']) ? row['watchers'] : [],
-      userName: getUserNameFromEmail(row['user_id'])
+      userName: getUserNameFromEmail(row['user_id']),
+      canEdit: row['user_id'] === user.email || isModerator
     }
 
     out.forumLastChange = rowData.time;
@@ -422,7 +440,8 @@ function forumAddEntry(type, data) {
     vote: 0,
     votedBy: [],
     edited: '',
-    watchers: row['watchers']
+    watchers: row['watchers'],
+    canEdit: true
   };
 
   am.sql.insert({
@@ -563,6 +582,13 @@ function editSave(item) {
   var user = getUser();
   var am = getForum(item.forumId);
 
+  var isModerator = am.moderators.includes(user.email);
+
+  // Only autor and moderator can edit
+  if (!(isModerator || item.userId === user.email)){
+    return;
+  }
+
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
 
   if (!item.body){
@@ -658,36 +684,19 @@ function removeWatcher(forumId, qId, email) {
   return true;
 }
 
-function install() {
-  var user = getUser();
-  
+
+function forumSheetCreate(forumId) {
   var folderName = 'G Suite Stack Overflow';
-  
-  if (!DriveApp.getFoldersByName(folderName).hasNext()){
-    var folder = DriveApp.createFolder(folderName);
-    var ssForums = SpreadsheetApp.create('Forums');
-    var ssForumData = SpreadsheetApp.create('Forum Data');
-    
-    DriveApp.getFileById(ssForums.getId()).moveTo(folder);
+
+  var folderIterator = DriveApp.getFoldersByName(folderName);
+
+  if (folderIterator.hasNext()){
+    var folder = folderIterator.next();
+    var ssForumData = SpreadsheetApp.create('Forum Data - ' + forumId);
     DriveApp.getFileById(ssForumData.getId()).moveTo(folder);
-    
-    // Moving the script to created folder
-    DriveApp.getFileById(ScriptApp.getScriptId()).moveTo(folder);
 
     var sql = new SqlAbstract();
-    
-    sql.createDB({
-      spreadsheet: ssForums.getUrl(),
-      tables: [
-        {
-          name: 'Forums',
-          columns: ['id','user_id','name','forum_data_url','is_public','is_closed','users','moderators']
-        }
-      ]
-    })
-    
-    sql.insert({table: 'Forums', values: {id: 'demo', user_id: user.email, name: 'Demo', forum_data_url: ssForumData.getUrl(), users: '[]', moderators: '[]'}});
-    
+
     var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers'];
     sql.createDB({
       spreadsheet: ssForumData.getUrl(),
@@ -705,12 +714,48 @@ function install() {
           columns: ['forum_id','time','user_id','action','source']
         },
       ]
-     });
+    });
+
+    return ssForumData.getUrl();
+  }
+}
+
+
+function install() {
+  var user = getUser();
+  
+  var folderName = 'G Suite Stack Overflow';
+  
+  if (!DriveApp.getFoldersByName(folderName).hasNext()){
+    var folder = DriveApp.createFolder(folderName);
+    var ssForums = SpreadsheetApp.create('Forums');
+    
+    DriveApp.getFileById(ssForums.getId()).moveTo(folder);
+    
+    // Moving the script to created folder
+//    DriveApp.getFileById(ScriptApp.getScriptId()).moveTo(folder);
+
+    var sql = new SqlAbstract();
+    
+    sql.createDB({
+      spreadsheet: ssForums.getUrl(),
+      tables: [
+        {
+          name: 'Forums',
+          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators']
+        }
+      ]
+    })
+    
+    var forumSheetUrl = forumSheetCreate('demo');
+    
+    sql.insert({table: 'Forums', values: {id: 'demo', user_id: user.email, name: 'Demo', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]'}});
         
-     var scriptProperties = PropertiesService.getScriptProperties();
-     scriptProperties.setProperty('settingsUrl', ssForums.getUrl());
-        
-     forumAddEntry('question', {forumId: 'demo', title: 'First question', text: 'Question body'});
+    var scriptProperties = PropertiesService.getScriptProperties();
+    scriptProperties.setProperty('settingsUrl', ssForums.getUrl());
+    APP_CONFIG.settingsUrl = ssForums.getUrl();
+    
+    forumAddEntry('question', {forumId: 'demo', title: 'First question', text: 'Question body'});
   }
   else {
     throw 'Folder already exists.';

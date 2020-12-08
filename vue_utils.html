@@ -29,11 +29,7 @@
     },
     computed: {
       isEnabled() {
-        if (this.item.type === 'comment'){
-          return this.sharedState.user.id === this.item.userId;
-        }
-
-        return true;
+        return this.item.canEdit;
       },
       title() {
         return this.item.edited ? 'Edited: ' + this.item.edited : 'Edit'

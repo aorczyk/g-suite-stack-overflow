@@ -4,7 +4,6 @@
     return {
       sharedState: store.state,
       privateState: {},
-      searchText: ''
     }
   },
   methods: {
@@ -15,7 +14,19 @@
       store.clearSearch();
     },
     showForums() {
+      this.sharedState.forum = null;
       router.push(`/forums`);
+    }
+  },
+  watch: {
+    'sharedState.searchText': function(newVal, oldVal){
+      // console.log('searchText', newVal);
+      // if (this.sharedState.searched && newVal !== oldVal){
+      //   Vue.set(this.sharedState, 'searched', null);
+      // }
+      if (newVal === ''){
+        this.clearSearch();
+      }
     }
   },
   template: `
@@ -23,7 +34,7 @@
     style="border-bottom: 1px solid lightgray;">
     <div class="navbar-brand">
       <strong class="navbar-item">
-        G Suite Stack Overflow - <span class="navbar-item" v-if="sharedState.forum">{{ sharedState.forum.name }}</span>
+        G Suite Stack Overflow <span class="navbar-item" v-if="sharedState.forum && sharedState.forum.name"> - {{ sharedState.forum.name }}</span>
       </strong>
     </div>
     <div id="navbarBasicExample" class="navbar-menu">
@@ -40,13 +51,14 @@
             <div class="control">
               <input class="input" type="text" placeholder="Search" v-model="sharedState.searchText" @keyup.enter="search">
             </div>
-            <div class="control" v-if="sharedState.searched">
+            <!--<div class="control" v-if="sharedState.searched">
               <a class="button is-info" @click="clearSearch">
                 <span class="icon is-small">
                   <i class="fas fa-times"></i>
                 </span>
               </a>
             </div>
+            -->
             <div class="control">
               <a class="button is-info" @click="search">
                 <span class="icon is-small">

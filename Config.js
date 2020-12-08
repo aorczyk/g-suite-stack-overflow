@@ -12,3 +12,8 @@ if (!APP_CONFIG.settingsUrl){
 if (!APP_CONFIG.appUrl){
   APP_CONFIG.appUrl = ScriptApp.getService().getUrl();
 }
+
+function setSettingsUrl(){
+  var scriptProperties = PropertiesService.getScriptProperties();
+  scriptProperties.setProperty('settingsUrl', '');
+}

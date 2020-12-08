@@ -203,7 +203,7 @@
         }
     
         .forum-list-row {
-            padding: 12px 8px;
+            padding: 12px 20px;
             border-bottom: 1px solid #eff0f1;
             cursor: pointer;
             font-size: 16px;
@@ -257,21 +257,16 @@
                 grid-template-rows: 1fr 30px;
     
                 .forum-ans-row-content-info {
-                    display: grid;
-                    grid-auto-flow: column;
-    
+                    padding-top: 7px;
+
                     .forum-ans-row-content-info-left {
+                        float: left;
                         font-size: 13px;
-                        justify-self: start;
-                        align-self: center;
-                        padding: 0px 10px;
                     }
     
                     .forum-ans-row-content-info-right {
+                        float: right;
                         font-size: 13px;
-                        justify-self: end;
-                        align-self: center;
-                        padding: 0px 10px;
                     }
                 }
             }
@@ -286,9 +281,18 @@
         .user-name {
             color: #07C;
         }
+
+        .forums-edit-icon {
+            color: gray;
+            float: right;
+
+            &:hover {
+                color: black;
+            }
+        }
     
         .forum-list-row {
-            padding: 12px 8px;
+            padding: 12px 20px;
             border-bottom: 1px solid #eff0f1;
             cursor: pointer;
             font-size: 16px;
@@ -306,21 +310,16 @@
                 grid-template-rows: 1fr 30px;
     
                 .forum-ans-row-content-info {
-                    display: grid;
-                    grid-auto-flow: column;
+                    padding-top: 7px;
     
                     .forum-ans-row-content-info-left {
+                        float: left;
                         font-size: 13px;
-                        justify-self: start;
-                        align-self: center;
-                        // padding: 0px 10px;
                     }
     
                     .forum-ans-row-content-info-right {
+                        float: right;
                         font-size: 13px;
-                        justify-self: end;
-                        align-self: center;
-                        padding: 0px 10px;
                     }
                 }
             }
@@ -366,8 +365,7 @@
         }
     
         .forum-selected-item {
-            background-color: #ffff00;
-            .transition(all,1000ms);
+            background-color: #fafabe;
         }
     
         .forum-ans-list {
@@ -446,7 +444,7 @@
                 .forum-ans-row-content {
                     display: grid;
                     grid-template-rows: 1fr 30px;
-    
+
                     .forum-ans-row-content-info {
                         font-size: 13px;
                         
