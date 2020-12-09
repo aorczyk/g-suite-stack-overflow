@@ -1,6 +1,6 @@
 # G Suite Stack Overflow
 
-## How to install:
+### How to install:
 ```
 git clone
 clasp login
