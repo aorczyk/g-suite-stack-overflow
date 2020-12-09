@@ -11,4 +11,4 @@ Open the script file in a browser:
 ```
 clasp open
 ```
-Open script file "Kod.gs" and run function "install".
+Open script file "Config.gs" and run function "Install".
