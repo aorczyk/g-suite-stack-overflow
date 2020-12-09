@@ -78,10 +78,12 @@ var compQuestions = Vue.component('questions', {
     addQuestion() {
       var self = this;
 
+      var text = postProcessAnsText(this.newTopicData.text);
+
       var data = {
         forumId: this.sharedState.forum.id,
         title: this.newTopicData.title,
-        text: this.newTopicData.text
+        text: text
       };
 
       this.saving = true;
@@ -120,7 +122,25 @@ var compQuestions = Vue.component('questions', {
     },
     clearSearch(){
       store.clearSearch();
-    }
+    },
+    postProcessAnsText(text){
+      let out = text;
+      // return out;
+      // const regex = /(?<!<div.*?>)(<img.*?>)/g; 
+      const regex = /(<img.*?(?!onclick))[^>]*/g; 
+
+      const found = regex.exec(out);
+
+      if (found){
+        console.log('changed');
+        // this.newAnswerData.text = newVal.replace(regex, 'x<div class="quill-image">$&</div>')
+        // out = out.replace(regex, '<div class="quill-image" @click="showImage">$&</div>')
+        out = out.replace(regex, '$& onclick="showImg(this)"')
+        console.log(out);
+      }
+
+      return out;
+    },
   },
   template:
   `
