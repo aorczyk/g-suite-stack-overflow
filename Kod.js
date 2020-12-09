@@ -749,7 +749,7 @@ function install() {
     
     var forumSheetUrl = forumSheetCreate('demo');
     
-    sql.insert({table: 'Forums', values: {id: 'demo', user_id: user.email, name: 'Demo', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]'}});
+    sql.insert({table: 'Forums', values: {time: new Date(), id: 'demo', user_id: user.email, name: 'Demo', description: 'Example', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]'}});
         
     var scriptProperties = PropertiesService.getScriptProperties();
     scriptProperties.setProperty('settingsUrl', ssForums.getUrl());

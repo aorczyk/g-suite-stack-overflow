@@ -13,6 +13,10 @@ if (!APP_CONFIG.appUrl){
   APP_CONFIG.appUrl = ScriptApp.getService().getUrl();
 }
 
+function Install(){
+  install();
+}
+
 function setSettingsUrl(){
   var scriptProperties = PropertiesService.getScriptProperties();
   scriptProperties.setProperty('settingsUrl', '');
