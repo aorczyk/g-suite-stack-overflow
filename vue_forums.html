@@ -32,7 +32,7 @@
       methods: {
         getForums() {
           this.sharedState.isSpinnerVisible = true;
-
+          console.log('getForums');
           google.script.run.withSuccessHandler((data)=>{
             console.log(data);
             this.forums = data;
