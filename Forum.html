@@ -61,8 +61,11 @@
         // Router - Get the path from the string URL fragment appearing after the '#' character.
         google.script.url.getLocation(function(location) {
           var path = location.hash;
-          if (path){
-            router.push(path);
+
+          if (! path || path == '/'){
+            router.push('/forums');
+          } else {
+            router.push(path);
           }
 
           self.locationLoaded = true;
