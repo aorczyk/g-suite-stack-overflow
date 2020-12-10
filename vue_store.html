@@ -17,6 +17,7 @@
     search(){
       if (!this.state.searchText){
         this.state.searched = null;
+        return;
       }
 
       var reg = new RegExp(this.state.searchText, 'i');

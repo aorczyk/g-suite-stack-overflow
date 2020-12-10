@@ -76,7 +76,6 @@ var compQuestion = Vue.component('question', {
     },
     methods: {
         showQuestions() {
-          this.pageId = 'questions';
           router.push(`/${this.sharedState.forum.id}`);
         },
         showAddNewComment(id) {
@@ -311,6 +310,11 @@ var compQuestion = Vue.component('question', {
           this.addWatcherVisible = false;
           this.newWatcher = '';
         },
+        closeWatchers() {
+          this.watchersVisible = false;
+          this.addWatcherVisible = false;
+          this.newWatcher = '';
+        },
         openAddWatcher() {
           this.newWatcher = '';
           this.addWatcherVisible = true;
@@ -475,7 +479,7 @@ var compQuestion = Vue.component('question', {
         </div>
       </div>
     
-      <div class="forum-page" v-if="sharedState.forum">
+      <div class="forum-page" @click.stop="closeWatchers" v-if="sharedState.forum">
         <div class="container forum-ans" v-if="selectedQuestion">
           <nav class="level">
             <nav class="level-level">
@@ -513,7 +517,7 @@ var compQuestion = Vue.component('question', {
                     <div class="dropdown-item" v-if="addWatcherVisible">
                       <div class="field is-grouped">
                         <p class="control is-expanded">
-                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress">
+                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress" @click.stop="">
                         </p>
                         <p class="control">
                           <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)">
@@ -529,7 +533,7 @@ var compQuestion = Vue.component('question', {
           </nav>
           <div class="forum-ans-title" v-html="highlight(selectedQuestion.title)"></div>
           <div class="forum-ans-list">
-            <div class="forum-ans-row forum-ans-question">
+            <div class="forum-ans-row forum-ans-question" :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}">
               <div class="forum-ans-row-left">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, 1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
@@ -552,7 +556,7 @@ var compQuestion = Vue.component('question', {
                 </div>
               </div>
               <div class="forum-ans-row-content">
-                <div v-html="highlight(selectedQuestion.body)" :class="{'forum-selected-item': selectedQuestion.id == selectedId}"></div>
+                <div v-html="highlight(selectedQuestion.body)"></div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="selectedQuestion" @edit="editOpen"></edit>
@@ -565,7 +569,7 @@ var compQuestion = Vue.component('question', {
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
-                    <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId}"
+                    <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
                       v-for="comment in sharedState.forum.comments[selectedQuestion.id]">
                       <span v-html="highlight(comment.body)"></span>
                       <span class="user-name"> - {{ comment.userName }}</span>
@@ -599,7 +603,7 @@ var compQuestion = Vue.component('question', {
           </div>
           <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} Answers</div>
           <div class="forum-ans-list">
-            <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId}"
+            <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
               v-for="ans in sortedAnswers">
               <div class="forum-ans-row-left">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(ans, 1)"
@@ -639,7 +643,7 @@ var compQuestion = Vue.component('question', {
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
                     <div class="forum-ans-comments-list-row" :id="comment.id"
-                      :class="{'forum-selected-item': comment.id == selectedId}"
+                      :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
                       v-for="comment in sharedState.forum.comments[ans.id]">
                       <span v-html="highlight(comment.body)"></span>
                       <span class="user-name"> - {{ comment.userName }}</span>
