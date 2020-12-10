@@ -59,8 +59,6 @@ var compQuestions = Vue.component('questions', {
     showAns(q) {
       this.selectedQuestion = q;
 
-      this.onClickLog(this.sharedState.forum.id, 'forum', q.id);
-
       if (!this.sharedState.forum.views[q.id]) {
         this.sharedState.forum.views[q.id] = 0;
       }

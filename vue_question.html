@@ -43,6 +43,12 @@ var compQuestion = Vue.component('question', {
           this.selectedId = null;
         }, 2000);
       }
+
+      google.script.run.withSuccessHandler()
+        .withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e);
+        }).onClickLog(this.sharedState.forum.id, 'forum', this.questionId);
     },
     computed: {
       selectedQuestion() {
