@@ -18,5 +18,5 @@ clasp push
 ```
 clasp open
 ```
-4. Open script file "Config.gs" and run function "Install" - creates new folder "G Suite Stack Overflow" and two Spreadsheet files.
+4. Open script file "Config.gs" and run function "Install" - creates new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files.
 5. Public the app and run the link in a browser.
