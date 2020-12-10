@@ -2,7 +2,11 @@
 
 ### How to install:
 1. Install Clasp from [link](https://github.com/google/clasp)
-2. In console: by Clasp log in to your Google account, create google app scrip file, fetch created file with settings, clone this repository and push code to the new created script file.
+2. In console: 
+- by Clasp log in to your Google account,
+- create google app scrip file,
+- fetch created file with settings,
+- clone this repository and push code to the new created script file.
 ```
 clasp login
 clasp create 'G Suite Stack Overflow'
