@@ -14,8 +14,11 @@
       store.clearSearch();
     },
     showForums() {
-      this.sharedState.forum = null;
-      router.push(`/forums`);
+      var path = `/forums`;
+      if (path != router.currentRoute.path){
+        router.push(path);
+        this.sharedState.forum = null;
+      }
     },
     showQuestions() {
       var path = `/${this.sharedState.forum.id}`;
@@ -40,11 +43,14 @@
     style="border-bottom: 1px solid lightgray;">
     <div class="navbar-brand">
       <strong class="navbar-item">
-        G Suite Stack Overflow
+        <img src="https://icons-for-free.com/iconfiles/png/512/stackoverflow-1321215626484539706.png">
       </strong>
     </div>
     <div id="navbarBasicExample" class="navbar-menu">
       <div class="navbar-start">
+        <a class="navbar-item" @click="showForums">
+          <b>G Suite Stack Overflow</b>
+        </a>
         <a class="navbar-item" @click="showQuestions" v-if="sharedState.forum && sharedState.forum.name">
           <b>{{ sharedState.forum.name }}</b>
         </a>
