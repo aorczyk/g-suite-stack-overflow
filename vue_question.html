@@ -556,7 +556,7 @@ var compQuestion = Vue.component('question', {
                 </div>
               </div>
               <div class="forum-ans-row-content">
-                <div v-html="highlight(selectedQuestion.body)"></div>
+                <div class="forum-ans-row-content-body" v-html="highlight(selectedQuestion.body)"></div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="selectedQuestion" @edit="editOpen"></edit>
@@ -629,7 +629,7 @@ var compQuestion = Vue.component('question', {
                 </div>
               </div>
               <div class="forum-ans-row-content">
-                <div v-html="highlight(ans.body)"></div>
+                <div class="forum-ans-row-content-body" v-html="highlight(ans.body)"></div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="ans" @edit="editOpen"></edit>
