@@ -52,4 +52,54 @@
     </span>
     `
   });
+
+  function showImg(image){
+    window.open("").document.write(image.outerHTML);
+  }
+
+  var mixinUtils = {
+    methods: {
+      postProcessAnsText(text){
+        let out = text;
+        const regex = /(<img.*?(?!onclick))[^>]*/g; 
+        const found = regex.exec(out);
+
+        if (found){
+          out = out.replace(regex, '$& onclick="showImg(this)"')
+        }
+
+        return out;
+      },
+      validateEmail(email) {
+          const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          return re.test(String(email).toLowerCase());
+      }
+    }
+  }
+
+  Vue.component('modalImage', {
+    props: ['img'],
+    data: function(){
+      return {
+        sharedState: store.state,
+      }
+    },
+    computed: {
+    },
+    methods: {
+      close() {
+        this.$emit('close');
+      }
+    },
+    template: 
+    `
+    <div class="modal" :class="{'is-active': img}">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <img :src="img">
+      </div>
+      <button class="modal-close is-large" aria-label="close" @click.stop="close"></button>
+    </div>
+    `
+  });
 </script>

@@ -37,14 +37,14 @@
     var dataFromServer = <?!= JSON.stringify(dataFromServerTemplate) ?>;
     console.log(dataFromServer);
   </script>
-
+  
+  <?!= include('vue_utils.html'); ?>
   <?!= include('vue_store.html'); ?>
   <?!= include('vue_forums.html'); ?>
   <?!= include('vue_questions.html'); ?>
   <?!= include('vue_question.html'); ?>
   <?!= include('vue_forum.html'); ?>
   <?!= include('vue_topbar.html'); ?>
-  <?!= include('vue_utils.html'); ?>
   <?!= include('vue_quill.html'); ?>
   <?!= include('vue_routes.html'); ?>
 
