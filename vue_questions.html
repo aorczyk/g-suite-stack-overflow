@@ -6,17 +6,7 @@ var compQuestions = Vue.component('questions', {
     return {
       sharedState: store.state,
       quillSettings: quillSettings,
-      newTopicFormVisible: false,
-      questions: [],
-      newTopicData: {
-        title: '',
-        text: ''
-      },
-      saving: false,
     }
-  },
-  created() {
-    var self = this;
   },
   computed: {
     sortedQuestions() {
@@ -38,85 +28,10 @@ var compQuestions = Vue.component('questions', {
 
       return [];
     },
-    topicTitleLengthIsValid() {
-      if (this.newTopicData.title.length > 100) {
-        return false;
-      }
-
-      return true;
-    },
   },
   methods: {
-    onClickLog(amId, type, source) {
-      google.script.run.withSuccessHandler()
-        .withFailureHandler(function (e) {
-          console.log('error');
-          console.log(e);
-        }).onClickLog(amId, type, source);
-    },
-    showAddNewTopic() {
-      this.newTopicFormVisible = true;
-    },
     openQuestion(q) {
-      this.selectedQuestion = q;
-
-      if (!this.sharedState.forum.views[q.id]) {
-        this.sharedState.forum.views[q.id] = 0;
-      }
-
-      this.sharedState.forum.views[q.id] += 1;
-
       router.push(`/${this.sharedState.forum.id}/${q.id}`);
-    },
-    showAddNewTopic() {
-      this.newTopicFormVisible = true;
-    },
-    cancelAddNewTopic() {
-      this.newTopicFormVisible = false;
-    },
-    addQuestion() {
-      var self = this;
-
-      var text = this.postProcessAnsText(this.newTopicData.text);
-
-      var data = {
-        forumId: this.sharedState.forum.id,
-        title: this.newTopicData.title,
-        text: text
-      };
-
-      this.saving = true;
-      google.script.run.withSuccessHandler(function (data) {
-        console.log('forumAddEntry');
-        console.log(data);
-
-        self.sharedState.forum.questions.push(data);
-        self.newTopicData.title = '';
-        self.newTopicData.text = '';
-        self.saving = false;
-        self.sharedState.forum.answers[data.id] = [];
-        self.newTopicFormVisible = false;
-        self.sharedState.forum.lastChange[data.id] = data.time;
-
-        var notificationData = {
-          forumId: self.sharedState.forum.id,
-          forumName: self.sharedState.forum.name,
-          qId: data.id,
-        };
-
-        self.openQuestion(data);
-
-        google.script.run.withSuccessHandler()
-          .withFailureHandler(function (e) {
-            console.log('error');
-            console.log(e);
-            console.log(e.message);
-          }).forumAddEntryNotification('question', notificationData)
-      }).withFailureHandler(function (e) {
-        console.log('error');
-        console.log(e.message);
-        self.saving = false;
-      }).forumAddEntry('question', data);
     },
     highlightText(html){
       return store.highlightText(html);
@@ -128,45 +43,6 @@ var compQuestions = Vue.component('questions', {
   template:
   `
   <div>
-    <div class="modal" :class="{'is-active': newTopicFormVisible}">
-      <div class="modal-background"></div>
-      <div class="modal-card">
-        <header class="modal-card-head">
-          <p class="modal-card-title">Ask a public question</p>
-        </header>
-        <section class="modal-card-body">
-          <div class="field">
-            <label class="label">Title</label>
-            <div class="control">
-              <div>Be specific and imagine you’re asking a question to another person</div>
-              <input class="input" :class="{'is-danger': !topicTitleLengthIsValid}" type="text"
-                placeholder="" v-model="newTopicData.title">
-            </div>
-          </div>
-          <p class="help is-danger" v-if="!topicTitleLengthIsValid">Text too long</p>
-          <div class="field">
-            <label class="label">Body</label>
-            <div class="control">
-              <div>Include all the information someone would need to answer your question</div>
-              <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="quillSettings">
-              </quill-editor>
-            </div>
-          </div>
-        </section>
-        <footer class="modal-card-foot">
-          <div class="field is-grouped">
-            <div class="control">
-              <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
-                :disabled="saving || !topicTitleLengthIsValid || !newTopicData.title">Save</button>
-            </div>
-            <div class="control">
-              <button class="button" @click="cancelAddNewTopic" :disabled="saving">Cancel</button>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </div>
-  
     <div class="forum-page" v-if="sharedState.forum">
       <div class="container">
         <div class="notification is-info" v-if="sharedState.searched">
@@ -180,9 +56,6 @@ var compQuestions = Vue.component('questions', {
         <nav class="level">
           <nav class="level-level">
             Questions
-          </nav>
-          <nav class="level-level">
-            <div class="button is-info" @click="showAddNewTopic" v-if="!sharedState.forum.am.isClosed">Ask Question</div>
           </nav>
         </nav>
         <div class="forum-list" v-if="sortedQuestions.length">

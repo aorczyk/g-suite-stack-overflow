@@ -17,9 +17,7 @@ function handleResponse(request) {
   var user = getUser();
 
   htmlTemplate.dataFromServerTemplate = {
-    user: user,
-    data: {},
-    am: {},
+    user: user
   };
   
   var response = htmlTemplate.evaluate();
@@ -74,7 +72,8 @@ function getForums() {
 
   var forums = forumsSql.select({
     table: 'Forums',
-    where: [{'is_public': true}, {'user_id': user.email}]
+    where: [{'is_public': true}, {'user_id': user.email}],
+    orderBy: {'name': 'asc'}
   }).map((x)=>{
     var out = x.get();
     out.userName = getUserNameFromEmail(out.user_id);
@@ -721,7 +720,7 @@ function forumSheetCreate(forumId) {
 }
 
 
-function install() {
+function appInstall() {
   var user = getUser();
   
   var folderName = 'G Suite Stack Overflow';
@@ -733,7 +732,7 @@ function install() {
     DriveApp.getFileById(ssForums.getId()).moveTo(folder);
     
     // Moving the script to created folder
-//    DriveApp.getFileById(ScriptApp.getScriptId()).moveTo(folder);
+    // DriveApp.getFileById(ScriptApp.getScriptId()).moveTo(folder);
 
     var sql = new SqlAbstract();
     

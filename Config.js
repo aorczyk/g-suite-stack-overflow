@@ -14,7 +14,7 @@ if (!APP_CONFIG.appUrl){
 }
 
 function Install(){
-  install();
+  appInstall();
 }
 
 function setSettingsUrl(){

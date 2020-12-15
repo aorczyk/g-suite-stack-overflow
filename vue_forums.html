@@ -4,20 +4,7 @@
       data() {
         return {
           sharedState: store.state,
-          quillSettings: quillSettings,
-          newForumFormVisible: false,
           forums: [],
-          newForumDataTemplate: {
-            name: '',
-            description: '',
-            is_public: true,
-            users: '',
-            moderators: '',
-            forum_data_url: ''
-          },
-          newForumData: null,
-          saving: false,
-          edit: false,
         }
       },
       created() {
@@ -25,142 +12,40 @@
         this.sharedState.forumsButtonVisible = false;
 
         this.getForums();
-        console.log('Forums created');
-      },
-      computed: {
       },
       methods: {
         getForums() {
           this.sharedState.isSpinnerVisible = true;
-          console.log('getForums');
+
           google.script.run.withSuccessHandler((data)=>{
-            console.log(data);
             this.forums = data;
             this.sharedState.isSpinnerVisible = false;
           }).getForums();
         },
-        forumAdd(){
-          this.saving = true;
-          if (this.edit){
-
-            console.log(this.newForumData);
-
-            google.script.run.withSuccessHandler((data)=>{
-              this.saving = false;
-              this.newForumFormVisible = false;
-              this.getForums();
-            }).withFailureHandler((e)=>{
-              console.log('error');
-              console.log(e.message);
-              this.saving = false;
-            }).editForum(this.newForumData);
-          }
-          else {
-            this.newForumData.forum_data_url = this.forums[0].forum_data_url;
-
-            google.script.run.withSuccessHandler((data)=>{
-              this.saving = false;
-              this.newForumFormVisible = false;
-              this.getForums();
-            }).withFailureHandler((e)=>{
-              console.log('error');
-              console.log(e.message);
-              this.saving = false;
-            }).addForum(this.newForumData);
-          }
-
-        },
-        forumAddCancel(){
-          this.newForumFormVisible = false;
-        },
         openForum(forum){
           router.push(`/${forum.id}`);
         },
-        showAddForumForm(){
-          this.newForumData = JSON.parse(JSON.stringify(this.newForumDataTemplate));
-          this.newForumFormVisible = true;
-          this.edit = false;
-        },
-        showEditForumForm(forum){
-          this.newForumData = forum;
-          this.newForumFormVisible = true;
-          this.edit = true;
-        },
+        editForum(forum){
+          this.sharedState.newForumFormVisible = true;
+          this.sharedState.editForum = forum;
+        }
       },
       template:
       `
       <div>
-        <div class="modal" :class="{'is-active': true}" v-if="newForumFormVisible">
-          <div class="modal-background"></div>
-          <div class="modal-card">
-            <header class="modal-card-head">
-              <p class="modal-card-title" v-if="!edit">New forum</p>
-              <p class="modal-card-title" v-else>Edit forum</p>
-            </header>
-            <section class="modal-card-body">
-              <div class="field">
-                <label class="label">Name</label>
-                <div class="control">
-                  <input class="input" type="text"
-                    placeholder="" v-model="newForumData.name">
-                </div>
-              </div>
-              <div class="field">
-                <label class="label">Description</label>
-                <div class="control">
-                  <input class="input" type="text"
-                    placeholder="" v-model="newForumData.description">
-                </div>
-              </div>
-              <div class="field">
-                <label class="checkbox">
-                  <input type="checkbox" v-model="newForumData.is_public">
-                  Is public
-                </label>
-              </div>
-              <div class="field" v-if="!newForumData.is_public">
-                <label class="label">Users (comma separated users emails)</label>
-                <div class="control">
-                  <input class="input" type="text"
-                    placeholder="" v-model="newForumData.users">
-                </div>
-              </div>
-              <div class="field">
-                <label class="label">Moderators (comma separated users emails)</label>
-                <div class="control">
-                  <input class="input" type="text"
-                    placeholder="" v-model="newForumData.moderators">
-                </div>
-              </div>
-            </section>
-            <footer class="modal-card-foot">
-              <div class="field is-grouped">
-                <div class="control">
-                  <button class="button is-info" :class="{'is-loading': saving}" @click="forumAdd"
-                    :disabled="saving || !newForumData.name">Save</button>
-                </div>
-                <div class="control">
-                  <button class="button" @click="forumAddCancel" :disabled="saving">Cancel</button>
-                </div>
-              </div>
-            </footer>
-          </div>
-        </div>
-      
+        <v-new-forum @reload="getForums" v-if="sharedState.newForumFormVisible"/>
+
         <div class="forum-page">
           <div class="container">
             <nav class="level">
               <nav class="level-level">
                 Forums
               </nav>
-              <nav class="level-level">
-                <div class="button is-info" @click="showAddForumForm">New forum</div>
-              </nav>
             </nav>
             <div class="forums-list">
               <div class="forum-list-row" v-for="forum in forums" @click="openForum(forum)">
                 <div class="forum-list-row-content">
-                  <div>{{ forum.name }} <span v-if="!forum.is_public"><i class="fas fa-lock"></i></span> <span class="forums-edit-icon" v-if="forum.user_id === sharedState.user.email" @click.stop="showEditForumForm(forum)"><i class="fas fa-pen"></i></span></div>
+                  <div>{{ forum.name }} <span v-if="!forum.is_public"><i class="fas fa-lock"></i></span> <span class="forums-edit-icon" v-if="forum.user_id === sharedState.user.email" @click.stop="editForum(forum)"><i class="fas fa-pen"></i></span></div>
                   <div class="forum-ans-row-content-info">
                     <div class="forum-ans-row-content-info-left">{{ forum.description }}</div>
                     <div class="forum-ans-row-content-info-right">{{ forum.time }} <span

@@ -30,16 +30,17 @@
   <div id="app">
     <spinner v-if="sharedState.isSpinnerVisible"></spinner>
     <top-bar></top-bar>
-    <router-view :user="user"></router-view>
+    <router-view></router-view>
   </div>
 
   <script>
     var dataFromServer = <?!= JSON.stringify(dataFromServerTemplate) ?>;
-    console.log(dataFromServer);
   </script>
   
   <?!= include('vue_utils.html'); ?>
   <?!= include('vue_store.html'); ?>
+  <?!= include('vue_new_question.html'); ?>
+  <?!= include('vue_new_forum.html'); ?>
   <?!= include('vue_forums.html'); ?>
   <?!= include('vue_questions.html'); ?>
   <?!= include('vue_question.html'); ?>
@@ -55,7 +56,6 @@
       data: {
         sharedState: store.state,
         router: router,
-        user: dataFromServer.user
       },
       created: function () {
         // Router - Get the path from the string URL fragment appearing after the '#' character.
@@ -81,8 +81,6 @@
            };
            google.script.history.push(state, {}, path);
         }
-      },
-      methods: {
       }
     })
   </script>

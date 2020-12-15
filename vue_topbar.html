@@ -3,7 +3,6 @@
   data() {
     return {
       sharedState: store.state,
-      privateState: {},
     }
   },
   methods: {
@@ -26,6 +25,12 @@
         router.push(path);
       }
     },
+    showAddNewTopicForm() {
+      this.sharedState.newTopicFormVisible = true;
+    },
+    showAddNewForum() {
+      this.sharedState.newForumFormVisible = true;
+    }
   },
   watch: {
     'sharedState.searchText': function(newVal, oldVal){
@@ -81,6 +86,12 @@
         </div>
       </div>
       <div class="navbar-end">
+        <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
+          <div class="button is-info" @click.stop="showAddNewTopicForm">Ask Question</div>
+        </div>
+        <div class="navbar-item" v-if="!sharedState.searchVisible">
+          <div class="button is-info" @click.stop="showAddNewForum">Add New Forum</div>
+        </div>
         <a class="navbar-item">
           {{ sharedState.user.email }}
         </a>

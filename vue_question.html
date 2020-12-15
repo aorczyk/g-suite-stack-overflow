@@ -39,6 +39,12 @@
           console.log('error');
           console.log(e);
         }).onClickLog(this.sharedState.forum.id, 'forum', this.questionId);
+
+      if (!this.sharedState.forum.views[this.questionId]) {
+        this.sharedState.forum.views[this.questionId] = 0;
+      }
+
+      this.sharedState.forum.views[this.questionId] += 1;
     },
     computed: {
       selectedQuestion() {
@@ -109,7 +115,6 @@
 
         this.saving = true;
         google.script.run.withSuccessHandler(function (data) {
-          console.log(data);
           if (!self.sharedState.forum.comments[self.addNewCommentParentId]) {
             self.sharedState.forum.comments[self.addNewCommentParentId] = [];
           }
@@ -266,7 +271,10 @@
           }).editSave(this.editItem);
       },
       editClose() {
-        this.editItem.body = this.editItemTmp.body;
+        for (var key in this.editItemTmp){
+          this.editItem[key] = this.editItemTmp[key];
+        }
+        
         this.editItem = null;
       },
       newRef(p1, p2) {
