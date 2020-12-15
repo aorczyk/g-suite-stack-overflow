@@ -27,8 +27,6 @@
         forumAdd(){
           this.saving = true;
 
-          console.log(this.forumData);
-
           if (this.sharedState.editForum){
             google.script.run.withSuccessHandler((data)=>{
               this.saving = false;
