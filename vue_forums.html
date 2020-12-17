@@ -45,7 +45,7 @@
             <div class="forums-list">
               <div class="forum-list-row" v-for="forum in forums" @click="openForum(forum)">
                 <div class="forum-list-row-content">
-                  <div>{{ forum.name }} <span v-if="!forum.is_public"><i class="fas fa-lock"></i></span> <span class="forums-edit-icon" v-if="forum.user_id === sharedState.user.email" @click.stop="editForum(forum)"><i class="fas fa-pen"></i></span></div>
+                  <div>{{ forum.name }} <span v-if="!forum.is_public"><i class="fas fa-lock"></i></span> <span class="forums-edit-icon" v-if="forum.canEdit" @click.stop="editForum(forum)"><i class="fas fa-pen"></i></span></div>
                   <div class="forum-ans-row-content-info">
                     <div class="forum-ans-row-content-info-left">{{ forum.description }}</div>
                     <div class="forum-ans-row-content-info-right">{{ forum.time }} <span

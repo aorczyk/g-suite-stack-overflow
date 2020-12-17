@@ -48,6 +48,10 @@ function getSqlForums(){
               get: JSON.parse,
               set: JSON.stringify
             },
+            'admins': {
+              get: JSON.parse,
+              set: JSON.stringify
+            },
             'users': {
               get: JSON.parse,
               set: JSON.stringify
@@ -75,8 +79,16 @@ function getForums() {
     where: [{'is_public': true}, {'user_id': user.email}],
     orderBy: {'name': 'asc'}
   }).map((x)=>{
+    // Postprocess
     var out = x.get();
+    
     out.userName = getUserNameFromEmail(out.user_id);
+
+    var isAdmin = out.admins.includes(user.email);
+    var isOwner = out.user_id === user.email;
+
+    out.canEdit = isAdmin || isOwner;
+
     return out;
   });
 
@@ -100,6 +112,7 @@ function addForum(data){
     'is_public': data.is_public,
     'users': data.users.split(','),
     'moderators': data.moderators.split(','),
+    'admins': data.admins.split(','),
     'forum_data_url': forumSheetUrl
   };
 
@@ -117,9 +130,11 @@ function editForum(data){
   var am = getForum(data.id);
 
   var isModerator = am.moderators.includes(user.email);
+  var isAdmin = am.admins.includes(user.email);
+  var isOwner = am.user_id === user.email;
 
   // Only autor and moderator can edit
-  if (!(isModerator || am.user_id === user.email)){
+  if (!(isModerator || isAdmin || isOwner)){
     return;
   }
 
@@ -265,13 +280,16 @@ function getForumData(id) {
     };
   }
 
-  if (!am.is_public && !(am.moderators.includes(user.email) || am.users.includes(user.email) || am.user_id === user.email)){
+  var isModerator = am.moderators.includes(user.email);
+  var isAdmin = am.admins.includes(user.email);
+  var isUser = am.users.includes(user.email);
+  var isOwner = am.user_id === user.email;
+
+  if (!am.is_public && !(isModerator || isAdmin || isUser || isOwner)){
     return {
       accessDenied: true
     };
   }
-
-  var isModerator = am.moderators.includes(user.email);
 
   var out = {
     appUrl: APP_CONFIG.appUrl,
@@ -329,7 +347,7 @@ function getForumData(id) {
       edited: row['changed_time'],
       watchers: isArray(row['watchers']) ? row['watchers'] : [],
       userName: getUserNameFromEmail(row['user_id']),
-      canEdit: row['user_id'] === user.email || isModerator
+      canEdit: row['user_id'] === user.email || isModerator || isAdmin || isOwner
     }
 
     out.forumLastChange = rowData.time;
@@ -582,9 +600,12 @@ function editSave(item) {
   var am = getForum(item.forumId);
 
   var isModerator = am.moderators.includes(user.email);
+  var isAdmin = am.admins.includes(user.email);
+  var isOwner = am.user_id === user.email;
+  var isEntryOwner = item.userId === user.email;
 
-  // Only autor and moderator can edit
-  if (!(isModerator || item.userId === user.email)){
+  // Who can edit.
+  if (!(isModerator || isAdmin || isOwner || isEntryOwner)){
     return;
   }
 
@@ -741,14 +762,14 @@ function appInstall() {
       tables: [
         {
           name: 'Forums',
-          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators']
+          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators','admins']
         }
       ]
     })
     
     var forumSheetUrl = forumSheetCreate('demo');
     
-    sql.insert({table: 'Forums', values: {time: new Date(), id: 'demo', user_id: user.email, name: 'Demo', description: 'Example', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]'}});
+    sql.insert({table: 'Forums', values: {time: new Date(), id: 'demo', user_id: user.email, name: 'Demo', description: 'Example', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]', admins: '[]'}});
         
     var scriptProperties = PropertiesService.getScriptProperties();
     scriptProperties.setProperty('settingsUrl', ssForums.getUrl());
