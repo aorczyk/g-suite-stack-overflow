@@ -1,5 +1,15 @@
 # G Suite Stack Overflow
 
+### How it works:
+The application works like simple version of Stack Overflow. All data is stored in Spreadsheet file on your Google Drive.
+User can:
+ - ask questions 
+ - answer questions
+ - add comments
+ - vote questions and answers
+ - add/remove watchers in given question (watchers get notification about all changes done in question)
+ - create own forum (also private forum for selected users only)
+ 
 ### How to install:
 1. Install Clasp from [link](https://github.com/google/clasp)
 2. In console: 
