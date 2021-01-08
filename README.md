@@ -1,13 +1,12 @@
 # G Suite Stack Overflow
 
 ### How it works?
-The application works like simple version of Stack Overflow. All data is stored in Spreadsheet file on your Google Drive.
-User can:
+The application works like simple version of Stack Overflow. All data is stored in Spreadsheet file on your Google Drive. It's been desinged for G Suite users in given company, without login to the app. User can:
  - ask questions 
  - answer questions
  - add comments
  - vote questions and answers
- - add/remove watchers in given question (watchers get notification about all changes done in question)
+ - add/remove watchers in given question (watchers get email notification about all changes done in question)
  - create own forum (also private forum for selected users only)
  
 ### How to install?
