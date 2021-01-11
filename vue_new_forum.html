@@ -11,6 +11,7 @@
             is_public: true,
             users: '',
             moderators: '',
+            admins: ''
           },
           saving: false,
           forumData: null
@@ -103,6 +104,13 @@
                 <div class="control">
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.moderators">
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Admins (comma separated users emails)</label>
+                <div class="control">
+                  <input class="input" type="text"
+                    placeholder="" v-model="forumData.admins">
                 </div>
               </div>
             </section>
