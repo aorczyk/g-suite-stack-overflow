@@ -60,12 +60,12 @@
           <b>{{ sharedState.forum.name }}</b>
         </a>
         <a class="navbar-item" @click="showForums" v-if="sharedState.forumsButtonVisible">
-          Forums
+          {{ $t("message.forums") }}
         </a>
         <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
           <div class="field has-addons">
             <div class="control">
-              <input class="input" type="text" placeholder="Search" v-model="sharedState.searchText" @keyup.enter="search">
+              <input class="input" type="text" :placeholder="$t('message.search')" v-model="sharedState.searchText" @keyup.enter="search">
             </div>
             <!--<div class="control" v-if="sharedState.searched">
               <a class="button is-info" @click="clearSearch">
@@ -87,10 +87,10 @@
       </div>
       <div class="navbar-end">
         <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
-          <div class="button is-info" @click.stop="showAddNewTopicForm">Ask Question</div>
+          <div class="button is-info" @click.stop="showAddNewTopicForm">{{ $t("message.askQuestion") }}</div>
         </div>
         <div class="navbar-item" v-if="!sharedState.searchVisible">
-          <div class="button is-info" @click.stop="showAddNewForum">Add New Forum</div>
+          <div class="button is-info" @click.stop="showAddNewForum">{{ $t("message.addNewForum") }}</div>
         </div>
         <a class="navbar-item">
           {{ sharedState.user.email }}

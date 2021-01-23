@@ -32,7 +32,7 @@
         return this.item.canEdit;
       },
       title() {
-        return this.item.edited ? 'Edited: ' + this.item.edited : 'Edit'
+        return this.item.edited ? this.$t('message.edited') + ': ' + this.item.edited : this.$t('message.edit2')
       }
     },
     methods: {
@@ -46,9 +46,9 @@
     `<span>
       <span :class="[isEnabled ? 'action-icon' : 'action-icon-disabled']" @click="edit" :title="title" v-if="isEnabled || item.edited">
         <span v-if="type === 'icon'"> <i class="fas fa-pen"></i></span>
-        <span v-else>edit</span>
+        <span v-else>{{ $t('message.edit2') }}</span>
       </span>
-      <span v-if="item.status == 'Deleted'">Deleted</span>
+      <span v-if="item.status == 'Deleted'">{{ $t('message.deleted') }}</span>
     </span>
     `
   });

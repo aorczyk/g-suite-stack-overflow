@@ -425,16 +425,16 @@
         <div class="modal-background"></div>
         <div class="modal-card">
           <header class="modal-card-head">
-            <p class="modal-card-title">Edit</p>
+            <p class="modal-card-title">{{ $t("message.edit") }}</p>
           </header>
           <section class="modal-card-body" v-if="editItem">
             <div class="field" v-if="editItem.type == 'question'">
-              <label class="label">Title</label>
+              <label class="label">{{ $t("message.title") }}</label>
               <input class="input" type="text" v-model="editItem.title">
             </div>
             <div class="field" v-if="editItem.type !== 'comment'">
               <div class="control">
-                <label class="label">Body</label>
+                <label class="label">{{ $t("message.body") }}</label>
                 <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings"></quill-editor>
               </div>
             </div>
@@ -447,10 +447,10 @@
           <footer class="modal-card-foot">
             <div class="field is-grouped">
               <div class="control">
-                <button class="button is-info" :class="{'is-loading': saving}" @click.stop="editSave">Save</button>
+                <button class="button is-info" :class="{'is-loading': saving}" @click.stop="editSave">{{ $t("message.save") }}</button>
               </div>
               <div class="control">
-                <button class="button" @click.stop="editClose" :disabled="saving">Cancel</button>
+                <button class="button" @click.stop="editClose" :disabled="saving">{{ $t("message.cancel") }}</button>
               </div>
             </div>
           </footer>
@@ -461,7 +461,7 @@
         <div class="container forum-ans" v-if="selectedQuestion">
           <nav class="level">
             <nav class="level-level">
-              <div class="button is-info" @click.stop="showQuestions">Back To Questions</div>
+              <div class="button is-info" @click.stop="showQuestions">{{ $t("message.backToQuestions") }}</div>
             </nav>
             <nav class="level-level">
               <div class="dropdown is-right" :class="{'is-active': watchersVisible}">
@@ -473,10 +473,10 @@
                 <div class="dropdown-menu" id="dropdown-menu" role="menu">
                   <div class="dropdown-content">
                     <a href="#" class="dropdown-item" @click.stop="startWatching" v-if="!selectedQuestion.watchers.includes(sharedState.user.email)">
-                      Start watching <span v-if="startWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
+                      {{ $t("message.startWatching") }} <span v-if="startWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
                     </a>
                     <a href="#" class="dropdown-item" @click.stop="stopWatching" v-else>
-                      Stop watching <span v-if="stopWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
+                      {{ $t("message.stopWatching") }} <span v-if="stopWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
                     </a>
                     <hr class="dropdown-divider" v-if="selectedQuestion.watchers.length">
                     <div class="dropdown-item watchers-dropdown-item" v-for="email in selectedQuestion.watchers">
@@ -490,16 +490,16 @@
                     </div>
                     <hr class="dropdown-divider">
                     <a href="#" class="dropdown-item" @click.stop="openAddWatcher" v-if="!addWatcherVisible">
-                      <i class="fas fa-plus"></i> Add watcher
+                      <i class="fas fa-plus"></i> {{ $t("message.addWatcher") }}
                     </a>
                     <div class="dropdown-item" v-if="addWatcherVisible">
                       <div class="field is-grouped">
                         <p class="control is-expanded">
-                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" placeholder="Enter email" v-model="newWatcher" :disabled="addWatcherProgress" @click.stop="">
+                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" :placeholder="$t('message.enterEmail')" v-model="newWatcher" :disabled="addWatcherProgress" @click.stop="">
                         </p>
                         <p class="control">
-                          <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)">
-                            <i class="fas fa-plus"></i>
+                          <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)"  :title="$t('message.save')">
+                            <i class="fas fa-check"></i>
                           </a>
                         </p>
                       </div>
@@ -515,22 +515,22 @@
               <div class="forum-ans-row-left">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, 1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
-                  <i class="fas fa-caret-up" title="Pytanie jest przydatne"></i>
+                  <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
                 </div>
                 <div class="forum-ans-row-left-vote-value">
                   {{ selectedQuestion.vote }}
                 </div>
                 <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, -1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
-                  <i class="fas fa-caret-down" title="Pytanie nie jest przydatne"></i>
+                  <i class="fas fa-caret-down" :title="$t('message.badAns')"></i>
                 </div>
                 <div v-if="sharedState.user.email == selectedQuestion.userId">
                   <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : selectedQuestion.bestAns == selectedQuestion.id}" @click.stop="bestAns(selectedQuestion)">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" :title="$t('message.bestAns')"></i>
                   </div>
                 </div>
                 <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == selectedQuestion.id">
-                  <i class="fas fa-check" title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i>
+                  <i class="fas fa-check" :title="$t('message.bestAns')"></i>
                 </div>
               </div>
               <div class="forum-ans-row-content">
@@ -557,7 +557,7 @@
                   </div>
                   <div>
                     <span class="forum-ans-comments-add" @click.stop="showAddNewComment(selectedQuestion.id)"
-                      v-if="!sharedState.forum.am.isClosed">add a comment</span>
+                      v-if="!sharedState.forum.am.isClosed">{{ $t("message.addAcomment") }}</span>
                   </div>
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == selectedQuestion.id">
                     <div class="field">
@@ -568,10 +568,10 @@
                     <div class="field is-grouped">
                       <div class="control">
                         <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                          :disabled="saving">Save</button>
+                          :disabled="saving">{{ $t("message.save") }}</button>
                       </div>
                       <div class="control">
-                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">Cancel</button>
+                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t("message.cancel") }}</button>
                       </div>
                     </div>
                   </div>
@@ -579,31 +579,29 @@
               </div>
             </div>
           </div>
-          <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} Answers</div>
+          <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} {{ $t("message.answers2") }}</div>
           <div class="forum-ans-list">
             <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
               v-for="ans in sortedAnswers">
               <div class="forum-ans-row-left">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(ans, 1)"
                 :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
-                  <i class="fas fa-caret-up"
-                  title="Odpowiedź jest przydatna"></i>
+                  <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
                 </div>
                 <div class="forum-ans-row-left-vote-value">
                   {{ ans.vote }}
                 </div>
                 <div class="forum-ans-row-left-vote" @click.stop="vote(ans, -1)"
                 :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
-                  <i class="fas fa-caret-down"
-                  title="Odpowiedź nie jest przydatna"></i>
+                  <i class="fas fa-caret-down" :title="$t('message.badAns')"></i>
                 </div>
                 <div v-if="sharedState.user.email == selectedQuestion.userId">
                   <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : selectedQuestion.bestAns == ans.id}" @click.stop="bestAns(ans)">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" :title="$t('message.bestAns')"></i>
                   </div>
                 </div>
                 <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == ans.id">
-                  <i class="fas fa-check" title="Zadający pytanie uważa, że ta odpowiedź jest najlepsza"></i>
+                  <i class="fas fa-check" :title="$t('message.editForum')"></i>
                 </div>
               </div>
               <div class="forum-ans-row-content">
@@ -630,7 +628,7 @@
                     </div>
                   </div>
                   <div>
-                    <span class="forum-ans-comments-add" @click.stop="showAddNewComment(ans.id)" v-if="!sharedState.forum.am.isClosed">add a comment</span>
+                    <span class="forum-ans-comments-add" @click.stop="showAddNewComment(ans.id)" v-if="!sharedState.forum.am.isClosed">{{ $t('message.addAcomment') }}</span>
                   </div>
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == ans.id">
                     <div class="field">
@@ -641,10 +639,10 @@
                     <div class="field is-grouped">
                       <div class="control">
                         <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                          :disabled="saving">Save</button>
+                          :disabled="saving">{{ $t('message.save') }}</button>
                       </div>
                       <div class="control">
-                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">Cancel</button>
+                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
                       </div>
                     </div>
                   </div>
@@ -653,12 +651,12 @@
             </div>
           </div>
           <div v-if="!sharedState.forum.am.isClosed">
-            <div class="forum-ans-text">Your Answer</div>
+            <div class="forum-ans-text">{{ $t('message.yourAnswer') }}</div>
             <!--<div class="editor"></div>-->
             <quill-editor class="quill-restyle" v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings">
             </quill-editor>
             <div class="forum-ans-add">
-              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving">Post Your Answer</div>
+              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving">{{ $t('message.postYourAnswer') }}</div>
             </div>
           </div>
         </div>

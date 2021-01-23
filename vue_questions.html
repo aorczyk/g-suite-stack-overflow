@@ -47,7 +47,7 @@ var compQuestions = Vue.component('questions', {
       <div class="container">
         <div class="notification is-info" v-if="sharedState.searched">
           <button class="delete" @click.stop="clearSearch"></button>
-          Filter: 
+          {{ $t("message.filter") }}: 
           <span class="tag is-light">
             {{ sharedState.searchText }}
             <button class="delete is-small" @click.stop="clearSearch"></button>
@@ -55,7 +55,7 @@ var compQuestions = Vue.component('questions', {
         </div>
         <nav class="level">
           <nav class="level-level">
-            Questions
+            {{ $t("message.questions") }}
           </nav>
         </nav>
         <div class="forum-list" v-if="sortedQuestions.length">
@@ -65,26 +65,26 @@ var compQuestions = Vue.component('questions', {
                 <div class="forum-list-row-summary-count">
                   <span>{{ question.vote }}</span>
                 </div>
-                <div>votes</div>
+                <div>{{ $t("message.votes") }}</div>
               </div>
               <div class="forum-list-row-summary"
                 :class="{'forum-list-row-summary-bestAns': question.bestAns}">
                 <div class="forum-list-row-summary-count">
                   <span>{{ sharedState.forum.answers[question.id] ? sharedState.forum.answers[question.id].length : 0 }}</span>
                 </div>
-                <div>answers</div>
+                <div>{{ $t("message.answers") }}</div>
               </div>
               <div class="forum-list-row-summary">
                 <div class="forum-list-row-summary-count">
                   <span>{{ sharedState.forum.views[question.id] ? sharedState.forum.views[question.id] : 0 }}</span>
                 </div>
-                <div>views</div>
+                <div>{{ $t("message.views") }}</div>
               </div>
             </div>
             <div class="forum-list-row-content">
               <div v-html="highlightText(question.title)"></div>
               <div class="forum-ans-row-content-info">
-                <div class="forum-ans-row-content-info-left">Last change:
+                <div class="forum-ans-row-content-info-left">{{ $t("message.lastChange") }}:
                   {{ sharedState.forum.lastChange[question.id] }}</div>
                 <div class="forum-ans-row-content-info-right">{{ question.time }} <span
                     class="user-name">{{ question.userName }}</span></div>
@@ -93,7 +93,7 @@ var compQuestions = Vue.component('questions', {
           </div>
         </div>
         <div v-else>
-          No Questions
+          {{ $t("message.noQuestions") }}
         </div>
       </div>
     </div>

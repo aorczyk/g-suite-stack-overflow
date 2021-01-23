@@ -74,22 +74,22 @@
           <div class="modal-background"></div>
           <div class="modal-card">
             <header class="modal-card-head">
-              <p class="modal-card-title">Ask a public question</p>
+              <p class="modal-card-title">{{ $t('message.AskApublicQuestion') }}</p>
             </header>
             <section class="modal-card-body">
               <div class="field">
-                <label class="label">Title</label>
+                <label class="label">{{ $t("message.title") }}</label>
                 <div class="control">
-                  <div>Be specific and imagine you’re asking a question to another person</div>
+                  <div>{{ $t("message.newQuestionTitleInfo") }}</div>
                   <input class="input" :class="{'is-danger': !topicTitleLengthIsValid}" type="text"
                     placeholder="" v-model="newTopicData.title">
                 </div>
               </div>
               <p class="help is-danger" v-if="!topicTitleLengthIsValid">Text too long</p>
               <div class="field">
-                <label class="label">Body</label>
+                <label class="label">{{ $t("message.body") }}</label>
                 <div class="control">
-                  <div>Include all the information someone would need to answer your question</div>
+                  <div>{{ $t("message.newQuestionBodyInfo") }}</div>
                   <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="quillSettings">
                   </quill-editor>
                 </div>
@@ -99,10 +99,10 @@
               <div class="field is-grouped">
                 <div class="control">
                   <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
-                    :disabled="saving || !topicTitleLengthIsValid || !newTopicData.title">Save</button>
+                    :disabled="saving || !topicTitleLengthIsValid || !newTopicData.title">{{ $t("message.save") }}</button>
                 </div>
                 <div class="control">
-                  <button class="button" @click="cancel" :disabled="saving">Cancel</button>
+                  <button class="button" @click="cancel" :disabled="saving">{{ $t("message.cancel") }}</button>
                 </div>
               </div>
             </footer>

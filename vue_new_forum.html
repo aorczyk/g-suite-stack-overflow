@@ -68,19 +68,19 @@
           <div class="modal-background"></div>
           <div class="modal-card">
             <header class="modal-card-head">
-              <p class="modal-card-title" v-if="!data">New forum</p>
-              <p class="modal-card-title" v-else>Edit forum</p>
+              <p class="modal-card-title" v-if="!data">{{ $t("message.newForum") }}</p>
+              <p class="modal-card-title" v-else>{{ $t("message.editForum") }}</p>
             </header>
             <section class="modal-card-body">
               <div class="field">
-                <label class="label">Name</label>
+                <label class="label">{{ $t("message.name") }}</label>
                 <div class="control">
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.name">
                 </div>
               </div>
               <div class="field">
-                <label class="label">Description</label>
+                <label class="label">{{ $t("message.description") }}</label>
                 <div class="control">
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.description">
@@ -89,25 +89,25 @@
               <div class="field">
                 <label class="checkbox">
                   <input type="checkbox" v-model="forumData.is_public">
-                  Is public
+                  {{ $t("message.isPublic") }}
                 </label>
               </div>
               <div class="field" v-if="!forumData.is_public">
-                <label class="label">Users (comma separated users emails)</label>
+                <label class="label">{{ $t("message.users") }}</label>
                 <div class="control">
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.users">
                 </div>
               </div>
               <div class="field">
-                <label class="label">Moderators (comma separated users emails)</label>
+                <label class="label">{{ $t("message.moderators") }}</label>
                 <div class="control">
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.moderators">
                 </div>
               </div>
               <div class="field">
-                <label class="label">Admins (comma separated users emails)</label>
+                <label class="label">{{ $t("message.admins") }}</label>
                 <div class="control">
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.admins">
@@ -118,10 +118,10 @@
               <div class="field is-grouped">
                 <div class="control">
                   <button class="button is-info" :class="{'is-loading': saving}" @click.stop="forumAdd"
-                    :disabled="saving || !forumData.name">Save</button>
+                    :disabled="saving || !forumData.name">{{ $t("message.save") }}</button>
                 </div>
                 <div class="control">
-                  <button class="button" @click.stop="forumAddCancel" :disabled="saving">Cancel</button>
+                  <button class="button" @click.stop="forumAddCancel" :disabled="saving">{{ $t("message.cancel") }}</button>
                 </div>
               </div>
             </footer>
