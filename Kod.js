@@ -17,7 +17,8 @@ function handleResponse(request) {
   var user = getUser();
 
   htmlTemplate.dataFromServerTemplate = {
-    user: user
+    user: user,
+    language: APP_CONFIG.language
   };
   
   var response = htmlTemplate.evaluate();
