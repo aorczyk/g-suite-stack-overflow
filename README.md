@@ -29,3 +29,12 @@ clasp open
 ```
 4. Open script file "Config.gs" and run function "Install" - creates new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files.
 5. Public the app and run the link in a browser.
+
+### In the project I used:
+ - [Google Apps Script](https://developers.google.com/apps-script) - backend
+ - [Google Apps Script SQL Abstract](https://github.com/aorczyk/gas-sql-abstract) - database
+ - [Vue.js](https://vuejs.org/) - JavaScript Framework
+ - [Vue Router](https://router.vuejs.org/) - official router for Vue.js
+ - [Vue I18n](https://kazupon.github.io/vue-i18n/introduction.html) - internationalization plugin of Vue.js
+ - [Quill](https://quilljs.com/) - a free, open source WYSIWYG editor
+ - [Font Awesome](https://fontawesome.com/) - icon set
