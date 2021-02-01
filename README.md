@@ -11,29 +11,26 @@ The application works on Google Apps Script application development platform. It
  
 ### How to install?
 1. Install Clasp from [link](https://github.com/google/clasp)
-2. In console: 
+2. In a console window run commands listed below. They do: 
  - log by Clasp in to your Google account,
  - create google app scrip file,
  - fetch created files,
  - clone this repository,
- - push code to the new created google app script file.
+ - push code to the new created google app script file,
+ - open the new created Google App Script file in a browser.
 ```
 clasp login
 clasp create 'G Suite Stack Overflow'
 clasp pull
 git clone https://github.com/aorczyk/g-suite-stack-overflow.git
 clasp push
-```
-3. Open the gas file in a browser:
-```
 clasp open
 ```
-4. In Google App Script editor:
- - Open file "Config.gs" and run function "Install" - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files.
- - In the menu select "Publish" and "Deploy as web app".
- - Select "Project version" as "New", add some description, "Execute the app as": Me, "Who has access to the app": "Only myself" or if you want to publish it in your company select "Anyone within ...".
- - Copy "Current web app URL" and run it in a browser or click link in "Test web app for your latest code".
-
+3. In Google App Script editor:
+ - open file "Config.gs" and run function "Install" - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files,
+ - in the menu select "Publish" and "Deploy as web app",
+ - select "Project version" as "New", add some description, "Execute the app as": Me, "Who has access to the app": "Only myself" or if you want to publish it in your company select "Anyone within ...",
+ - copy "Current web app URL" and run it in a browser or click link in "Test web app for your latest code".
 
 ### In the project I used:
  - [Google Apps Script](https://developers.google.com/apps-script/overview) - backend and running environment
