@@ -575,7 +575,11 @@ function forumAddEntryNotification(type, data) {
 
     var email = {};
     email.topic = Utilities.formatString("Forum %s - %s", data.forumName, actionName);
-    email.text = Utilities.formatString("New changes in topic: <b>%s</b><br>%s:<br><div style='background-color: #fffbec;'>%s</div><br>Show: <a href='%s'>link</a><br>", qTitle, actionName, data.body,link);
+    if (type == 'question'){
+      email.text = Utilities.formatString("New topic: <b>%s</b><br><br>Show: <a href='%s'>link</a><br>", qTitle, link);
+    } else {
+      email.text = Utilities.formatString("New changes in topic: <b>%s</b><br>%s:<br><div style='background-color: #fffbec;'>%s</div><br>Show: <a href='%s'>link</a><br>", qTitle, actionName, data.body,link);
+    }
     
     sendEmail(email, watchers);
   }
