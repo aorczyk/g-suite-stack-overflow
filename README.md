@@ -1,7 +1,9 @@
 # G Suite Stack Overflow
 
 ### How it works?
-The application works on Google Apps Script application development platform. It's simple forum, similar to Stack Overflow. All data is stored in Spreadsheet file on your Google Drive. It's been desinged for G Suite users in given company, login to the app is not required. User can:
+The application works on Google Apps Script application development platform. It's simple forum, similar to Stack Overflow. All data is stored in Spreadsheet file on your Google Drive. It's been desinged for G Suite users in given company, login to the app is not required.
+
+User can:
  - ask questions 
  - answer questions
  - add comments
@@ -12,12 +14,12 @@ The application works on Google Apps Script application development platform. It
 ### How to install?
 1. Install Clasp from [link](https://github.com/google/clasp)
 2. In a console window run commands listed below. They do: 
- - log by Clasp in to your Google account,
- - create google app scrip file,
- - fetch created files,
- - clone this repository,
- - push code to the new created google app script file,
- - open the new created Google App Script file in a browser.
+   - log by Clasp in to your Google account,
+   - create google app scrip file,
+   - fetch created files,
+   - clone this repository,
+   - push code to the new created google app script file,
+   - open the new created Google App Script file in a browser.
 ```
 clasp login
 clasp create 'G Suite Stack Overflow'
