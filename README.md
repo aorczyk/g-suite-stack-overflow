@@ -1,7 +1,7 @@
 # G Suite Stack Overflow
 
 ### How it works?
-The application works in Google Apps Script application development platform. It's simple version of forum, similar to Stack Overflow. All data is stored in Spreadsheet file on your Google Drive. It's been desinged for G Suite users in given company, login to the app is no need. User can:
+The application works on Google Apps Script application development platform. It's simple forum, similar to Stack Overflow. All data is stored in Spreadsheet file on your Google Drive. It's been desinged for G Suite users in given company, login to the app is not required. User can:
  - ask questions 
  - answer questions
  - add comments
@@ -28,8 +28,12 @@ clasp push
 ```
 clasp open
 ```
-4. Open script file "Config.gs" and run function "Install" - creates new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files.
-5. Public the app and run the link in a browser.
+4. In Google App Script editor:
+ - Open file "Config.gs" and run function "Install" - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files.
+ - In the menu select "Publish" and "Deploy as web app".
+ - Select "Project version" as "New", add some description, "Execute the app as": Me, "Who has access to the app": "Only myself" or if you want to publish it in your company select "Anyone within ...".
+ - Copy "Current web app URL" and run it in a browser or click link in "Test web app for your latest code".
+
 
 ### In the project I used:
  - [Google Apps Script](https://developers.google.com/apps-script/overview) - backend and running environment
