@@ -12,9 +12,9 @@ The application works like simple version of Stack Overflow. All data is stored 
 ### How to install?
 1. Install Clasp from [link](https://github.com/google/clasp)
 2. In console: 
- - by Clasp log in to your Google account,
+ - by Clasp - log in to your Google account,
  - create google app scrip file,
- - fetch created file with settings,
+ - fetch created files,
  - clone this repository and push code to the new created script file.
 ```
 clasp login
@@ -36,5 +36,7 @@ clasp open
  - [Vue.js](https://vuejs.org/) - JavaScript Framework
  - [Vue Router](https://router.vuejs.org/) - official router for Vue.js
  - [Vue I18n](https://kazupon.github.io/vue-i18n/introduction.html) - internationalization plugin of Vue.js
+ - [Bulma](https://bulma.io/) - CSS framework
+ - [Less](http://lesscss.org/) - language extension for CSS
  - [Quill](https://quilljs.com/) - a free, open source WYSIWYG editor
  - [Font Awesome](https://fontawesome.com/) - icon set
