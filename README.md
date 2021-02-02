@@ -15,11 +15,29 @@ User can:
 1. Install Clasp from [link](https://github.com/google/clasp)
 2. In a console window run commands listed below. They do: 
    - log by Clasp in to your Google account,
+     ```
+     clasp login
+     ```
    - create google app scrip file,
+     ```
+     clasp create 'G Suite Stack Overflow'
+     ```
    - fetch created files,
+     ```
+     clasp pull
+     ```
    - clone this repository,
+     ```
+     git clone https://github.com/aorczyk/g-suite-stack-overflow.git
+     ```
    - push code to the new created google app script file,
+     ```
+     clasp push
+     ```
    - open the new created Google App Script file in a browser.
+     ```
+     clasp open
+     ```
 ```
 clasp login
 clasp create 'G Suite Stack Overflow'
