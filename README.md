@@ -12,7 +12,7 @@ User can:
  - create own forum (also private forum for selected users only)
  
 ### How to install?
-1. Install Clasp from [link](https://github.com/google/clasp)
+1. Install Clasp from [https://github.com/google/clasp](https://github.com/google/clasp)
 2. In a console window run commands listed below. They do: 
    - log by Clasp in to your Google Account,
      ```
