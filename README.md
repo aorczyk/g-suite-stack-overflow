@@ -14,15 +14,15 @@ User can:
 ### How to install?
 1. Install Clasp from [link](https://github.com/google/clasp)
 2. In a console window run commands listed below. They do: 
-   - log by Clasp in to your Google account,
+   - log by Clasp in to your Google Account,
      ```
      clasp login
      ```
-   - create google app scrip file,
+   - create Google App Script project,
      ```
      clasp create 'G Suite Stack Overflow'
      ```
-   - fetch created files,
+   - fetch created project,
      ```
      clasp pull
      ```
@@ -30,22 +30,15 @@ User can:
      ```
      git clone https://github.com/aorczyk/g-suite-stack-overflow.git
      ```
-   - push code to the new created google app script file,
+   - push code to the new created Google App Script project,
      ```
      clasp push
      ```
-   - open the new created Google App Script file in a browser.
+   - open your Google App Script project in a browser editor.
      ```
      clasp open
      ```
-```
-clasp login
-clasp create 'G Suite Stack Overflow'
-clasp pull
-git clone https://github.com/aorczyk/g-suite-stack-overflow.git
-clasp push
-clasp open
-```
+
 3. In Google App Script editor:
    - open file "Config.gs" and run function "Install" - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files,
    - in the menu select "Publish" and "Deploy as web app",
