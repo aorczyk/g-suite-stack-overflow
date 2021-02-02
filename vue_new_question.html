@@ -24,6 +24,8 @@
     methods: {
       cancel() {
         this.sharedState.newTopicFormVisible = false;
+        this.newTopicData.title = '';
+        this.newTopicData.text = '';
       },
       addQuestion() {
         var self = this;
