@@ -637,15 +637,34 @@ function editSave(item) {
     values: itemRow.get()
   });
   
-  // --
+  // Update previous row
+  if (item.body.length < 50000){
+    itemRow.set({
+      'title': item.title,
+      'body': item.body,
+      'status': item.status,
+      'changed_time': new Date(),
+      'changed_by': user.email,
+    });
+  } else {
+    // Liczba znaków w Twoich danych wejściowych przekracza dopuszczalną wartość 50000 znaków na jedną komórkę.
 
-  itemRow.set({
-    'title': item.title,
-    'body': item.body,
-    'status': item.status,
-    'changed_time': new Date(),
-    'changed_by': user.email,
-  });
+    // Copy previous row and insert as new row.
+    var newRow = itemRow.get();
+    newRow.title = item.title;
+    newRow.body = item.body;
+    newRow.status = item.status;
+    newRow.changed_time = new Date();
+    newRow.changed_by = user.email;
+
+    am.sql.insert({
+      table: 'Forum',
+      values: newRow
+    });
+
+    // Delete previous row.
+    itemRow.sheet.deleteRow(itemRow.rowNr);
+  }
 
   item.edited = now;
 
