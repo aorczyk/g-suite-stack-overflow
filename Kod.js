@@ -428,13 +428,15 @@ function forumAddEntry(type, data) {
     row['question_id'] = data.qId;
     row['answer_id'] = data.aId;
     row['body'] = data.text;
-
+    row['watchers'].push(user.email);
     entryType = 'nowy komentarz';
+
   } else if (type == 'answer') {
     row['question_id'] = data.qId;
     row['body'] = data.text;
-
+    row['watchers'].push(user.email);
     entryType = 'nowa odpowiedź';
+    
   } else if (type == 'question') {
     row['title'] = data.title;
     row['body'] = data.text;
