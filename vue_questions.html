@@ -55,20 +55,20 @@ var compQuestions = Vue.component('questions', {
         </div>
         <nav class="level">
           <nav class="level-level">
-            {{ $t("message.questions") }}
+            {{ $t("message.questions") }} ({{ sortedQuestions.length }})
           </nav>
         </nav>
         <div class="forum-list" v-if="sortedQuestions.length">
           <div class="forum-list-row" v-for="question in sortedQuestions" @click="openQuestion(question)">
             <div class="forum-list-row-left">
-              <div class="forum-list-row-summary">
+              <div class="forum-list-row-summary" v-if="sharedState.forum.scored_questions">
                 <div class="forum-list-row-summary-count">
                   <span>{{ question.vote }}</span>
                 </div>
                 <div>{{ $t("message.votes") }}</div>
               </div>
               <div class="forum-list-row-summary"
-                :class="{'forum-list-row-summary-bestAns': question.bestAns}">
+                :class="{'forum-list-row-summary-bestAns': sharedState.forum.scored_questions && question.bestAns}">
                 <div class="forum-list-row-summary-count">
                   <span>{{ sharedState.forum.answers[question.id] ? sharedState.forum.answers[question.id].length : 0 }}</span>
                 </div>

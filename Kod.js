@@ -62,6 +62,10 @@ function getSqlForums(){
                 return Utilities.formatDate(x, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
               }
             },
+            'watchers': {
+              get: JSON.parse,
+              set: JSON.stringify
+            },
           }
         }
       }
@@ -77,7 +81,7 @@ function getForums() {
 
   var forums = forumsSql.select({
     table: 'Forums',
-    where: [{'is_public': true}, {'user_id': user.email}],
+    where: [{'is_public': true}, {'user_id': user.email}, {'watchers': function(x){return x.includes(user.email)}}],
     orderBy: {'name': 'asc'}
   }).map((x)=>{
     // Postprocess
@@ -146,6 +150,7 @@ function editForum(data){
       name: data.name,
       description: data.description,
       is_public: data.is_public,
+      scored_questions: data.scored_questions,
       users: typeof data.users === 'string' ? data.users.split(',') : [],
       moderators: typeof data.moderators === 'string' ? data.moderators.split(',') : []
     }
@@ -285,8 +290,9 @@ function getForumData(id) {
   var isAdmin = am.admins.includes(user.email);
   var isUser = am.users.includes(user.email);
   var isOwner = am.user_id === user.email;
+  var isWatcher = am.watchers.includes(user.email);
 
-  if (!am.is_public && !(isModerator || isAdmin || isUser || isOwner)){
+  if (!am.is_public && !(isModerator || isAdmin || isUser || isOwner || isWatcher)){
     return {
       accessDenied: true
     };
@@ -303,6 +309,7 @@ function getForumData(id) {
     lastChange: {},
     forumLastChange: '-',
     views: {},
+    scoredQuestions: am.scored_questions
   };
 
   var forumData = am.sql.select({
@@ -348,7 +355,8 @@ function getForumData(id) {
       edited: row['changed_time'],
       watchers: isArray(row['watchers']) ? row['watchers'] : [],
       userName: getUserNameFromEmail(row['user_id']),
-      canEdit: row['user_id'] === user.email || isModerator || isAdmin || isOwner
+      canEdit: row['user_id'] === user.email || isModerator || isAdmin || isOwner,
+      // scoredQuestions: am.scored_questions
     }
 
     out.forumLastChange = rowData.time;
@@ -360,10 +368,15 @@ function getForumData(id) {
     }
 
     if (type == 'question') {
+      if (!am.is_public && !(isModerator || isAdmin || isUser || isOwner) && !rowData.watchers.includes(user.email)){
+        continue;
+      }
+
       out.questions.push(rowData);
       out.answers[rowData.id] = [];
     } else if (type == 'answer') {
       if (!out.answers[rowData.qId]) {
+        continue;
         out.answers[rowData.qId] = [];
       }
 
@@ -371,6 +384,7 @@ function getForumData(id) {
       out.comments[rowData.id] = [];
     } else if (type == 'comment') {
       if (!out.comments[rowData.ansId]) {
+        continue;
         out.comments[rowData.ansId] = [];
       }
 
@@ -688,14 +702,38 @@ function addWatchers(forumId, qId, newWatchers) {
   var addedWatchers = [];
 
   for (var n in newWatchers){
-    var email = newWatchers[n];
-    if (watchers.indexOf(email) == -1){
-      watchers.push(email);
-      addedWatchers.push(email);
+    var watcherEmail = newWatchers[n];
+    if (watchers.indexOf(watcherEmail) == -1){
+      watchers.push(watcherEmail);
+      addedWatchers.push(watcherEmail);
     }
   }
 
   question.set({'watchers': watchers});
+
+  // Forum watchers
+
+  var forum = getSqlForums().select({
+    table: 'Forums',
+    where: {
+      'id': forumId,
+    }
+  })[0];
+
+  var forumWatchers = forum.get('watchers');
+  var forumAddedWatchers = [];
+
+  for (var n in newWatchers){
+    var watcherEmail = newWatchers[n];
+    if (forumWatchers.indexOf(watcherEmail) == -1){
+      forumWatchers.push(watcherEmail);
+      forumAddedWatchers.push(watcherEmail);
+    }
+  }
+
+  if (forumAddedWatchers.length){
+    forum.set({'watchers': forumWatchers});
+  }
 
   var appUrl = APP_CONFIG.appUrl;
 
@@ -788,14 +826,14 @@ function appInstall() {
       tables: [
         {
           name: 'Forums',
-          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators','admins']
+          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators','admins','watchers','scored_questions']
         }
       ]
     })
     
     var forumSheetUrl = forumSheetCreate('demo');
     
-    sql.insert({table: 'Forums', values: {time: new Date(), id: 'demo', user_id: user.email, name: 'Demo', description: 'Example', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]', admins: '[]'}});
+    sql.insert({table: 'Forums', values: {time: new Date(), id: 'demo', user_id: user.email, name: 'Demo', description: 'Example', forum_data_url: forumSheetUrl, users: '[]', moderators: '[]', admins: '[]', watchers: '[]'}});
         
     var scriptProperties = PropertiesService.getScriptProperties();
     scriptProperties.setProperty('settingsUrl', ssForums.getUrl());

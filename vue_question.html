@@ -512,7 +512,7 @@
           <div class="forum-ans-title" v-html="highlight(selectedQuestion.title)"></div>
           <div class="forum-ans-list">
             <div class="forum-ans-row forum-ans-question" :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}">
-              <div class="forum-ans-row-left">
+              <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, 1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
                   <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
@@ -532,6 +532,8 @@
                 <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == selectedQuestion.id">
                   <i class="fas fa-check" :title="$t('message.bestAns')"></i>
                 </div>
+              </div>
+              <div class="forum-ans-row-left" v-else>
               </div>
               <div class="forum-ans-row-content">
                 <div class="forum-ans-row-content-body" v-html="highlight(selectedQuestion.body)"></div>
@@ -583,7 +585,7 @@
           <div class="forum-ans-list">
             <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
               v-for="ans in sortedAnswers">
-              <div class="forum-ans-row-left">
+              <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(ans, 1)"
                 :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
                   <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
@@ -603,6 +605,8 @@
                 <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == ans.id">
                   <i class="fas fa-check" :title="$t('message.editForum')"></i>
                 </div>
+              </div>
+              <div class="forum-ans-row-left" v-else>
               </div>
               <div class="forum-ans-row-content">
                 <div class="forum-ans-row-content-body" v-html="highlight(ans.body)"></div>

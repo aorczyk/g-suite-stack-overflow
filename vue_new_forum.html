@@ -9,6 +9,7 @@
             name: '',
             description: '',
             is_public: true,
+            scored_questions: true,
             users: '',
             moderators: '',
             admins: ''
@@ -85,6 +86,12 @@
                   <input class="input" type="text"
                     placeholder="" v-model="forumData.description">
                 </div>
+              </div>
+              <div class="field">
+                <label class="checkbox">
+                  <input type="checkbox" v-model="forumData.scored_questions">
+                  {{ $t("message.scoredQuestions") }}
+                </label>
               </div>
               <div class="field">
                 <label class="checkbox">
