@@ -59,6 +59,7 @@
                 this.$refs['foo'].click();
               }
             }, 200)
+
             return out[0];
           }
         }
@@ -536,7 +537,8 @@
               <div class="forum-ans-row-left" v-else>
               </div>
               <div class="forum-ans-row-content">
-                <div class="forum-ans-row-content-body" v-html="highlight(selectedQuestion.body)"></div>
+                <div class="forum-ans-row-content-body" v-html="highlight(selectedQuestion.body)">
+                </div>
                 <div class="forum-ans-row-content-info">
                   <div class="forum-ans-row-content-info-left">
                     <edit :item="selectedQuestion" @edit="editOpen"></edit>

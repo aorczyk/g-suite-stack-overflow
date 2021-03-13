@@ -30,6 +30,14 @@
 </head>
 
 <body>
+  <div id="image-viewer" class="modal" style="display: none">
+    <div class="modal-background"></div>
+    <div class="modal-content image-viewer-content">
+      <img id="image-viewer-img" src="">
+    </div>
+    <button class="modal-close is-large is-info" aria-label="close" onclick="closeImg()"></button>
+  </div>
+
   <div id="app">
     <spinner v-if="sharedState.isSpinnerVisible"></spinner>
     <top-bar></top-bar>

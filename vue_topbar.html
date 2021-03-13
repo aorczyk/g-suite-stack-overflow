@@ -57,11 +57,11 @@
           <b>G Suite Stack Overflow</b>
         </a>
         <a class="navbar-item" @click="showQuestions" v-if="sharedState.forum && sharedState.forum.name">
-          <b>{{ sharedState.forum.name }}</b>
+          {{ sharedState.forum.name }}
         </a>
-        <a class="navbar-item" @click="showForums" v-if="sharedState.forumsButtonVisible">
+        <!--<a class="navbar-item" @click="showForums" v-if="sharedState.forumsButtonVisible">
           {{ $t("message.forums") }}
-        </a>
+        </a>-->
         <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
           <div class="field has-addons">
             <div class="control">
