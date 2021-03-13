@@ -18,7 +18,8 @@ function handleResponse(request) {
 
   htmlTemplate.dataFromServerTemplate = {
     user: user,
-    language: APP_CONFIG.language
+    language: APP_CONFIG.language,
+    logoImg: APP_CONFIG.faviconUrl
   };
   
   var response = htmlTemplate.evaluate();
