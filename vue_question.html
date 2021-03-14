@@ -40,11 +40,11 @@
           console.log(e);
         }).onClickLog(this.sharedState.forum.id, 'forum', this.questionId);
 
-      if (!this.sharedState.forum.views[this.questionId]) {
-        this.sharedState.forum.views[this.questionId] = 0;
-      }
+      // if (!this.sharedState.forum.views[this.questionId]) {
+      //   this.sharedState.forum.views[this.questionId] = 0;
+      // }
 
-      this.sharedState.forum.views[this.questionId] += 1;
+      // this.sharedState.forum.views[this.questionId] += 1;
     },
     computed: {
       selectedQuestion() {
@@ -59,6 +59,13 @@
                 this.$refs['foo'].click();
               }
             }, 200)
+
+            // Views counter
+            if (out[0].views){
+              out[0].views += 1
+            } else {
+              out[0].views = 1
+            }
 
             return out[0];
           }

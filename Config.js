@@ -3,6 +3,7 @@ var APP_CONFIG = {
 //  settingsUrl: ''
   faviconUrl: 'https://icons-for-free.com/iconfiles/png/512/stackoverflow-1321215626484539706.png',
   pageTitle: 'G Suite Stack Overflow',
+  appTitle: 'G Suite Stack Overflow',
   language: 'en'
 };
 

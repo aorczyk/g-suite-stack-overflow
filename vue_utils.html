@@ -53,23 +53,23 @@
     `
   });
 
+  function closeImgOnEsc(e) {
+      if (e.code == 'Escape'){
+        closeImg();
+      }
+    }
+
   function showImg(image){
     // window.open("").document.write(image.outerHTML);
 
     document.getElementById('image-viewer-img').src = image.src;
     document.getElementById('image-viewer').style.display = "block";
-    document.addEventListener('keydown', logKey);
-
-    function logKey(e) {
-      if (e.code == 'Escape'){
-        closeImg();
-      }
-    }
+    document.addEventListener('keydown', closeImgOnEsc);
   }
 
   function closeImg(){
     document.getElementById('image-viewer').style.display = "none";
-    document.removeEventListener('keydown');
+    document.removeEventListener('keydown', closeImgOnEsc);
   }
 
   var mixinUtils = {

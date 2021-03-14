@@ -19,7 +19,8 @@ function handleResponse(request) {
   htmlTemplate.dataFromServerTemplate = {
     user: user,
     language: APP_CONFIG.language,
-    logoImg: APP_CONFIG.faviconUrl
+    logoImg: APP_CONFIG.faviconUrl,
+    appTitle: APP_CONFIG.appTitle,
   };
   
   var response = htmlTemplate.evaluate();
@@ -238,6 +239,19 @@ function onClickLog(forumId, type, source) {
     table: 'Log',
     values: row
   });
+
+  var row = am.sql.select({
+    table: 'Forum',
+    where: {
+      'id': source
+    }
+  })[0];
+
+  var views = row.get('views');
+
+  row.set({
+    'views': views ? views + 1 : 1
+  });
 }
 
 
@@ -351,6 +365,7 @@ function getForumData(id) {
       time: row['time'],
       vote: voteValue,
       votedBy: votedBy,
+      views: row['views'] || 0,
       userId: row['user_id'],
       bestAns: row['best_ans'],
       edited: row['changed_time'],
@@ -393,30 +408,30 @@ function getForumData(id) {
     }
   }
 
-  var viewsData = am.sql.select({
-    table: 'Log',
-    where: {
-      'forum_id': id,
-      'action': 'forum'
-    },
-    groupBy: ['source']
-  });
+  // var viewsData = am.sql.select({
+  //   table: 'Log',
+  //   where: {
+  //     'forum_id': id,
+  //     'action': 'forum'
+  //   },
+  //   groupBy: ['source']
+  // });
 
-  for (var qId in viewsData) {
-    // var row = viewsData[n].get();
-    // var qId = row['Url Source'];
+  // for (var qId in viewsData) {
+  //   // var row = viewsData[n].get();
+  //   // var qId = row['Url Source'];
 
-    // Counting only unique views
-    // if (!out.views[qId]){
-    //   out.views[qId] = Object.keys(viewsData[qId]).length;
-    // }
+  //   // Counting only unique views
+  //   // if (!out.views[qId]){
+  //   //   out.views[qId] = Object.keys(viewsData[qId]).length;
+  //   // }
 
-    if (!out.views[qId]) {
-      out.views[qId] = viewsData[qId].length;
-    }
+  //   if (!out.views[qId]) {
+  //     out.views[qId] = viewsData[qId].length;
+  //   }
 
-    // out.views[qId] += 1;
-  }
+  //   // out.views[qId] += 1;
+  // }
 
   return out;
 }
@@ -782,7 +797,7 @@ function forumSheetCreate(forumId) {
 
     var sql = new SqlAbstract();
 
-    var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers'];
+    var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers','views'];
     sql.createDB({
       spreadsheet: ssForumData.getUrl(),
       tables: [

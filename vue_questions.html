@@ -76,7 +76,8 @@ var compQuestions = Vue.component('questions', {
               </div>
               <div class="forum-list-row-summary">
                 <div class="forum-list-row-summary-count">
-                  <span>{{ sharedState.forum.views[question.id] ? sharedState.forum.views[question.id] : 0 }}</span>
+                  <!--<span>{{ sharedState.forum.views[question.id] ? sharedState.forum.views[question.id] : 0 }}</span>-->
+                  <span>{{ question.views }}</span>
                 </div>
                 <div>{{ $t("message.views") }}</div>
               </div>
