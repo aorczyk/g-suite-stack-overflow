@@ -704,6 +704,27 @@ function editSave(item) {
 }
 
 
+function archiveItem(item) {
+  var am = getForum(item.forumId);
+
+  // History
+
+  var itemRow = am.sql.select({
+    table: 'Forum',
+    where: {
+      'id': item.id,
+    }
+  })[0];
+
+  am.sql.insert({
+    table: 'History',
+    values: itemRow.get()
+  });
+
+  return item;
+}
+
+
 function addWatchers(forumId, qId, newWatchers) {
   var am = getForum(forumId);
 
