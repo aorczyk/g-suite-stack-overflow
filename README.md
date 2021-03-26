@@ -8,7 +8,7 @@ User can:
  - answer questions
  - add comments
  - vote questions and answers
- - add/remove watchers in given question (watchers get email notification about all changes done in question)
+ - add/remove watchers in given question (watchers get email notification about all changes done in question). In private forum watcher get access to the question.
  - create own forum (also private forum for selected users only)
  
 ### How to install?
