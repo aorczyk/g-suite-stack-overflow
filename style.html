@@ -96,6 +96,26 @@
     opacity: 0;
   }
 }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+.text-overflow-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.motion {
+  -webkit-transition: all 300ms ease-in;
+  -moz-transition: all 300ms ease-in;
+  -o-transition: all 300ms ease-in;
+  -ms-transition: all 300ms ease-in;
+  transition: all 300ms ease-in;
+}
 .progress {
   width: 100vw;
   height: 100vh;
@@ -147,7 +167,22 @@
   cursor: default;
 }
 .highlight {
-  background-color: #ffff00;
+  background-color: #ffffbe;
+}
+.info-button {
+  display: inline-block;
+  position: relative;
+}
+.info-button .info-deleted {
+  color: red;
+}
+.info-button .info-button-dialog {
+  background: white;
+  padding: 10px;
+  position: absolute;
+  top: 20px;
+  width: 300px;
+  z-index: 1;
 }
 .forum-page {
   margin-top: 20px;
@@ -293,13 +328,18 @@
   background-color: #fafabe;
 }
 .forum-page .forum-ans .forum-item-deleted {
-  background-color: lightgray;
+  background-color: #f9f9f9;
 }
 .forum-page .forum-ans .forum-ans-list {
   display: grid;
   grid-auto-flow: row;
 }
 .forum-page .forum-ans .forum-ans-list .forum-ans-row {
+  -webkit-transition: all 300ms ease-in;
+  -moz-transition: all 300ms ease-in;
+  -o-transition: all 300ms ease-in;
+  -ms-transition: all 300ms ease-in;
+  transition: all 300ms ease-in;
   padding-bottom: 20px;
   padding-top: 20px;
   border-bottom: 1px solid #e4e6e8;
@@ -371,6 +411,9 @@
 }
 .forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-content .forum-ans-row-content-info .forum-ans-row-content-info-left {
   justify-self: start;
+  display: grid;
+  grid-auto-flow: column;
+  column-gap: 10px;
 }
 .forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-content .forum-ans-row-content-info .forum-ans-row-content-info-right {
   justify-self: end;

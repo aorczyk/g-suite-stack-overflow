@@ -48,10 +48,127 @@
         <span v-if="type === 'icon'"> <i class="fas fa-pen"></i></span>
         <span v-else>{{ $t('message.edit2') }}</span>
       </span>
-      <span v-if="item.status == 'Deleted'">{{ $t('message.deleted') }}</span>
     </span>
     `
   });
+
+
+  Vue.component('share', {
+    props: ['link'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        isOpen: false
+      }
+    },
+    computed: {
+    },
+    methods: {
+      toggle() {
+        this.isOpen = !this.isOpen;
+        setTimeout(() => {
+          this.$refs.shareLink.select();
+        }, 50);
+        
+      },
+      copy() {
+        this.$refs.shareLink.select();
+        try {
+          var successful = document.execCommand('copy');
+          var msg = successful ? 'successful' : 'unsuccessful';
+          // alert('Testing code was copied ' + msg);
+
+          this.toggle();
+        } catch (err) {
+          alert('Oops, unable to copy');
+        }
+      }
+    },
+    template: 
+    `<div class="info-button">
+      <span class="action-icon" :title="$t('message.shareQuestionTitle')" @click.stop="toggle">{{ $t('message.share') }}</span>
+      <div class="box info-button-dialog" v-show="isOpen">
+        <div class="field">
+          <label class="label">{{ $t('message.shareQuestionTitleBox') }}</label>
+          <div class="control">
+            <input ref="shareLink" class="input" type="text" placeholder="Link"  :value="link">
+          </div>
+        </div>
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-link is-small" @click.stop="copy">Copy</button>
+          </div>
+          <div class="control">
+            <button class="button is-light is-small" @click.stop="toggle">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    `
+  });
+
+
+  Vue.component('delete', {
+    props: ['item', 'type'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        isOpen: false,
+        saving: false
+      }
+    },
+    computed: {
+    },
+    methods: {
+      toggle() {
+        if (this.saving){
+          return;
+        }
+        
+        this.isOpen = !this.isOpen;      
+      },
+      deleteItem(){
+        this.saving = true;
+
+        var self = this;
+
+        google.script.run.withSuccessHandler(function (item) {
+            self.saving = false;
+            // self.item = item;
+            self.item.status = 'Deleted';
+            self.toggle();
+          })
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).deleteItem(this.item);
+      }
+    },
+    template: 
+    `<div class="info-button" v-if="item.canEdit">
+      <span class="action-icon" :title="$t('message.deleteTitle')" @click.stop="toggle" v-if="item.status != 'Deleted'">
+        <span v-if="type === 'icon'"> <i class="fas fa-trash-alt"></i></span>
+        <span v-else>{{ $t('message.delete') }}</span>
+      </span>
+      <span v-else class="info-deleted">{{ $t('message.deleted') }}</span>
+      <div class="box info-button-dialog" v-show="isOpen">
+        <div class="field">
+          <label class="label">{{ $t('message.deleteDialogTitle') }}</label>
+        </div>
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-danger is-small" :class="{'is-loading': saving}" @click.stop="deleteItem">Delete</button>
+          </div>
+          <div class="control">
+            <button class="button is-light is-small" @click.stop="toggle" :disabled="saving">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    `
+  });
+
 
   function closeImgOnEsc(e) {
       if (e.code == 'Escape'){

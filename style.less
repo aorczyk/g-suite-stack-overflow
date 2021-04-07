@@ -114,6 +114,12 @@
     }
 }
 
+.fade-enter-active, .fade-leave-active {
+    transition: opacity .5s;
+  }
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+    opacity: 0;
+}
 
 .transition (@prop: all, @time: 300ms, @ease: ease) {
     -webkit-transition: @prop @time @ease;
@@ -122,6 +128,24 @@
     -ms-transition: @prop @time @ease;
     transition: @prop @time @ease;
 }
+
+.text-overflow-ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.motion {
+    .transition(all,300ms,ease-in);
+}
+
+.box-shadow (@string) {
+    -webkit-box-shadow: @string;
+    -moz-box-shadow:    @string;
+    box-shadow:         @string;
+}
+
+@box-shadow: 0px 3px 10px 0 rgba(0, 0, 0, 0.16);
 
 
 .progress {
@@ -186,7 +210,25 @@
 }
 
 .highlight {
-    background-color: #ffff00;
+    background-color: #ffffbe;
+}
+
+.info-button {
+    display: inline-block;
+    position: relative;
+
+    .info-deleted {
+        color: red;
+    }
+
+    .info-button-dialog {
+        background: white;
+        padding: 10px;
+        position: absolute;
+        top: 20px;
+        width: 300px;
+        z-index: 1;
+    }
 }
 
 .forum-page {
@@ -311,7 +353,7 @@
     
                 .forum-ans-row-content-info {
                     padding-top: 7px;
-    
+
                     .forum-ans-row-content-info-left {
                         float: left;
                         font-size: 13px;
@@ -369,7 +411,7 @@
         }
     
         .forum-item-deleted {
-            background-color: lightgray;
+            background-color: #f9f9f9;
         }
 
         .forum-ans-list {
@@ -377,6 +419,7 @@
             grid-auto-flow: row;
     
             .forum-ans-row {
+                .motion();
                 padding-bottom: 20px;
                 padding-top: 20px;
                 border-bottom: 1px solid #e4e6e8;
@@ -385,6 +428,8 @@
                 grid-template-columns: max-content 1fr;
                 column-gap: 10px;
     
+                // background-color: white;
+
                 img {
                     max-width: 300px !important;
                     cursor: pointer;
@@ -463,6 +508,9 @@
 
                         .forum-ans-row-content-info-left {
                             justify-self: start;
+                            display: grid;
+                            grid-auto-flow: column;
+                            column-gap: 10px;
                         }
 
                         .forum-ans-row-content-info-right {

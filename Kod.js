@@ -704,6 +704,50 @@ function editSave(item) {
 }
 
 
+function deleteItem(item) {
+  var user = getUser();
+  var am = getForum(item.forumId);
+
+  var isModerator = am.moderators.includes(user.email);
+  var isAdmin = am.admins.includes(user.email);
+  var isOwner = am.user_id === user.email;
+  var isEntryOwner = item.userId === user.email;
+
+  // Who can edit.
+  if (!(isModerator || isAdmin || isOwner || isEntryOwner)){
+    return;
+  }
+
+  var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
+
+  item.status = 'Deleted';
+
+  // History
+
+  var itemRow = am.sql.select({
+    table: 'Forum',
+    where: {
+      'id': item.id,
+    }
+  })[0];
+
+  am.sql.insert({
+    table: 'History',
+    values: itemRow.get()
+  });
+  
+  itemRow.set({
+    'status': item.status,
+    'changed_time': new Date(),
+    'changed_by': user.email,
+  });
+
+  item.edited = now;
+
+  return item;
+}
+
+
 function archiveItem(item) {
   var am = getForum(item.forumId);
 
