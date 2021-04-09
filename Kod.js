@@ -19,7 +19,7 @@ function handleResponse(request) {
   htmlTemplate.dataFromServerTemplate = {
     user: user,
     language: APP_CONFIG.language,
-    logoImg: APP_CONFIG.faviconUrl,
+    logoImg: APP_CONFIG.logoImg,
     appTitle: APP_CONFIG.appTitle,
   };
   
@@ -120,7 +120,9 @@ function addForum(data){
     'users': data.users.split(','),
     'moderators': data.moderators.split(','),
     'admins': data.admins.split(','),
-    'forum_data_url': forumSheetUrl
+    'forum_data_url': forumSheetUrl,
+    'watchers': data.admins.split(','),
+    'scored_questions': data.scored_questions
   };
 
   forumsSql.insert({
@@ -392,7 +394,6 @@ function getForumData(id) {
       out.answers[rowData.id] = [];
     } else if (type == 'answer') {
       if (!out.answers[rowData.qId]) {
-        continue;
         out.answers[rowData.qId] = [];
       }
 
@@ -400,7 +401,6 @@ function getForumData(id) {
       out.comments[rowData.id] = [];
     } else if (type == 'comment') {
       if (!out.comments[rowData.ansId]) {
-        continue;
         out.comments[rowData.ansId] = [];
       }
 
@@ -648,10 +648,14 @@ function editSave(item) {
 
   var now = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss");
 
-  if (!item.body){
-    item.status = 'Deleted';
-  }
-  else {
+  // if (!item.body){
+  //   item.status = 'Deleted';
+  // }
+  // else {
+  //   item.status = '';
+  // }
+
+  if (item.status == 'Deleted'){
     item.status = '';
   }
 
@@ -769,7 +773,7 @@ function archiveItem(item) {
 }
 
 
-function addWatchers(forumId, qId, newWatchers) {
+function addWatchers(forumId, qId, newWatchers, silent) {
   var am = getForum(forumId);
 
   var question = am.sql.select({
@@ -824,7 +828,9 @@ function addWatchers(forumId, qId, newWatchers) {
   email.topic = Utilities.formatString("Forum %s - %s", am.name, 'watching');
   email.text = Utilities.formatString("You was added as a watcher of the topic: <b>%s</b><br><br>Show: <a href='%s'>link</a><br>", question.get('title'), link);
 
-  sendEmail(email, addedWatchers);
+  if (!silent){
+    sendEmail(email, addedWatchers);
+  }
 
   return true;
 }

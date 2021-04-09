@@ -54,7 +54,7 @@
 
 
   Vue.component('share', {
-    props: ['link'],
+    props: ['link', 'type'],
     data: function(){
       return {
         sharedState: store.state,
@@ -86,7 +86,10 @@
     },
     template: 
     `<div class="info-button">
-      <span class="action-icon" :title="$t('message.shareQuestionTitle')" @click.stop="toggle">{{ $t('message.share') }}</span>
+      <span class="action-icon" :title="$t('message.shareQuestionTitle')" @click.stop="toggle">
+        <span v-if="type === 'icon'"> <i class="fas fa-external-link-alt"></i></span>
+        <span v-else>{{ $t('message.share') }}</span>
+      </span>
       <div class="box info-button-dialog" v-show="isOpen">
         <div class="field">
           <label class="label">{{ $t('message.shareQuestionTitleBox') }}</label>
@@ -129,6 +132,7 @@
       },
       deleteItem(){
         this.saving = true;
+        this.isOpen = false; 
 
         var self = this;
 
@@ -136,7 +140,6 @@
             self.saving = false;
             // self.item = item;
             self.item.status = 'Deleted';
-            self.toggle();
           })
           .withFailureHandler(function (e) {
             console.log('error');
@@ -152,6 +155,11 @@
         <span v-else>{{ $t('message.delete') }}</span>
       </span>
       <span v-else class="info-deleted">{{ $t('message.deleted') }}</span>
+
+      <span class="action-icon" v-if="saving">
+         <i class="fas fa-spinner fa-pulse"></i>
+      </span>
+
       <div class="box info-button-dialog" v-show="isOpen">
         <div class="field">
           <label class="label">{{ $t('message.deleteDialogTitle') }}</label>

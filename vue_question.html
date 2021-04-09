@@ -31,7 +31,7 @@
       if (this.selectedId) {
         setTimeout(() => {
           this.selectedId = null;
-        }, 2000);
+        }, 5000);
       }
 
       google.script.run.withSuccessHandler()
@@ -147,6 +147,8 @@
               console.log(e.message);
             })
             .forumAddEntryNotification('comment', notificationData)
+
+          // google.script.run.addWatchers(self.sharedState.forum.id, self.selectedQuestion.id, self.selectedQuestion.watchers, true)
         }).withFailureHandler(function (e) {
           console.log('error');
           console.log(e.message);
@@ -249,9 +251,12 @@
         google.script.run.withSuccessHandler(function (item) {
             Vue.set(self.editItem, 'edited', item.edited);
             Vue.set(self.editItem, 'status', item.status);
-            if (item.status == 'Deleted') {
-              self.editItem.body = self.editItemTmp.body;
-            }
+            Vue.set(self.editItem, 'body', self.postProcessAnsText(item.body));
+
+            // if (item.status == 'Deleted') {
+            //   self.editItem.body = self.editItemTmp.body;
+            // }
+
             self.editItem = null;
             self.editItemTmp = null;
             self.saving = false;
@@ -444,17 +449,17 @@
           <section class="modal-card-body" v-if="editItem">
             <div class="field" v-if="editItem.type == 'question'">
               <label class="label">{{ $t("message.title") }}</label>
-              <input class="input" type="text" v-model="editItem.title">
+              <input class="input" type="text" v-model="editItem.title" :disabled="saving">
             </div>
             <div class="field" v-if="editItem.type !== 'comment'">
               <div class="control">
                 <label class="label">{{ $t("message.body") }}</label>
-                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings"></quill-editor>
+                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings" :disabled="saving"></quill-editor>
               </div>
             </div>
             <div class="field" v-else>
               <div class="control">
-                <input class="input" type="text" v-model="editItem.body">
+                <input class="input" type="text" v-model="editItem.body" :disabled="saving">
               </div>
             </div>
           </section>
@@ -525,7 +530,10 @@
           </nav>
           <div class="forum-ans-title" v-html="highlight(selectedQuestion.title)"></div>
           <div class="forum-ans-list">
-            <div class="forum-ans-row forum-ans-question" :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}">
+            <div 
+              class="forum-ans-row forum-ans-question"
+              :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}"
+            >
               <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, 1)"
                     :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
@@ -565,11 +573,16 @@
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
-                    <div class="forum-ans-comments-list-row" :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
-                      v-for="comment in sharedState.forum.comments[selectedQuestion.id]">
+                    <div 
+                      class="forum-ans-comments-list-row"
+                      :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
+                      v-for="comment in sharedState.forum.comments[selectedQuestion.id]"
+                      :id="comment.id"
+                    >
                       <span v-html="highlight(comment.body)"></span>
                       <span class="user-name"> - {{ comment.userName }}</span>
                       <span> {{ comment.time }}</span>
+                      <share type="icon" :link="getItemLink(comment)"/>
                       <edit :item="comment" type="icon" @edit="editOpen"></edit>
                       <delete :item="comment" type="icon"/>
                     </div>
@@ -581,13 +594,13 @@
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == selectedQuestion.id">
                     <div class="field">
                       <div class="control">
-                        <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',selectedQuestion.id)">
+                        <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',selectedQuestion.id)" :disabled="saving">
                       </div>
                     </div>
                     <div class="field is-grouped">
                       <div class="control">
                         <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                          :disabled="saving">{{ $t("message.save") }}</button>
+                          :disabled="saving || !newCommentData.text">{{ $t("message.save") }}</button>
                       </div>
                       <div class="control">
                         <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t("message.cancel") }}</button>
@@ -600,8 +613,12 @@
           </div>
           <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} {{ $t("message.answers2") }}</div>
           <div class="forum-ans-list">
-            <div class="forum-ans-row" :id="ans.id" :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
-              v-for="ans in sortedAnswers">
+            <div 
+              class="forum-ans-row" 
+              :id="ans.id" 
+              :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
+              v-for="ans in sortedAnswers"
+            >
               <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
                 <div class="forum-ans-row-left-vote" @click.stop="vote(ans, 1)"
                 :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
@@ -640,12 +657,16 @@
                 </div>
                 <div class="forum-ans-comments">
                   <div class="forum-ans-comments-list">
-                    <div class="forum-ans-comments-list-row" :id="comment.id"
+                    <div 
+                      class="forum-ans-comments-list-row"
+                      :id="comment.id"
                       :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
-                      v-for="comment in sharedState.forum.comments[ans.id]">
+                      v-for="comment in sharedState.forum.comments[ans.id]"
+                    >
                       <span v-html="highlight(comment.body)"></span>
                       <span class="user-name"> - {{ comment.userName }}</span>
                       <span> {{ comment.time }}</span>
+                      <share type="icon" :link="getItemLink(comment)"/>
                       <edit :item="comment" type="icon" @edit="editOpen"></edit>
                       <delete :item="comment" type="icon"/>
                     </div>
@@ -656,13 +677,13 @@
                   <div class="forum-ans-comments-new" v-show="addNewCommentParentId == ans.id">
                     <div class="field">
                       <div class="control">
-                        <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',ans.id)">
+                        <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',ans.id)" :disabled="saving">
                       </div>
                     </div>
                     <div class="field is-grouped">
                       <div class="control">
                         <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                          :disabled="saving">{{ $t('message.save') }}</button>
+                          :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
                       </div>
                       <div class="control">
                         <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
@@ -676,10 +697,10 @@
           <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">{{ $t('message.yourAnswer') }}</div>
             <!--<div class="editor"></div>-->
-            <quill-editor class="quill-restyle" v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings">
+            <quill-editor class="quill-restyle" v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings" :disabled="saving">
             </quill-editor>
             <div class="forum-ans-add">
-              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving">{{ $t('message.postYourAnswer') }}</div>
+              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text">{{ $t('message.postYourAnswer') }}</div>
             </div>
           </div>
         </div>
