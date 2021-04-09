@@ -391,14 +391,14 @@ function getForumData(id) {
       }
 
       out.questions.push(rowData);
-      out.answers[rowData.id] = [];
+      // out.answers[rowData.id] = [];
     } else if (type == 'answer') {
       if (!out.answers[rowData.qId]) {
         out.answers[rowData.qId] = [];
       }
 
       out.answers[rowData.qId].push(rowData);
-      out.comments[rowData.id] = [];
+      // out.comments[rowData.id] = [];
     } else if (type == 'comment') {
       if (!out.comments[rowData.ansId]) {
         out.comments[rowData.ansId] = [];
