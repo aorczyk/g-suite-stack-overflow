@@ -4,7 +4,6 @@
     data() {
       return {
         sharedState: store.state,
-        quillSettings: quillSettings,
         newTopicData: {
           title: '',
           text: ''
@@ -75,7 +74,7 @@
       <div>
         <div class="modal" :class="{'is-active': sharedState.newTopicFormVisible}">
           <div class="modal-background"></div>
-          <div class="modal-card">
+          <div class="modal-card edit-modal">
             <header class="modal-card-head">
               <p class="modal-card-title">{{ $t('message.AskApublicQuestion') }}</p>
             </header>
@@ -93,8 +92,7 @@
                 <label class="label">{{ $t("message.body") }}</label>
                 <div class="control">
                   <div>{{ $t("message.newQuestionBodyInfo") }}</div>
-                  <quill-editor v-model="newTopicData.text" ref="quillEditorA" :options="quillSettings">
-                  </quill-editor>
+                  <quill-editor v-model="newTopicData.text" :disabled="saving"></quill-editor>
                 </div>
               </div>
             </section>

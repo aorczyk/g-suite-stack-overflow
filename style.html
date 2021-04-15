@@ -181,7 +181,7 @@
   padding: 10px;
   position: absolute;
   top: 20px;
-  width: 300px;
+  width: max-content;
   z-index: 1;
 }
 .forum-page {
@@ -308,7 +308,6 @@
 }
 .forum-page .forum-ans .forum-ans-separator {
   margin-top: 20px;
-  margin-bottom: 20px;
   border-bottom: 1px solid #e4e6e8;
   height: 40px;
   color: #3b4045;
@@ -358,6 +357,21 @@
   font-size: 1.61538462rem;
   color: #6a737c;
   padding: 0px 15px;
+}
+.forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-left.forum-ans-row-left-answer {
+  color: #209cee;
+  font-size: 26px;
+}
+.forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-left .forum-ans-row-left-answer-nr {
+  height: 26px;
+  width: 26px;
+  background-color: #209cee;
+  border-radius: 50%;
+  display: inline-block;
+  color: white;
+  line-height: 26px;
+  font-size: 16px;
+  text-align: center;
 }
 .forum-page .forum-ans .forum-ans-list .forum-ans-row .forum-ans-row-left .forum-ans-row-left-ok {
   color: green;
@@ -495,4 +509,17 @@
   margin-top: 55px;
   overflow: auto;
   width: 100%;
+}
+.edit-modal {
+  max-width: calc(100vw - 100px);
+  width: 100%;
+}
+.quill-editor {
+  max-width: calc(100vw - 100px);
+  width: 100%;
+  height: 100vh;
+  max-height: calc(100vh - 330px);
+}
+.quill-editor .ql-editor img {
+  max-width: 300px !important;
 }

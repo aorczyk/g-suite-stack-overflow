@@ -569,15 +569,17 @@ function forumAddEntryNotification(type, data) {
 
   watchers = watchers.concat(am.moderators);
 
-  var question = am.sql.select({
-    table: 'Forum',
-    where: {
-      'id': data.qId
-    }
-  })[0];
+  // var question = am.sql.select({
+  //   table: 'Forum',
+  //   where: {
+  //     'id': data.qId
+  //   }
+  // })[0];
 
-  var qWatchers = question.get('watchers');
-  var qTitle = question.get('title');
+  // var qWatchers = question.get('watchers');
+  var qWatchers = data.watchers;
+  // var qTitle = question.get('title');
+  var qTitle = data.qTitle;
 
   for (var n in qWatchers){
     var watcher = qWatchers[n];

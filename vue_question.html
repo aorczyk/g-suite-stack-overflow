@@ -5,7 +5,6 @@
     data() {
       return {
         sharedState: store.state,
-        quillSettings: quillSettings,
         newAnswerData: {
           text: ''
         },
@@ -88,73 +87,6 @@
       showQuestions() {
         router.push(`/${this.sharedState.forum.id}`);
       },
-      showAddNewComment(id) {
-        if (this.addNewCommentParentId == id) {
-          this.addNewCommentParentId = null;
-        } else {
-          this.addNewCommentParentId = id;
-          this.newCommentData = {
-            text: ''
-          };
-
-          var refId = 'comment_' + id;
-
-          this.$nextTick(() => {
-            if (Array.isArray(this.$refs[refId])) {
-              this.$refs[refId][0].focus()
-            } else {
-              this.$refs[refId].focus()
-            }
-          })
-        }
-      },
-      cancelAddNewComment() {
-        this.addNewCommentParentId = null;
-      },
-      addComment() {
-        var self = this;
-
-        var data = {
-          forumId: this.sharedState.forum.id,
-          qId: this.selectedQuestion.id,
-          aId: this.addNewCommentParentId,
-          text: this.newCommentData.text,
-        };
-
-        this.saving = true;
-        google.script.run.withSuccessHandler(function (data) {
-          if (!self.sharedState.forum.comments[self.addNewCommentParentId]) {
-            self.sharedState.forum.comments[self.addNewCommentParentId] = [];
-          }
-          self.sharedState.forum.comments[self.addNewCommentParentId].push(data);
-          self.addNewCommentParentId = null;
-          self.saving = false;
-          self.sharedState.forum.lastChange[self.selectedQuestion.id] = data.time;
-
-          var notificationData = {
-            forumId: self.sharedState.forum.id,
-            forumName: self.sharedState.forum.name,
-            userId: self.selectedQuestion.userId,
-            qId: data.qId,
-            sId: data.id,
-            body: self.newCommentData.text
-          };
-
-          google.script.run
-            .withSuccessHandler()
-            .withFailureHandler(function (e) {
-              console.log('error');
-              console.log(e.message);
-            })
-            .forumAddEntryNotification('comment', notificationData)
-
-          // google.script.run.addWatchers(self.sharedState.forum.id, self.selectedQuestion.id, self.selectedQuestion.watchers, true)
-        }).withFailureHandler(function (e) {
-          console.log('error');
-          console.log(e.message);
-          self.saving = false;
-        }).forumAddEntry('comment', data);
-      },
       addAnswer() {
         var self = this;
 
@@ -188,7 +120,9 @@
             userId: self.selectedQuestion.userId,
             qId: data.qId,
             sId: data.id,
-            body: text
+            body: text,
+            watchers: self.selectedQuestion.watchers,
+            qTitle: self.selectedQuestion.title,
           };
 
           google.script.run
@@ -204,39 +138,6 @@
           console.log(e.message);
           self.saving = false;
         }).forumAddEntry('answer', data);
-      },
-      vote(item, value) {
-        var self = this;
-
-        if (!this.canVote(item)) {
-          return;
-        }
-
-        Vue.set(item, 'vote', item.vote + value);
-        item.votedBy.push(self.sharedState.user.email);
-
-        google.script.run.withSuccessHandler()
-          .withFailureHandler(function (e) {
-            console.log('error');
-            console.log(e);
-            self.saving = false;
-          }).forumVote(this.sharedState.forum.id, item.id, value);
-      },
-      canVote(item) {
-        if (item.userId == this.sharedState.user.email || item.votedBy.indexOf(this.sharedState.user.email) != -1) {
-          return false;
-        }
-
-        return true;
-      },
-      bestAns(item) {
-        Vue.set(this.selectedQuestion, 'bestAns', item.id);
-
-        google.script.run.withSuccessHandler()
-          .withFailureHandler(function (e) {
-            console.log('error');
-            console.log(e);
-          }).forumBestAns(this.sharedState.forum.id, this.selectedQuestion.id, item.id);
       },
       editOpen(item) {
         this.editItem = item;
@@ -267,7 +168,9 @@
               userId: item.userId,
               qId: item.qId,
               type: item.type,
-              body: item.body
+              body: item.body,
+              watchers: self.selectedQuestion.watchers,
+              qTitle: self.selectedQuestion.title,
             };
 
             google.script.run
@@ -295,9 +198,6 @@
         // item.body = '';
         // this.editItem = item;
         // this.editSave();
-      },
-      newRef(p1, p2) {
-        return String(p1) + String(p2);
       },
       getItemLink(item) {
         return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}/${item.id}`;
@@ -442,7 +342,7 @@
       
       <div class="modal" :class="{'is-active': editItem}">
         <div class="modal-background"></div>
-        <div class="modal-card">
+        <div class="modal-card edit-modal">
           <header class="modal-card-head">
             <p class="modal-card-title">{{ $t("message.edit") }}</p>
           </header>
@@ -454,7 +354,7 @@
             <div class="field" v-if="editItem.type !== 'comment'">
               <div class="control">
                 <label class="label">{{ $t("message.body") }}</label>
-                <quill-editor v-model="editItem.body" ref="quillEditorA" :options="quillSettings" :disabled="saving"></quill-editor>
+                <quill-editor v-model="editItem.body" :disabled="saving"></quill-editor>
               </div>
             </div>
             <div class="field" v-else>
@@ -534,81 +434,8 @@
               class="forum-ans-row forum-ans-question"
               :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}"
             >
-              <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
-                <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, 1)"
-                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
-                  <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
-                </div>
-                <div class="forum-ans-row-left-vote-value">
-                  {{ selectedQuestion.vote }}
-                </div>
-                <div class="forum-ans-row-left-vote" @click.stop="vote(selectedQuestion, -1)"
-                    :class="{'forum-ans-row-left-vote-disabled': !canVote(selectedQuestion)}">
-                  <i class="fas fa-caret-down" :title="$t('message.badAns')"></i>
-                </div>
-                <div v-if="sharedState.user.email == selectedQuestion.userId">
-                  <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : selectedQuestion.bestAns == selectedQuestion.id}" @click.stop="bestAns(selectedQuestion)">
-                    <i class="fas fa-check" :title="$t('message.bestAns')"></i>
-                  </div>
-                </div>
-                <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == selectedQuestion.id">
-                  <i class="fas fa-check" :title="$t('message.bestAns')"></i>
-                </div>
-              </div>
-              <div class="forum-ans-row-left" v-else>
-              </div>
-              <div class="forum-ans-row-content">
-                <div class="forum-ans-row-content-body" v-html="highlight(selectedQuestion.body)">
-                </div>
-                <div class="forum-ans-row-content-info">
-                  <div class="forum-ans-row-content-info-left">
-                    <share :link="getQuestionLink()"/>
-                    <edit :item="selectedQuestion" @edit="editOpen"></edit>
-                    <delete :item="selectedQuestion"/>
-                  </div>
-                  <div class="forum-ans-row-content-info-right">
-                    <span class="user-name"> {{ selectedQuestion.userName }}</span>
-                    <span> {{ selectedQuestion.time }}</span>
-                  </div>
-                </div>
-                <div class="forum-ans-comments">
-                  <div class="forum-ans-comments-list">
-                    <div 
-                      class="forum-ans-comments-list-row"
-                      :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
-                      v-for="comment in sharedState.forum.comments[selectedQuestion.id]"
-                      :id="comment.id"
-                    >
-                      <span v-html="highlight(comment.body)"></span>
-                      <span class="user-name"> - {{ comment.userName }}</span>
-                      <span> {{ comment.time }}</span>
-                      <share type="icon" :link="getItemLink(comment)"/>
-                      <edit :item="comment" type="icon" @edit="editOpen"></edit>
-                      <delete :item="comment" type="icon"/>
-                    </div>
-                  </div>
-                  <div>
-                    <span class="forum-ans-comments-add" @click.stop="showAddNewComment(selectedQuestion.id)"
-                      v-if="!sharedState.forum.am.isClosed">{{ $t("message.addAcomment") }}</span>
-                  </div>
-                  <div class="forum-ans-comments-new" v-show="addNewCommentParentId == selectedQuestion.id">
-                    <div class="field">
-                      <div class="control">
-                        <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',selectedQuestion.id)" :disabled="saving">
-                      </div>
-                    </div>
-                    <div class="field is-grouped">
-                      <div class="control">
-                        <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                          :disabled="saving || !newCommentData.text">{{ $t("message.save") }}</button>
-                      </div>
-                      <div class="control">
-                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t("message.cancel") }}</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <vote :question="selectedQuestion" :parent="selectedQuestion" />
+              <answer :question="selectedQuestion" :item="selectedQuestion" :selected-id="selectedId" @edit="editOpen" :link="getQuestionLink()"/>
             </div>
           </div>
           <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} {{ $t("message.answers2") }}</div>
@@ -617,87 +444,16 @@
               class="forum-ans-row" 
               :id="ans.id" 
               :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
-              v-for="ans in sortedAnswers"
+              v-for="(ans,index) in sortedAnswers"
             >
-              <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
-                <div class="forum-ans-row-left-vote" @click.stop="vote(ans, 1)"
-                :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
-                  <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
-                </div>
-                <div class="forum-ans-row-left-vote-value">
-                  {{ ans.vote }}
-                </div>
-                <div class="forum-ans-row-left-vote" @click.stop="vote(ans, -1)"
-                :class="{'forum-ans-row-left-vote-disabled': !canVote(ans)}">
-                  <i class="fas fa-caret-down" :title="$t('message.badAns')"></i>
-                </div>
-                <div v-if="sharedState.user.email == selectedQuestion.userId">
-                  <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : selectedQuestion.bestAns == ans.id}" @click.stop="bestAns(ans)">
-                    <i class="fas fa-check" :title="$t('message.bestAns')"></i>
-                  </div>
-                </div>
-                <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="selectedQuestion.bestAns == ans.id">
-                  <i class="fas fa-check" :title="$t('message.editForum')"></i>
-                </div>
-              </div>
-              <div class="forum-ans-row-left" v-else>
-              </div>
-              <div class="forum-ans-row-content">
-                <div class="forum-ans-row-content-body" v-html="highlight(ans.body)"></div>
-                <div class="forum-ans-row-content-info">
-                  <div class="forum-ans-row-content-info-left">
-                    <share :link="getItemLink(ans)"/>
-                    <edit :item="ans" @edit="editOpen"></edit>
-                    <delete :item="ans"/>
-                  </div>
-                  <div class="forum-ans-row-content-info-right">
-                    <span class="user-name"> {{ ans.userName }}</span>
-                    <span> {{ ans.time }}</span>
-                  </div>
-                </div>
-                <div class="forum-ans-comments">
-                  <div class="forum-ans-comments-list">
-                    <div 
-                      class="forum-ans-comments-list-row"
-                      :id="comment.id"
-                      :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
-                      v-for="comment in sharedState.forum.comments[ans.id]"
-                    >
-                      <span v-html="highlight(comment.body)"></span>
-                      <span class="user-name"> - {{ comment.userName }}</span>
-                      <span> {{ comment.time }}</span>
-                      <share type="icon" :link="getItemLink(comment)"/>
-                      <edit :item="comment" type="icon" @edit="editOpen"></edit>
-                      <delete :item="comment" type="icon"/>
-                    </div>
-                  </div>
-                  <div>
-                    <span class="forum-ans-comments-add" @click.stop="showAddNewComment(ans.id)" v-if="!sharedState.forum.am.isClosed">{{ $t('message.addAcomment') }}</span>
-                  </div>
-                  <div class="forum-ans-comments-new" v-show="addNewCommentParentId == ans.id">
-                    <div class="field">
-                      <div class="control">
-                        <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',ans.id)" :disabled="saving">
-                      </div>
-                    </div>
-                    <div class="field is-grouped">
-                      <div class="control">
-                        <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                          :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
-                      </div>
-                      <div class="control">
-                        <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <vote :question="selectedQuestion" :parent="ans" :nr="index + 1"/>
+              <answer :question="selectedQuestion" :item="ans" :selected-id="selectedId" @edit="editOpen" :link="getItemLink(ans)"/>
             </div>
           </div>
           <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">{{ $t('message.yourAnswer') }}</div>
             <!--<div class="editor"></div>-->
-            <quill-editor class="quill-restyle" v-model="newAnswerData.text" ref="quillEditorA" :options="quillSettings" :disabled="saving">
+            <quill-editor class="quill-restyle" v-model="newAnswerData.text" :disabled="saving">
             </quill-editor>
             <div class="forum-ans-add">
               <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text">{{ $t('message.postYourAnswer') }}</div>

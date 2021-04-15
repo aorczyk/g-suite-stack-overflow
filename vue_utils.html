@@ -240,4 +240,256 @@
     </div>
     `
   });
+
+
+Vue.component('comments', {
+  props: ['parent', 'selectedId', 'question'],
+  data: function(){
+    return {
+      sharedState: store.state,
+      addNewCommentParentId: null,
+      newCommentData: {
+        text: ''
+      },
+      saving: false
+    }
+  },
+  methods: {
+    newRef(p1, p2) {
+      return String(p1) + String(p2);
+    },
+    getItemLink(item) {
+      var qId = this.parent.type == 'question' ? this.parent.id : this.parent.qId;
+      return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${qId}/${item.id}`;
+    },
+    highlight(html) {
+      return store.highlight(html);
+    },
+    showAddNewComment(id) {
+      if (this.addNewCommentParentId == id) {
+        this.addNewCommentParentId = null;
+      } else {
+        this.addNewCommentParentId = id;
+        this.newCommentData = {
+          text: ''
+        };
+
+        var refId = 'comment_' + id;
+
+        this.$nextTick(() => {
+          if (Array.isArray(this.$refs[refId])) {
+            this.$refs[refId][0].focus()
+          } else {
+            this.$refs[refId].focus()
+          }
+        })
+      }
+    },
+    cancelAddNewComment() {
+      this.addNewCommentParentId = null;
+    },
+    addComment() {
+      var data = {
+        forumId: this.sharedState.forum.id,
+        qId: this.parent.qId,
+        aId: this.addNewCommentParentId,
+        text: this.newCommentData.text,
+      };
+
+      this.saving = true;
+
+      var self = this;
+      google.script.run.withSuccessHandler(function (data) {
+        if (!self.sharedState.forum.comments[self.addNewCommentParentId]) {
+          self.sharedState.forum.comments[self.addNewCommentParentId] = [];
+        }
+        self.sharedState.forum.comments[self.addNewCommentParentId].push(data);
+        self.addNewCommentParentId = null;
+        self.saving = false;
+        self.sharedState.forum.lastChange[self.parent.id] = data.time;
+
+        var notificationData = {
+          forumId: self.sharedState.forum.id,
+          forumName: self.sharedState.forum.name,
+          userId: self.parent.userId,
+          qId: data.qId,
+          sId: data.id,
+          body: self.newCommentData.text,
+          watchers: self.question.watchers.concat(self.parent.watchers),
+          qTitle: self.question.title,
+        };
+
+        google.script.run
+          .withSuccessHandler()
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+          })
+          .forumAddEntryNotification('comment', notificationData)
+      }).withFailureHandler(function (e) {
+        console.log('error');
+        console.log(e.message);
+        self.saving = false;
+      }).forumAddEntry('comment', data);
+    },
+    edit(item) {
+      this.$emit('edit', item)
+    }
+  },
+  template: 
+  `
+  <div class="forum-ans-comments">
+    <div class="forum-ans-comments-list">
+      <div 
+        class="forum-ans-comments-list-row"
+        :id="comment.id"
+        :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
+        v-for="comment in sharedState.forum.comments[parent.id]"
+      >
+        <span v-html="highlight(comment.body)"></span>
+        <span class="user-name"> - {{ comment.userName }}</span>
+        <span> {{ comment.time }}</span>
+        <share type="icon" :link="getItemLink(comment)"/>
+        <edit :item="comment" type="icon" @edit="edit"></edit>
+        <delete :item="comment" type="icon"/>
+      </div>
+    </div>
+    <div>
+      <span class="forum-ans-comments-add" @click.stop="showAddNewComment(parent.id)" v-if="!sharedState.forum.am.isClosed">{{ $t('message.addAcomment') }}</span>
+    </div>
+    <div class="forum-ans-comments-new" v-show="addNewCommentParentId == parent.id">
+      <div class="field">
+        <div class="control">
+          <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',parent.id)" :disabled="saving">
+        </div>
+      </div>
+      <div class="field is-grouped">
+        <div class="control">
+          <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
+            :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
+        </div>
+        <div class="control">
+          <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  `
+});
+
+Vue.component('vote', {
+  props: ['parent', 'question','nr'],
+  data: function(){
+    return {
+      sharedState: store.state,
+      saving: false
+    }
+  },
+  methods: {
+    vote(item, value) {
+
+      if (!this.canVote(item)) {
+        return;
+      }
+
+      Vue.set(item, 'vote', item.vote + value);
+      item.votedBy.push(this.sharedState.user.email);
+
+      this.saving = true;
+
+      var self = this;
+      google.script.run.withSuccessHandler(function (e) {
+        self.saving = false;
+        })
+        .withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e);
+          self.saving = false;
+        }).forumVote(this.sharedState.forum.id, item.id, value);
+    },
+    canVote(item) {
+      if (this.saving || (item.userId == this.sharedState.user.email || item.votedBy.indexOf(this.sharedState.user.email) != -1)) {
+        return false;
+      }
+
+      return true;
+    },
+    bestAns(item) {
+      Vue.set(this.question, 'bestAns', item.id);
+
+      google.script.run.withSuccessHandler()
+        .withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e);
+        }).forumBestAns(this.sharedState.forum.id, this.question.id, item.id);
+    },
+  },
+  template: 
+  `
+  <div>
+    <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
+      <div class="forum-ans-row-left-vote" @click.stop="vote(parent, 1)"
+      :class="{'forum-ans-row-left-vote-disabled': !canVote(parent)}">
+        <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
+      </div>
+      <div class="forum-ans-row-left-vote-value">
+        {{ parent.vote }}
+      </div>
+      <div class="forum-ans-row-left-vote" @click.stop="vote(parent, -1)"
+      :class="{'forum-ans-row-left-vote-disabled': !canVote(parent)}">
+        <i class="fas fa-caret-down" :title="$t('message.badAns')"></i>
+      </div>
+      <div v-if="sharedState.user.email == question.userId">
+        <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : question.bestAns == parent.id}" @click.stop="bestAns(parent)">
+          <i class="fas fa-check" :title="$t('message.bestAns')"></i>
+        </div>
+      </div>
+      <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="question.bestAns == parent.id">
+        <i class="fas fa-check" :title="$t('message.editForum')"></i>
+      </div>
+    </div>
+    <div class="forum-ans-row-left forum-ans-row-left-answer" v-else>
+      <span class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</span>
+      <span v-else><i class="fas fa-chevron-circle-right"></i></span>
+    </div>
+  </div>
+  `
+});
+
+
+Vue.component('answer', {
+  props: ['item', 'question', 'selectedId', 'link'],
+  data: function(){
+    return {
+      sharedState: store.state,
+      saving: false
+    }
+  },
+  methods: {
+    edit(item) {
+      this.$emit('edit', item)
+    },
+    highlight(html) {
+      return store.highlight(html);
+    },
+  },
+  template: 
+  `
+  <div class="forum-ans-row-content">
+    <div class="forum-ans-row-content-body" v-html="highlight(item.body)"></div>
+    <div class="forum-ans-row-content-info">
+      <div class="forum-ans-row-content-info-left">
+        <share :link="link"/>
+        <edit :item="item" @edit="edit"></edit>
+        <delete :item="item"/>
+      </div>
+      <div class="forum-ans-row-content-info-right">
+        <span class="user-name"> {{ item.userName }}</span>
+        <span> {{ item.time }}</span>
+      </div>
+    </div>
+    <comments :question="question" :parent="item" :selected-id="selectedId" @edit="edit"/>
+  </div>
+  `
+});
 </script>
