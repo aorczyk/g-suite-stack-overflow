@@ -10,6 +10,7 @@
     data() {
       return {
         editor: null,
+        updated: false
       }
     },
     mounted(){
@@ -78,10 +79,18 @@
     watch: {
       disabled(status){
         this.editor.enable(!status)
+      },
+      value(newVal) {
+        if (!this.updated){
+          this.editor.root.innerHTML = newVal;
+        }
+
+        this.updated = false;
       }
     },
     methods: {
       update() {
+        this.updated = true;
         this.$emit('input', this.editor.getText() ? this.editor.root.innerHTML : '');
       }
     },

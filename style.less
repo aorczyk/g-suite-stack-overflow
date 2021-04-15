@@ -450,6 +450,10 @@
                         font-size: 26px;
                     }
 
+                    &.forum-ans-row-left-sub-answer {
+                        padding: 0px 5px;
+                    }
+
                     .forum-ans-row-left-answer-nr {
                         height: 26px;
                         width: 26px;
@@ -459,6 +463,18 @@
                         color: white;
                         line-height: 26px;
                         font-size: 16px;
+                        text-align: center;
+                    }
+
+                    .forum-ans-row-left-sub-answer-nr {
+                        height: 18px;
+                        width: 18px;
+                        background-color: #209cee;
+                        border-radius: 50%;
+                        display: inline-block;
+                        color: white;
+                        line-height: 18px;
+                        font-size: 12px;
                         text-align: center;
                     }
 
@@ -554,6 +570,15 @@
                     }
                 }
             }
+
+            .sub-answers {
+                .sub-answer {
+                    border-top: 1px solid #eff0f1;
+                    margin-top: 10px;
+                    margin-left: 50px;
+                    padding-top: 10px;
+                }
+            }
         }
     
         .forum-ans-comments {
@@ -584,6 +609,15 @@
     
             .forum-ans-comments-new {
                 margin-top: 10px;
+            }
+
+            .forum-ans-comments-actions {
+                display: grid;
+                grid-auto-flow: column;
+                grid-template-columns: max-content max-content;
+                column-gap: 20px;
+                max-width: 250px;
+                justify-items: start;
             }
         }
     }

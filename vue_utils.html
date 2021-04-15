@@ -243,21 +243,20 @@
 
 
 Vue.component('comments', {
+  mixins: [mixinUtils],
   props: ['parent', 'selectedId', 'question'],
   data: function(){
     return {
       sharedState: store.state,
-      addNewCommentParentId: null,
       newCommentData: {
         text: ''
       },
-      saving: false
+      saving: false,
+      isNewCommentVisible: false,
+      type: 'comment'
     }
   },
   methods: {
-    newRef(p1, p2) {
-      return String(p1) + String(p2);
-    },
     getItemLink(item) {
       var qId = this.parent.type == 'question' ? this.parent.id : this.parent.qId;
       return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${qId}/${item.id}`;
@@ -265,46 +264,63 @@ Vue.component('comments', {
     highlight(html) {
       return store.highlight(html);
     },
-    showAddNewComment(id) {
-      if (this.addNewCommentParentId == id) {
-        this.addNewCommentParentId = null;
+    showAddNewComment(type) {
+      if (this.isNewCommentVisible) {
+        this.isNewCommentVisible = false;
       } else {
-        this.addNewCommentParentId = id;
+        this.isNewCommentVisible = true;
         this.newCommentData = {
           text: ''
         };
 
-        var refId = 'comment_' + id;
+        this.type = type;
 
-        this.$nextTick(() => {
-          if (Array.isArray(this.$refs[refId])) {
-            this.$refs[refId][0].focus()
-          } else {
-            this.$refs[refId].focus()
-          }
-        })
+        if (type == 'comment'){
+          var refId = 'newCommentInput';
+
+          this.$nextTick(() => {
+            if (Array.isArray(this.$refs[refId])) {
+              this.$refs[refId][0].focus()
+            } else {
+              this.$refs[refId].focus()
+            }
+          })
+        }
+
       }
     },
     cancelAddNewComment() {
-      this.addNewCommentParentId = null;
+      this.isNewCommentVisible = false;
     },
     addComment() {
+      var text;
+      var agregatorName;
+
+      if (this.type == 'comment'){
+        agregatorName = 'comments';
+        text = this.newCommentData.text;
+      }
+      else if (this.type == 'subAnswer'){
+        agregatorName = 'answers';
+        text = this.postProcessAnsText(this.newCommentData.text);
+      }
+
       var data = {
         forumId: this.sharedState.forum.id,
         qId: this.parent.qId,
-        aId: this.addNewCommentParentId,
-        text: this.newCommentData.text,
+        aId: this.parent.id,
+        text: text,
       };
 
       this.saving = true;
-
       var self = this;
       google.script.run.withSuccessHandler(function (data) {
-        if (!self.sharedState.forum.comments[self.addNewCommentParentId]) {
-          self.sharedState.forum.comments[self.addNewCommentParentId] = [];
+        if (!self.sharedState.forum[agregatorName][self.parent.id]) {
+          self.sharedState.forum[agregatorName][self.parent.id] = [];
         }
-        self.sharedState.forum.comments[self.addNewCommentParentId].push(data);
-        self.addNewCommentParentId = null;
+        self.sharedState.forum[agregatorName][self.parent.id].push(data);
+
+        self.isNewCommentVisible = false;
         self.saving = false;
         self.sharedState.forum.lastChange[self.parent.id] = data.time;
 
@@ -319,18 +335,20 @@ Vue.component('comments', {
           qTitle: self.question.title,
         };
 
+        self.$emit('select', data.id)
+
         google.script.run
           .withSuccessHandler()
           .withFailureHandler(function (e) {
             console.log('error');
             console.log(e.message);
           })
-          .forumAddEntryNotification('comment', notificationData)
+          .forumAddEntryNotification(self.type, notificationData)
       }).withFailureHandler(function (e) {
         console.log('error');
         console.log(e.message);
         self.saving = false;
-      }).forumAddEntry('comment', data);
+      }).forumAddEntry(this.type, data);
     },
     edit(item) {
       this.$emit('edit', item)
@@ -338,39 +356,64 @@ Vue.component('comments', {
   },
   template: 
   `
-  <div class="forum-ans-comments">
-    <div class="forum-ans-comments-list">
+  <div>
+    <div class="forum-ans-comments">
+      <div class="forum-ans-comments-list">
+        <div 
+          class="forum-ans-comments-list-row"
+          :id="comment.id"
+          :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
+          v-for="comment in sharedState.forum.comments[parent.id]"
+        >
+          <span v-html="highlight(comment.body)"></span>
+          <span class="user-name"> - {{ comment.userName }}</span>
+          <span> {{ comment.time }}</span>
+          <share type="icon" :link="getItemLink(comment)"/>
+          <edit :item="comment" type="icon" @edit="edit"></edit>
+          <delete :item="comment" type="icon"/>
+        </div>
+      </div>
+      <div class="forum-ans-comments-actions">
+        <span class="forum-ans-comments-add" @click.stop="showAddNewComment('comment')" v-if="!sharedState.forum.am.isClosed">{{ $t('message.addAcomment') }}</span>
+        <span class="forum-ans-comments-add" @click.stop="showAddNewComment('subAnswer')" v-if="!sharedState.forum.am.isClosed && parent.id != question.id">{{ $t('message.addAnswerInThread') }}</span>
+      </div>
+      <div class="forum-ans-comments-new" v-show="isNewCommentVisible">
+        <div class="field">
+          <div class="control" v-if="type == 'comment'">
+            <input class="input" type="text" v-model="newCommentData.text" ref="newCommentInput" :disabled="saving">
+          </div>
+          <div class="control" v-if="type == 'subAnswer'">
+            <quill-editor v-model="newCommentData.text" :disabled="saving"></quill-editor>
+          </div>
+        </div>
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
+              :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
+          </div>
+          <div class="control">
+            <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="forum-ans-list" v-if="parent.id != question.id">
       <div 
-        class="forum-ans-comments-list-row"
-        :id="comment.id"
-        :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
-        v-for="comment in sharedState.forum.comments[parent.id]"
+        class="forum-ans-row" 
+        :id="ans.id"
+        :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
+        v-for="(ans,index) in sharedState.forum.answers[parent.id]"
       >
-        <span v-html="highlight(comment.body)"></span>
-        <span class="user-name"> - {{ comment.userName }}</span>
-        <span> {{ comment.time }}</span>
-        <share type="icon" :link="getItemLink(comment)"/>
-        <edit :item="comment" type="icon" @edit="edit"></edit>
-        <delete :item="comment" type="icon"/>
-      </div>
-    </div>
-    <div>
-      <span class="forum-ans-comments-add" @click.stop="showAddNewComment(parent.id)" v-if="!sharedState.forum.am.isClosed">{{ $t('message.addAcomment') }}</span>
-    </div>
-    <div class="forum-ans-comments-new" v-show="addNewCommentParentId == parent.id">
-      <div class="field">
-        <div class="control">
-          <input class="input" type="text" v-model="newCommentData.text" :ref="newRef('comment_',parent.id)" :disabled="saving">
+        <div class="forum-ans-row-left forum-ans-row-left-sub-answer">
+          <span class="forum-ans-row-left-sub-answer-nr">{{ index + 1 }}</span>
         </div>
-      </div>
-      <div class="field is-grouped">
-        <div class="control">
-          <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-            :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
-        </div>
-        <div class="control">
-          <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
-        </div>
+        <answer 
+          :question="question" 
+          :item="ans" 
+          :selected-id="selectedId" 
+          @edit="edit" 
+          :link="getItemLink(ans)" 
+        />
       </div>
     </div>
   </div>
@@ -472,6 +515,9 @@ Vue.component('answer', {
     highlight(html) {
       return store.highlight(html);
     },
+    setSelected(id) {
+      this.$emit('select', id);
+    }
   },
   template: 
   `
@@ -488,7 +534,7 @@ Vue.component('answer', {
         <span> {{ item.time }}</span>
       </div>
     </div>
-    <comments :question="question" :parent="item" :selected-id="selectedId" @edit="edit"/>
+    <comments :question="question" :parent="item" :selected-id="selectedId" @edit="edit" @select="setSelected"/>
   </div>
   `
 });

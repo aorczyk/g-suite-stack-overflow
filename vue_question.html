@@ -110,7 +110,7 @@
           self.sharedState.forum.answers[self.selectedQuestion.id].push(data);
           self.sharedState.forum.comments[data.id] = [];
 
-          self.newAnswerData.text = '';
+          Vue.set(self.newAnswerData, 'text', '');
           self.saving = false;
           self.sharedState.forum.lastChange[self.selectedQuestion.id] = data.time;
 
@@ -124,6 +124,8 @@
             watchers: self.selectedQuestion.watchers,
             qTitle: self.selectedQuestion.title,
           };
+
+          self.setSelected(data.id)
 
           google.script.run
             .withSuccessHandler((recipients) => {
@@ -154,24 +156,21 @@
             Vue.set(self.editItem, 'status', item.status);
             Vue.set(self.editItem, 'body', self.postProcessAnsText(item.body));
 
-            // if (item.status == 'Deleted') {
-            //   self.editItem.body = self.editItemTmp.body;
-            // }
-
-            self.editItem = null;
-            self.editItemTmp = null;
-            self.saving = false;
-
             var notificationData = {
               forumId: self.sharedState.forum.id,
               forumName: self.sharedState.forum.name,
               userId: item.userId,
               qId: item.qId,
+              sId: self.editItem.id,
               type: item.type,
               body: item.body,
               watchers: self.selectedQuestion.watchers,
               qTitle: self.selectedQuestion.title,
             };
+
+            self.editItem = null;
+            self.editItemTmp = null;
+            self.saving = false;
 
             google.script.run
               .withSuccessHandler()
@@ -334,6 +333,13 @@
       },
       highlight(html) {
         return store.highlight(html);
+      },
+      setSelected(id) {
+        this.selectedId = id;
+
+        setTimeout(() => {
+          this.selectedId = null;
+        }, 5000);
       }
     },
     template: `
@@ -435,7 +441,7 @@
               :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}"
             >
               <vote :question="selectedQuestion" :parent="selectedQuestion" />
-              <answer :question="selectedQuestion" :item="selectedQuestion" :selected-id="selectedId" @edit="editOpen" :link="getQuestionLink()"/>
+              <answer :question="selectedQuestion" :item="selectedQuestion" :selected-id="selectedId" @edit="editOpen" :link="getQuestionLink()" @select="setSelected"/>
             </div>
           </div>
           <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} {{ $t("message.answers2") }}</div>
@@ -447,14 +453,12 @@
               v-for="(ans,index) in sortedAnswers"
             >
               <vote :question="selectedQuestion" :parent="ans" :nr="index + 1"/>
-              <answer :question="selectedQuestion" :item="ans" :selected-id="selectedId" @edit="editOpen" :link="getItemLink(ans)"/>
+              <answer :question="selectedQuestion" :item="ans" :selected-id="selectedId" @edit="editOpen" :link="getItemLink(ans)" @select="setSelected"/>
             </div>
           </div>
           <div v-if="!sharedState.forum.am.isClosed">
             <div class="forum-ans-text">{{ $t('message.yourAnswer') }}</div>
-            <!--<div class="editor"></div>-->
-            <quill-editor class="quill-restyle" v-model="newAnswerData.text" :disabled="saving">
-            </quill-editor>
+            <quill-editor class="quill-restyle" v-model="newAnswerData.text" :disabled="saving"></quill-editor>
             <div class="forum-ans-add">
               <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text">{{ $t('message.postYourAnswer') }}</div>
             </div>

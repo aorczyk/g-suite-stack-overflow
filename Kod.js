@@ -391,20 +391,24 @@ function getForumData(id) {
       }
 
       out.questions.push(rowData);
-      // out.answers[rowData.id] = [];
     } else if (type == 'answer') {
       if (!out.answers[rowData.qId]) {
         out.answers[rowData.qId] = [];
       }
 
       out.answers[rowData.qId].push(rowData);
-      // out.comments[rowData.id] = [];
     } else if (type == 'comment') {
       if (!out.comments[rowData.ansId]) {
         out.comments[rowData.ansId] = [];
       }
 
       out.comments[rowData.ansId].push(rowData);
+    } else if (type == 'subAnswer') {
+      if (!out.answers[rowData.ansId]) {
+        out.answers[rowData.ansId] = [];
+      }
+
+      out.answers[rowData.ansId].push(rowData);
     }
   }
 
@@ -451,7 +455,6 @@ function forumAddEntry(type, data) {
     'watchers': []
   };
 
-  var entryType = '';
   var questionId = data.qId;
 
   if (type == 'comment') {
@@ -459,19 +462,22 @@ function forumAddEntry(type, data) {
     row['answer_id'] = data.aId;
     row['body'] = data.text;
     row['watchers'].push(user.email);
-    entryType = 'nowy komentarz';
 
+  } else if (type == 'subAnswer') {
+    row['question_id'] = data.qId;
+    row['answer_id'] = data.aId;
+    row['body'] = data.text;
+    row['watchers'].push(user.email);
+    
   } else if (type == 'answer') {
     row['question_id'] = data.qId;
     row['body'] = data.text;
     row['watchers'].push(user.email);
-    entryType = 'nowa odpowiedź';
     
   } else if (type == 'question') {
     row['title'] = data.title;
     row['body'] = data.text;
     row['watchers'].push(user.email);
-    entryType = 'nowe pytanie';
     questionId = row.id;
   }
 
@@ -557,6 +563,8 @@ function forumAddEntryNotification(type, data) {
     actionName = 'New comment';
   } else if (type == 'answer') {
     actionName = 'New answer';
+  } else if (type == 'subAnswer') {
+    actionName = 'New sub answer';
   } else if (type == 'question') {
     actionName = 'New question';
   } else if (type == 'edit') {
@@ -600,11 +608,11 @@ function forumAddEntryNotification(type, data) {
     var appUrl = APP_CONFIG.appUrl;
 
     var link = appUrl + "#/" + data.forumId + "/" + data.qId;
-    if (data.sId) {
-      link += '/' + data.sId;
-    }
+
     if (type == 'edit' && data.type == 'question') {
       link += '/' + data.qId;
+    } else if (data.sId) {
+      link += '/' + data.sId;
     }
 
     var email = {};
