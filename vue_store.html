@@ -33,9 +33,14 @@
       for (var entity of ['answers', 'comments']){
         for (var id in this.state.forum[entity]){
           for (var item of this.state.forum[entity][id]){
-            if (item.body && item.body.search(reg) != -1){
-              this.state.searched.push(item.qId);
+            try {
+              if (item.body && item.body.search(reg) != -1){
+                this.state.searched.push(item.qId);
+              }
+            } catch (e){
+              console.log(e);
             }
+
           }
         }
       }

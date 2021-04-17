@@ -264,6 +264,9 @@ Vue.component('comments', {
     highlight(html) {
       return store.highlight(html);
     },
+    highlightText(html) {
+      return store.highlightText(html);
+    },
     showAddNewComment(type) {
       if (this.isNewCommentVisible) {
         this.isNewCommentVisible = false;
@@ -335,7 +338,9 @@ Vue.component('comments', {
           qTitle: self.question.title,
         };
 
-        self.$emit('select', data.id)
+        if (self.type == 'subAnswer'){
+          self.setSelected(data.id)
+        }
 
         google.script.run
           .withSuccessHandler()
@@ -352,6 +357,9 @@ Vue.component('comments', {
     },
     edit(item) {
       this.$emit('edit', item)
+    },
+    setSelected(id) {
+      this.$emit('select', id);
     }
   },
   template: 
@@ -365,7 +373,7 @@ Vue.component('comments', {
           :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
           v-for="comment in sharedState.forum.comments[parent.id]"
         >
-          <span v-html="highlight(comment.body)"></span>
+          <span v-html="highlightText(comment.body)"></span>
           <span class="user-name"> - {{ comment.userName }}</span>
           <span> {{ comment.time }}</span>
           <share type="icon" :link="getItemLink(comment)"/>
@@ -411,8 +419,9 @@ Vue.component('comments', {
           :question="question" 
           :item="ans" 
           :selected-id="selectedId" 
-          @edit="edit" 
           :link="getItemLink(ans)" 
+          @edit="edit" 
+          @select="setSelected"
         />
       </div>
     </div>

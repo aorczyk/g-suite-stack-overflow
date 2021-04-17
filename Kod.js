@@ -261,7 +261,7 @@ function getUser() {
   var email = Session.getActiveUser().getEmail();
 
   if (!email){
-    email = 'Unknown visitor';
+    email = 'guest.user@email.com';
   }
 
   return {
@@ -362,7 +362,7 @@ function getForumData(id) {
       qId: row['question_id'],
       ansId: row['answer_id'],
       title: row['title'],
-      body: row['body'],
+      body: String(row['body']),
       status: row['status'],
       time: row['time'],
       vote: voteValue,
@@ -631,6 +631,10 @@ function forumAddEntryNotification(type, data) {
 
 
 function sendEmail(email, sendTo) {
+
+  var regex = new RegExp("(<img.*?>)", 'g');
+  email.text = email.text.replace(regex, '[Image]');
+
   GmailApp.sendEmail('', email.topic, '', {
     bcc: sendTo.join(','),
     // replyTo: user.email,

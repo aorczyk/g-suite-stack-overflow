@@ -338,6 +338,10 @@
         this.selectedId = id;
 
         setTimeout(() => {
+          this.$refs['foo'].click();
+        }, 100);
+        
+        setTimeout(() => {
           this.selectedId = null;
         }, 5000);
       }
