@@ -5,8 +5,8 @@ The application works on Google Apps Script application development platform. It
 
 User can:
  - ask questions 
- - answer questions
- - add comments
+ - add answers
+ - add comments and sub answers
  - vote questions and answers
  - add/remove watchers in given question (watchers get email notification about all changes done in question). In private forum watcher get access to the question.
  - create own forum (also private forum for selected users only)
@@ -44,6 +44,7 @@ User can:
    - in the menu select "Publish" and "Deploy as web app",
    - select "Project version" as "New", add some description, "Execute the app as": Me, "Who has access to the app": "Only myself" or if you want to publish it in your company select "Anyone within ...",
    - copy "Current web app URL" and run it in a browser or click link in "Test web app for your latest code".
+   - after first deploy set a web app URL in "Config.gs" in APP_CONFIG.appUrl, save the file and deploy the app again.
 
 ### In the project I used:
  - [Google Apps Script](https://developers.google.com/apps-script/overview) - backend and running environment
