@@ -1,0 +1,500 @@
+<script>
+  Vue.component('spinner', {
+    template: `
+      <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-content" style="overflow: hidden;">
+          <div class="sk-folding-cube">
+            <div class="sk-cube1 sk-cube"></div>
+            <div class="sk-cube2 sk-cube"></div>
+            <div class="sk-cube4 sk-cube"></div>
+            <div class="sk-cube3 sk-cube"></div>
+          </div>
+        </div>
+      </div>
+      `
+  });
+
+
+  Vue.component('edit', {
+    props: ['item','type'],
+    data: function(){
+      return {
+        sharedState: store.state,
+      }
+    },
+    computed: {
+      isEnabled() {
+        return this.item.canEdit;
+      },
+      title() {
+        return this.item.edited ? this.$t('message.edited') + ': ' + this.item.edited : this.$t('message.edit2')
+      }
+    },
+    methods: {
+      edit() {
+        if (this.isEnabled){
+          this.$emit('edit', this.item);
+        }
+      }
+    },
+    template: 
+    `<span>
+      <span :class="[isEnabled ? 'action-icon' : 'action-icon-disabled']" @click="edit" :title="title" v-if="isEnabled || item.edited">
+        <span v-if="type === 'icon'"> <i class="fas fa-pen"></i></span>
+        <span v-else>{{ $t('message.edit2') }}</span>
+      </span>
+    </span>
+    `
+  });
+
+
+  Vue.component('share', {
+    props: ['link', 'type'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        isOpen: false
+      }
+    },
+    computed: {
+    },
+    methods: {
+      toggle() {
+        this.isOpen = !this.isOpen;
+        setTimeout(() => {
+          this.$refs.shareLink.select();
+        }, 50);
+        
+      },
+      copy() {
+        this.$refs.shareLink.select();
+        try {
+          var successful = document.execCommand('copy');
+          var msg = successful ? 'successful' : 'unsuccessful';
+          // alert('Testing code was copied ' + msg);
+
+          this.toggle();
+        } catch (err) {
+          alert('Oops, unable to copy');
+        }
+      }
+    },
+    template: 
+    `<div class="info-button">
+      <span class="action-icon" :title="$t('message.shareQuestionTitle')" @click.stop="toggle">
+        <span v-if="type === 'icon'"> <i class="fas fa-external-link-alt"></i></span>
+        <span v-else>{{ $t('message.share') }}</span>
+      </span>
+      <div class="box info-button-dialog" v-show="isOpen">
+        <div class="field">
+          <label class="label">{{ $t('message.shareQuestionTitleBox') }}</label>
+          <div class="control">
+            <input ref="shareLink" class="input" type="text" placeholder="Link"  :value="link">
+          </div>
+        </div>
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-link is-small" @click.stop="copy">Copy</button>
+          </div>
+          <div class="control">
+            <button class="button is-light is-small" @click.stop="toggle">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    `
+  });
+
+
+  Vue.component('delete', {
+    props: ['item', 'type'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        isOpen: false,
+        saving: false
+      }
+    },
+    computed: {
+    },
+    methods: {
+      toggle() {
+        if (this.saving){
+          return;
+        }
+        
+        this.isOpen = !this.isOpen;      
+      },
+      deleteItem(){
+        this.saving = true;
+        this.isOpen = false; 
+
+        var self = this;
+
+        google.script.run.withSuccessHandler(function (item) {
+            self.saving = false;
+            // self.item = item;
+            self.item.status = 'Deleted';
+          })
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).deleteItem(this.item);
+      }
+    },
+    template: 
+    `<div class="info-button" v-if="item.canEdit">
+      <span class="action-icon" :title="$t('message.deleteTitle')" @click.stop="toggle" v-if="item.status != 'Deleted'">
+        <span v-if="type === 'icon'"> <i class="fas fa-trash-alt"></i></span>
+        <span v-else>{{ $t('message.delete') }}</span>
+      </span>
+      <span v-else class="info-deleted">{{ $t('message.deleted') }}</span>
+
+      <span class="action-icon" v-if="saving">
+         <i class="fas fa-spinner fa-pulse"></i>
+      </span>
+
+      <div class="box info-button-dialog" v-show="isOpen">
+        <div class="field">
+          <label class="label">{{ $t('message.deleteDialogTitle') }}</label>
+        </div>
+        <div class="field is-grouped">
+          <div class="control">
+            <button class="button is-danger is-small" :class="{'is-loading': saving}" @click.stop="deleteItem">Delete</button>
+          </div>
+          <div class="control">
+            <button class="button is-light is-small" @click.stop="toggle" :disabled="saving">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    `
+  });
+
+
+  Vue.component('modalImage', {
+    props: ['img'],
+    data: function(){
+      return {
+        sharedState: store.state,
+      }
+    },
+    methods: {
+      close() {
+        this.$emit('close');
+      }
+    },
+    template: 
+    `
+    <div class="modal" :class="{'is-active': img}">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <img :src="img">
+      </div>
+      <button class="modal-close is-large" aria-label="close" @click.stop="close"></button>
+    </div>
+    `
+  });
+
+
+  Vue.component('comments', {
+    mixins: [mixinUtils],
+    props: ['parent', 'selectedId', 'question'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        newCommentData: {
+          text: ''
+        },
+        saving: false,
+        isNewCommentVisible: false,
+        type: 'comment'
+      }
+    },
+    methods: {
+      getItemLink(item) {
+        var qId = this.parent.type == 'question' ? this.parent.id : this.parent.qId;
+        return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${qId}/${item.id}`;
+      },
+      showAddNewComment(type) {
+        if (this.isNewCommentVisible) {
+          this.isNewCommentVisible = false;
+        } else {
+          this.isNewCommentVisible = true;
+          this.newCommentData = {
+            text: ''
+          };
+
+          this.type = type;
+
+          if (type == 'comment'){
+            var refId = 'newCommentInput';
+
+            this.$nextTick(() => {
+              if (Array.isArray(this.$refs[refId])) {
+                this.$refs[refId][0].focus()
+              } else {
+                this.$refs[refId].focus()
+              }
+            })
+          }
+
+        }
+      },
+      cancelAddNewComment() {
+        this.isNewCommentVisible = false;
+      },
+      addComment() {
+        var text;
+        var agregatorName;
+
+        if (this.type == 'comment'){
+          agregatorName = 'comments';
+          text = this.newCommentData.text;
+        }
+        else if (this.type == 'subAnswer'){
+          agregatorName = 'answers';
+          text = this.postProcessAnsText(this.newCommentData.text);
+        }
+
+        var data = {
+          forumId: this.sharedState.forum.id,
+          qId: this.parent.qId,
+          aId: this.parent.id,
+          text: text,
+        };
+
+        this.saving = true;
+        var self = this;
+        google.script.run.withSuccessHandler(function (data) {
+          if (!self.sharedState.forum[agregatorName][self.parent.id]) {
+            self.sharedState.forum[agregatorName][self.parent.id] = [];
+          }
+          self.sharedState.forum[agregatorName][self.parent.id].push(data);
+
+          self.isNewCommentVisible = false;
+          self.saving = false;
+          self.sharedState.forum.lastChange[self.parent.id] = data.time;
+
+          var notificationData = {
+            forumId: self.sharedState.forum.id,
+            forumName: self.sharedState.forum.name,
+            userId: self.parent.userId,
+            qId: data.qId,
+            sId: data.id,
+            body: self.newCommentData.text,
+            watchers: self.question.watchers.concat(self.parent.watchers),
+            qTitle: self.question.title,
+          };
+
+          if (self.type == 'subAnswer'){
+            self.setSelected(data.id)
+          }
+
+          google.script.run
+            .withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e.message);
+            })
+            .forumAddEntryNotification(self.type, notificationData)
+        }).withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e.message);
+          self.saving = false;
+        }).forumAddEntry(this.type, data);
+      },
+      edit(item) {
+        this.$emit('edit', item)
+      },
+      setSelected(id) {
+        this.$emit('select', id);
+      }
+    },
+    template: 
+    `
+    <div>
+      <div class="forum-ans-comments">
+        <div class="forum-ans-comments-list">
+          <div 
+            class="forum-ans-comments-list-row"
+            :id="comment.id"
+            :class="{'forum-selected-item': comment.id == selectedId, 'forum-item-deleted': comment.status == 'Deleted'}"
+            v-for="comment in sharedState.forum.comments[parent.id]"
+          >
+            <span v-html="highlightText(comment.body)"></span>
+            <span class="user-name"> - {{ comment.userName }}</span>
+            <span> {{ comment.time }}</span>
+            <share type="icon" :link="getItemLink(comment)"/>
+            <edit :item="comment" type="icon" @edit="edit"></edit>
+            <delete :item="comment" type="icon"/>
+          </div>
+        </div>
+        <div class="forum-ans-comments-actions">
+          <span class="forum-ans-comments-add" @click.stop="showAddNewComment('comment')" v-if="!sharedState.forum.am.isClosed">{{ $t('message.addAcomment') }}</span>
+          <span class="forum-ans-comments-add" @click.stop="showAddNewComment('subAnswer')" v-if="!sharedState.forum.am.isClosed && parent.id != question.id">{{ $t('message.addAnswerInThread') }}</span>
+        </div>
+        <div class="forum-ans-comments-new" v-show="isNewCommentVisible">
+          <div class="field">
+            <div class="control" v-if="type == 'comment'">
+              <input class="input" type="text" v-model="newCommentData.text" ref="newCommentInput" :disabled="saving">
+            </div>
+            <div class="control" v-if="type == 'subAnswer'">
+              <quill-editor v-model="newCommentData.text" :disabled="saving"></quill-editor>
+            </div>
+          </div>
+          <div class="field is-grouped">
+            <div class="control">
+              <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
+                :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
+            </div>
+            <div class="control">
+              <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="forum-ans-list" v-if="parent.id != question.id">
+        <div 
+          class="forum-ans-row" 
+          :id="ans.id"
+          :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
+          v-for="(ans,index) in sharedState.forum.answers[parent.id]"
+        >
+          <div class="forum-ans-row-left forum-ans-row-left-sub-answer">
+            <span class="forum-ans-row-left-sub-answer-nr">{{ index + 1 }}</span>
+          </div>
+          <answer 
+            :question="question" 
+            :item="ans" 
+            :selected-id="selectedId" 
+            :link="getItemLink(ans)" 
+            @edit="edit" 
+            @select="setSelected"
+          />
+        </div>
+      </div>
+    </div>
+    `
+  });
+
+  
+  Vue.component('vote', {
+    props: ['parent', 'question','nr'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        saving: false
+      }
+    },
+    methods: {
+      vote(item, value) {
+
+        if (!this.canVote(item)) {
+          return;
+        }
+
+        Vue.set(item, 'vote', item.vote + value);
+        item.votedBy.push(this.sharedState.user.email);
+
+        this.saving = true;
+
+        var self = this;
+        google.script.run.withSuccessHandler(function (e) {
+          self.saving = false;
+          })
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e);
+            self.saving = false;
+          }).forumVote(this.sharedState.forum.id, item.id, value);
+      },
+      canVote(item) {
+        if (this.saving || (item.userId == this.sharedState.user.email || item.votedBy.indexOf(this.sharedState.user.email) != -1)) {
+          return false;
+        }
+
+        return true;
+      },
+      bestAns(item) {
+        Vue.set(this.question, 'bestAns', item.id);
+
+        google.script.run.withSuccessHandler()
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e);
+          }).forumBestAns(this.sharedState.forum.id, this.question.id, item.id);
+      },
+    },
+    template: 
+    `
+    <div>
+      <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
+        <div class="forum-ans-row-left-vote" @click.stop="vote(parent, 1)"
+        :class="{'forum-ans-row-left-vote-disabled': !canVote(parent)}">
+          <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
+        </div>
+        <div class="forum-ans-row-left-vote-value">
+          {{ parent.vote }}
+        </div>
+        <div class="forum-ans-row-left-vote" @click.stop="vote(parent, -1)"
+        :class="{'forum-ans-row-left-vote-disabled': !canVote(parent)}">
+          <i class="fas fa-caret-down" :title="$t('message.badAns')"></i>
+        </div>
+        <div v-if="sharedState.user.email == question.userId">
+          <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : question.bestAns == parent.id}" @click.stop="bestAns(parent)">
+            <i class="fas fa-check" :title="$t('message.bestAns')"></i>
+          </div>
+        </div>
+        <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="question.bestAns == parent.id">
+          <i class="fas fa-check" :title="$t('message.editForum')"></i>
+        </div>
+      </div>
+      <div class="forum-ans-row-left forum-ans-row-left-answer" v-else>
+        <span class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</span>
+        <span v-else><i class="fas fa-chevron-circle-right"></i></span>
+      </div>
+    </div>
+    `
+  });
+
+
+  Vue.component('answer', {
+    mixins: [mixinUtils],
+    props: ['item', 'question', 'selectedId', 'link'],
+    data: function(){
+      return {
+        sharedState: store.state,
+        saving: false
+      }
+    },
+    methods: {
+      edit(item) {
+        this.$emit('edit', item)
+      },
+      setSelected(id) {
+        this.$emit('select', id);
+      }
+    },
+    template: 
+    `
+    <div class="forum-ans-row-content">
+      <div class="forum-ans-row-content-body" v-html="highlight(item.body)"></div>
+      <div class="forum-ans-row-content-info">
+        <div class="forum-ans-row-content-info-left">
+          <share :link="link"/>
+          <edit :item="item" @edit="edit"></edit>
+          <delete :item="item"/>
+        </div>
+        <div class="forum-ans-row-content-info-right">
+          <span class="user-name"> {{ item.userName }}</span>
+          <span> {{ item.time }}</span>
+        </div>
+      </div>
+      <comments :question="question" :parent="item" :selected-id="selectedId" @edit="edit" @select="setSelected"/>
+    </div>
+    `
+  });
+</script>

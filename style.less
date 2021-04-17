@@ -425,15 +425,13 @@ html {
     
             .forum-ans-row {
                 .motion();
-                padding-bottom: 20px;
-                padding-top: 20px;
                 border-bottom: 1px solid #e4e6e8;
-    
+                column-gap: 10px;
                 display: grid;
                 grid-template-columns: max-content 1fr;
-                column-gap: 10px;
-    
-                // background-color: white;
+                padding-bottom: 20px;
+                padding-top: 20px;
+                scroll-margin-top: 104px;
 
                 img {
                     max-width: 300px !important;
@@ -452,7 +450,7 @@ html {
                     }
 
                     &.forum-ans-row-left-sub-answer {
-                        padding: 0px 5px;
+                        padding: 0px 15px;
                     }
 
                     .forum-ans-row-left-answer-nr {
@@ -471,7 +469,7 @@ html {
                         height: 18px;
                         width: 18px;
                         background-color: #209cee;
-                        border-radius: 50%;
+                        // border-radius: 50%;
                         display: inline-block;
                         color: white;
                         line-height: 18px;
@@ -592,9 +590,10 @@ html {
     
                 .forum-ans-comments-list-row {
                     .motion();
-                    padding: 6px 6px;
-                    font-size: 13px;
                     border-bottom: 1px solid #eff0f1;
+                    font-size: 13px;
+                    padding: 6px 6px;
+                    scroll-margin-top: 104px;
                 }
             }
     

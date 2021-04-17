@@ -1,17 +1,12 @@
 <script>
   Vue.component('top-bar', {
+  mixins: [mixinUtils],
   data() {
     return {
       sharedState: store.state,
     }
   },
   methods: {
-    search() {
-      store.search();
-    },
-    clearSearch() {
-      store.clearSearch();
-    },
     showForums() {
       var path = `/forums`;
       if (path != router.currentRoute.path){

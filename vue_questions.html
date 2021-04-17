@@ -32,12 +32,6 @@ var compQuestions = Vue.component('questions', {
     openQuestion(q) {
       router.push(`/${this.sharedState.forum.id}/${q.id}`);
     },
-    highlightText(html){
-      return store.highlightText(html);
-    },
-    clearSearch(){
-      store.clearSearch();
-    }
   },
   template:
   `
