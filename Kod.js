@@ -336,10 +336,13 @@ function getForumData(id) {
     }
   });
 
+  var deletedItems = {};
+
   for (var n in forumData) {
     var row = forumData[n].get();
 
-    if (row['status']) {
+    if (row['status'] == 'Deleted' || deletedItems[row['question_id']] || deletedItems[row['answer_id']]) {
+      deletedItems[row['id']] = true;
       continue;
     }
 
