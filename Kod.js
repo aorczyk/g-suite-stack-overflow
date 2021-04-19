@@ -387,7 +387,7 @@ function getForumData(id) {
       forumId: id,
       type: type,
       id: row['id'],
-      qId: row['question_id'],
+      qId: row['question_id'] || row['id'],
       ansId: row['answer_id'],
       title: row['title'],
       body: String(row['body']),
@@ -644,12 +644,12 @@ function forumAddEntryNotification(type, data) {
     }
 
     var email = {};
-    
+
     email.topic = Utilities.formatString("Forum %s - %s", data.forumName, actionName);
     if (type == 'question'){
-      email.text = Utilities.formatString("New topic: <b>%s</b><br><br>Show: <a href='%s'>link</a><br>", qTitle, link);
+      email.text = Utilities.formatString("New topic: <b>%s</b><br>%s<br><br>Show: <a href='%s'>link</a><br>", qTitle, data.body, link);
     } else {
-      email.text = Utilities.formatString("New changes in topic: <b>%s</b><br>%s:<br><div style='background-color: #fffbec;'>%s</div><br>Show: <a href='%s'>link</a><br>", qTitle, actionName, data.body,link);
+      email.text = Utilities.formatString("New changes in topic: <b>%s</b><br>%s:<br><div style='background-color: #fffbec;'>%s</div><br>Show: <a href='%s'>link</a><br>", qTitle, actionName, data.body, link);
     }
     
     sendEmail(email, watchers);
