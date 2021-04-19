@@ -105,8 +105,9 @@
         this.saving = true;
         google.script.run.withSuccessHandler(function (data) {
           if (!self.sharedState.forum.answers[self.selectedQuestion.id]) {
-            self.sharedState.forum.answers[self.selectedQuestion.id] = [];
+            Vue.set(self.sharedState.forum.answers, self.selectedQuestion.id, []);
           }
+
           self.sharedState.forum.answers[self.selectedQuestion.id].push(data);
           self.sharedState.forum.comments[data.id] = [];
 

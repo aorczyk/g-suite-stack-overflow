@@ -81,6 +81,18 @@ function getForums() {
   var forumsSql = getSqlForums();
   var user = getUser();
 
+  var scriptProperties = PropertiesService.getScriptProperties();
+  var forumsData = scriptProperties.getProperty('forumsData');
+
+  if (forumsData){
+    try {
+      return JSON.parse(forumsData);
+    } catch (e) {
+      Logger.log('ERROR: scriptProperties get forumsData');
+      Logger.log(forumsData);
+    }
+  }
+
   var forums = forumsSql.select({
     table: 'Forums',
     where: [{'is_public': true}, {'user_id': user.email}, {'watchers': function(x){return x.includes(user.email)}}],
@@ -98,6 +110,13 @@ function getForums() {
 
     return out;
   });
+
+  try {
+    scriptProperties.setProperty('forumsData', JSON.stringify(forums));
+  } catch (e) {
+    Logger.log('ERROR: scriptProperties set forumsData');
+    Logger.log(forums);
+  }
 
   return forums;
 }
@@ -130,6 +149,9 @@ function addForum(data){
     values: row
   });
 
+  var scriptProperties = PropertiesService.getScriptProperties();
+  scriptProperties.deleteProperty('forumsData');
+
   return true;
 }
 
@@ -159,6 +181,9 @@ function editForum(data){
       moderators: typeof data.moderators === 'string' ? data.moderators.split(',') : []
     }
   });
+
+  var scriptProperties = PropertiesService.getScriptProperties();
+  scriptProperties.deleteProperty('forumsData');
 
   return true;
 }
@@ -619,6 +644,7 @@ function forumAddEntryNotification(type, data) {
     }
 
     var email = {};
+    
     email.topic = Utilities.formatString("Forum %s - %s", data.forumName, actionName);
     if (type == 'question'){
       email.text = Utilities.formatString("New topic: <b>%s</b><br><br>Show: <a href='%s'>link</a><br>", qTitle, link);
