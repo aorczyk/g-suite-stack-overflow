@@ -462,7 +462,7 @@
             <div class="forum-ans-text">{{ $t('message.yourAnswer') }}</div>
             <quill-editor class="quill-restyle" v-model="newAnswerData.text" :disabled="saving"></quill-editor>
             <div class="forum-ans-add">
-              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text">{{ $t('message.postYourAnswer') }}</div>
+              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text || newAnswerData.text == '<p><br></p>'">{{ $t('message.postYourAnswer') }}</div>
             </div>
           </div>
         </div>

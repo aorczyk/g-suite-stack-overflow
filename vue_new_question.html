@@ -101,7 +101,7 @@
               <div class="field is-grouped">
                 <div class="control">
                   <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
-                    :disabled="saving || !topicTitleLengthIsValid || newTopicData.title == '' || newTopicData.text == '' || newTopicData.text == '<p><br></p>'">{{ $t("message.save") }}</button>
+                    :disabled="saving || !topicTitleLengthIsValid || !newTopicData.title || !newTopicData.text || newTopicData.text == '<p><br></p>'">{{ $t("message.save") }}</button>
                 </div>
                 <div class="control">
                   <button class="button" @click="cancel" :disabled="saving">{{ $t("message.cancel") }}</button>

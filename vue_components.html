@@ -348,7 +348,7 @@
           <div class="field is-grouped">
             <div class="control">
               <button class="button is-info" :class="{'is-loading': saving}" @click.stop="addComment"
-                :disabled="saving || !newCommentData.text">{{ $t('message.save') }}</button>
+                :disabled="saving || !newCommentData.text || newCommentData.text == '<p><br></p>'">{{ $t('message.save') }}</button>
             </div>
             <div class="control">
               <button class="button" @click.stop="cancelAddNewComment" :disabled="saving">{{ $t('message.cancel') }}</button>
