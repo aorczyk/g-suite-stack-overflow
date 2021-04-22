@@ -23,7 +23,7 @@ User can:
      ```
      cd .\g-suite-stack-overflow\
      ```
-   - log by Clasp in to your Google Account
+   - log by Clasp to your Google Account
      ```
      clasp login
      ```
