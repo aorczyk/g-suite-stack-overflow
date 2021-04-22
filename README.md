@@ -44,7 +44,7 @@ User can:
      clasp open
      ```
 
-3. In Google App Script editor:
+3. In Google App Script editor (old editor version):
    - open file "Config.gs" and run function "Install" (accept all permissions) - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files,
    - in the menu select "Publish" and "Deploy as web app",
    - select "Project version" as "New", add some description, "Execute the app as": Me, "Who has access to the app": "Only myself" or if you want to publish it in your company select "Anyone within ...",
