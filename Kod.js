@@ -947,7 +947,7 @@ function appInstall() {
     DriveApp.getFileById(ssForums.getId()).moveTo(folder);
     
     // Moving the script to created folder
-    // DriveApp.getFileById(ScriptApp.getScriptId()).moveTo(folder);
+    DriveApp.getFileById(ScriptApp.getScriptId()).moveTo(folder);
 
     var sql = new SqlAbstract();
     
