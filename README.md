@@ -14,7 +14,7 @@ User can:
 ### How to install?
 1. Install Clasp from [https://github.com/google/clasp](https://github.com/google/clasp)
 2. Enable Apps Script API by visiting [https://script.google.com/home/usersettings](https://script.google.com/home/usersettings)
-3. In a console window run commands listed below: 
+3. In a console window execute commands listed below: 
    - clone this repository
      ```
      git clone https://github.com/aorczyk/g-suite-stack-overflow.git
