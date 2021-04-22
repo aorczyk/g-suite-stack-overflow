@@ -15,6 +15,14 @@ User can:
 1. Install Clasp from [https://github.com/google/clasp](https://github.com/google/clasp)
 2. Enable Apps Script API by visiting [https://script.google.com/home/usersettings](https://script.google.com/home/usersettings)
 3. In a console window run commands listed below. They do: 
+   - clone this repository,
+     ```
+     git clone https://github.com/aorczyk/g-suite-stack-overflow.git
+     ```
+   - Enter to created folder,
+     ```
+     cd g-suite-stack-overflow
+     ```
    - log by Clasp in to your Google Account,
      ```
      clasp login
@@ -26,10 +34,6 @@ User can:
    - fetch created project,
      ```
      clasp pull
-     ```
-   - clone this repository,
-     ```
-     git clone https://github.com/aorczyk/g-suite-stack-overflow.git
      ```
    - push code to the new created Google App Script project,
      ```
