@@ -21,7 +21,7 @@ User can:
      ```
    - Enter to created folder,
      ```
-     cd g-suite-stack-overflow
+     cd .\g-suite-stack-overflow\
      ```
    - log by Clasp in to your Google Account,
      ```
