@@ -15,31 +15,31 @@ User can:
 1. Install Clasp from [https://github.com/google/clasp](https://github.com/google/clasp)
 2. Enable Apps Script API by visiting [https://script.google.com/home/usersettings](https://script.google.com/home/usersettings)
 3. In a console window run commands listed below. They do: 
-   - clone this repository,
+   - clone this repository
      ```
      git clone https://github.com/aorczyk/g-suite-stack-overflow.git
      ```
-   - Enter to created folder,
+   - Enter to created folder
      ```
      cd .\g-suite-stack-overflow\
      ```
-   - log by Clasp in to your Google Account,
+   - log by Clasp in to your Google Account
      ```
      clasp login
      ```
-   - create Google App Script project,
+   - create Google App Script project
      ```
      clasp create 'G Suite Stack Overflow'
      ```
-   - fetch created project,
+   - fetch created project
      ```
      clasp pull
      ```
-   - push code to the new created Google App Script project,
+   - push code to the new created Google App Script project
      ```
      clasp push
      ```
-   - open your Google App Script project in a browser editor.
+   - open your Google App Script project in a browser editor
      ```
      clasp open
      ```
