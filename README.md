@@ -13,7 +13,16 @@ User can:
  
 ### How to install?
 1. Install Clasp from [https://github.com/google/clasp](https://github.com/google/clasp)
-2. In a console window run commands listed below. They do: 
+2. Enable Apps Script API by visiting [https://script.google.com/home/usersettings](https://script.google.com/home/usersettings)
+3. In a console window run commands listed below. They do: 
+   - clone this repository,
+     ```
+     git clone https://github.com/aorczyk/g-suite-stack-overflow.git
+     ```
+   - Enter to created folder,
+     ```
+     cd .\g-suite-stack-overflow\
+     ```
    - log by Clasp in to your Google Account,
      ```
      clasp login
@@ -26,10 +35,6 @@ User can:
      ```
      clasp pull
      ```
-   - clone this repository,
-     ```
-     git clone https://github.com/aorczyk/g-suite-stack-overflow.git
-     ```
    - push code to the new created Google App Script project,
      ```
      clasp push
@@ -40,7 +45,7 @@ User can:
      ```
 
 3. In Google App Script editor:
-   - open file "Config.gs" and run function "Install" - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files,
+   - open file "Config.gs" and run function "Install" (accept all permissions) - it will create new folder "G Suite Stack Overflow" on your Google Drive and two Spreadsheet files,
    - in the menu select "Publish" and "Deploy as web app",
    - select "Project version" as "New", add some description, "Execute the app as": Me, "Who has access to the app": "Only myself" or if you want to publish it in your company select "Anyone within ...",
    - copy "Current web app URL" and run it in a browser or click link in "Test web app for your latest code".
