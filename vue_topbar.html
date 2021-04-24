@@ -1,0 +1,98 @@
+<script>
+  Vue.component('top-bar', {
+  mixins: [mixinUtils],
+  data() {
+    return {
+      sharedState: store.state,
+    }
+  },
+  methods: {
+    showForums() {
+      var path = `/forums`;
+      if (path != router.currentRoute.path){
+        router.push(path);
+        this.sharedState.forum = null;
+      }
+    },
+    showQuestions() {
+      var path = `/${this.sharedState.forum.id}`;
+      if (path != router.currentRoute.path){
+        router.push(path);
+      }
+    },
+    showAddNewTopicForm() {
+      this.sharedState.newTopicFormVisible = true;
+    },
+    showAddNewForum() {
+      this.sharedState.newForumFormVisible = true;
+    }
+  },
+  watch: {
+    'sharedState.searchText': function(newVal, oldVal){
+      // console.log('searchText', newVal);
+      // if (this.sharedState.searched && newVal !== oldVal){
+      //   Vue.set(this.sharedState, 'searched', null);
+      // }
+      if (newVal === ''){
+        this.clearSearch();
+      }
+    }
+  },
+  template: `
+  <nav class="navbar is-white is-fixed-top" role="navigation" aria-label="main navigation"
+    style="border-bottom: 1px solid lightgray;">
+    <div class="navbar-brand">
+      <strong class="navbar-item">
+        <img :src="sharedState.logoImg">
+      </strong>
+    </div>
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" @click="showForums"> // :href="sharedState.appUrl + '#/forums'
+          <b>{{ sharedState.appTitle }}</b>
+        </a>
+        <a class="navbar-item" @click="showQuestions" v-if="sharedState.forum && sharedState.forum.name">
+          {{ sharedState.forum.name }}
+        </a>
+        <!--<a class="navbar-item" @click="showForums" v-if="sharedState.forumsButtonVisible">
+          {{ $t("message.forums") }}
+        </a>-->
+        <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
+          <div class="field has-addons">
+            <div class="control">
+              <input class="input" type="text" :placeholder="$t('message.search')" v-model="sharedState.searchText" @keyup.enter="search">
+            </div>
+            <!--<div class="control" v-if="sharedState.searched">
+              <a class="button is-info" @click="clearSearch">
+                <span class="icon is-small">
+                  <i class="fas fa-times"></i>
+                </span>
+              </a>
+            </div>
+            -->
+            <div class="control">
+              <a class="button is-light" @click="search">
+                <span class="icon is-small has-text-grey-light">
+                  <i class="fas fa-search"></i>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item" v-if="sharedState.searchVisible && sharedState.forum && !sharedState.forum.accessDenied">
+          <div class="button is-info" @click.stop="showAddNewTopicForm">{{ $t("message.askQuestion") }}</div>
+        </div>
+        <div class="navbar-item" v-if="!sharedState.searchVisible">
+          <div class="button is-info" @click.stop="showAddNewForum">{{ $t("message.addNewForum") }}</div>
+        </div>
+        <a class="navbar-item">
+          {{ sharedState.user.email }}
+        </a>
+      </div>
+    </div>
+  </nav>
+  `
+  });
+</script>

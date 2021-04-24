@@ -1,0 +1,21 @@
+<script>
+  var store = {
+    state: {
+      user: dataFromServer.user,
+      forum: null,
+      isSpinnerVisible: false,
+      searched: null,
+      searchText: '',
+      searchVisible: true,
+      forumsButtonVisible: true,
+      newTopicFormVisible: false,
+      newForumFormVisible: false,
+      editForum: null,
+      logoImg: dataFromServer.logoImg,
+      appTitle: dataFromServer.appTitle
+    },
+    setForum(newValue) {
+      this.state.forum = newValue
+    },
+  };
+</script>

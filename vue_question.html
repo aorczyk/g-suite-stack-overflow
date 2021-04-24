@@ -1,0 +1,475 @@
+<script>
+  var compQuestion = Vue.component('question', {
+    mixins: [mixinUtils],
+    props: ['questionId', 'selectedId'],
+    data() {
+      return {
+        sharedState: store.state,
+        newAnswerData: {
+          text: ''
+        },
+        addNewCommentParentId: null,
+        newCommentData: {
+          text: ''
+        },
+        saving: false,
+        editItem: null,
+        editItemTmp: null,
+        watchersVisible: false,
+        addWatcherVisible: false,
+        newWatcher: '',
+        addWatcherError: false,
+        addWatcherProgress: false,
+        removeWatcherProgress: [],
+        startWatchingProgress: false,
+        stopWatchingProgress: false,
+      }
+    },
+    mounted() {
+      window.scrollTo(0, 0);
+      if (this.selectedId) {
+        setTimeout(() => {
+          this.selectedId = null;
+        }, 5000);
+      }
+
+      google.script.run.withSuccessHandler()
+        .withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e);
+        }).onClickLog(this.sharedState.forum.id, 'forum', this.questionId);
+
+      // if (!this.sharedState.forum.views[this.questionId]) {
+      //   this.sharedState.forum.views[this.questionId] = 0;
+      // }
+
+      // this.sharedState.forum.views[this.questionId] += 1;
+    },
+    computed: {
+      selectedQuestion() {
+        if (this.sharedState.forum) {
+          var out = this.sharedState.forum.questions.filter((x) => {
+            return x.id == this.questionId;
+          });
+
+          if (out.length) {
+            setTimeout(() => {
+              if (this.selectedId) {
+                this.$refs['foo'].click();
+              }
+            }, 200)
+
+            // Views counter
+            if (out[0].views){
+              out[0].views += 1
+            } else {
+              out[0].views = 1
+            }
+
+            return out[0];
+          }
+        }
+
+        return;
+      },
+      sortedAnswers() {
+        var items = this.sharedState.forum.answers[this.selectedQuestion.id];
+        // items.sort(function (a, b) {
+        //   var aKey = a.vote;
+        //   var bKey = b.vote;
+        //   return (aKey > bKey) ? -1 : (aKey < bKey) ? 1 : 0;
+        // });
+
+        return items;
+      },
+    },
+    methods: {
+      showQuestions() {
+        router.push(`/${this.sharedState.forum.id}`);
+      },
+      addAnswer() {
+        var self = this;
+
+        var text = this.postProcessAnsText(this.newAnswerData.text);
+
+        var data = {
+          forumId: this.sharedState.forum.id,
+          qId: this.selectedQuestion.id,
+          text: text
+        };
+
+        if (data.text === '') {
+          return;
+        }
+
+        this.saving = true;
+        google.script.run.withSuccessHandler(function (data) {
+          if (!self.sharedState.forum.answers[self.selectedQuestion.id]) {
+            Vue.set(self.sharedState.forum.answers, self.selectedQuestion.id, []);
+          }
+
+          self.sharedState.forum.answers[self.selectedQuestion.id].push(data);
+          self.sharedState.forum.comments[data.id] = [];
+
+          Vue.set(self.newAnswerData, 'text', '');
+          self.saving = false;
+          self.sharedState.forum.lastChange[self.selectedQuestion.id] = data.time;
+
+          var notificationData = {
+            forumId: self.sharedState.forum.id,
+            forumName: self.sharedState.forum.name,
+            userId: self.selectedQuestion.userId,
+            qId: data.qId,
+            sId: data.id,
+            body: text,
+            watchers: self.selectedQuestion.watchers,
+            qTitle: self.selectedQuestion.title,
+          };
+
+          self.setSelected(data.id)
+
+          google.script.run
+            .withSuccessHandler((recipients) => {
+              // console.log('recipients', recipients);
+            })
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e.message);
+            }).forumAddEntryNotification('answer', notificationData)
+        }).withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e.message);
+          self.saving = false;
+        }).forumAddEntry('answer', data);
+      },
+      editOpen(item) {
+        this.editItem = item;
+        this.editItemTmp = JSON.parse(JSON.stringify(item));
+      },
+      editSave() {
+        var self = this;
+        this.saving = true;
+
+        this.editItem.body = this.postProcessAnsText(this.editItem.body);
+
+        google.script.run.withSuccessHandler(function (item) {
+            Vue.set(self.editItem, 'edited', item.edited);
+            Vue.set(self.editItem, 'status', item.status);
+            Vue.set(self.editItem, 'body', self.postProcessAnsText(item.body));
+
+            var notificationData = {
+              forumId: self.sharedState.forum.id,
+              forumName: self.sharedState.forum.name,
+              userId: item.userId,
+              qId: item.qId,
+              sId: self.editItem.id,
+              type: item.type,
+              body: item.body,
+              watchers: self.selectedQuestion.watchers,
+              qTitle: self.selectedQuestion.title,
+            };
+
+            self.editItem = null;
+            self.editItemTmp = null;
+            self.saving = false;
+
+            google.script.run
+              .withSuccessHandler()
+              .withFailureHandler(function (e) {
+                console.log('error');
+                console.log(e.message);
+              }).forumAddEntryNotification('edit', notificationData)
+          })
+          .withFailureHandler(function (e) {
+            console.log('error');
+            console.log(e.message);
+            self.saving = false;
+          }).editSave(this.editItem);
+      },
+      editClose() {
+        for (var key in this.editItemTmp){
+          this.editItem[key] = this.editItemTmp[key];
+        }
+        
+        this.editItem = null;
+      },
+      getItemLink(item) {
+        return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}/${item.id}`;
+      },
+      getQuestionLink() {
+        return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}`;
+      },
+      toggleWatchers() {
+        this.watchersVisible = !this.watchersVisible;
+        this.addWatcherVisible = false;
+        this.newWatcher = '';
+      },
+      closeWatchers() {
+        this.watchersVisible = false;
+        this.addWatcherVisible = false;
+        this.newWatcher = '';
+      },
+      openAddWatcher() {
+        this.newWatcher = '';
+        this.addWatcherVisible = true;
+        this.addWatcherError = false;
+      },
+      addWatcher(emails, onAfter, onError) {
+        emails = emails.split(',');
+
+        var emailsFailed = [];
+        var emailsNew = [];
+
+        for (var email of emails) {
+          if (this.validateEmail(email)) {
+            if (!this.selectedQuestion.watchers.includes(email)) {
+              emailsNew.push(email);
+              console.log(email);
+            }
+          } else {
+            this.addWatcherError = true;
+            emailsFailed.push(email);
+          }
+        }
+
+        if (!this.addWatcherError) {
+          this.newWatcher = '';
+          this.addWatcherError = false;
+        } else {
+          this.newWatcher = emailsFailed.join(',');
+        }
+
+        if (emailsNew.length) {
+          this.addWatcherProgress = true;
+
+          google.script.run.withSuccessHandler(() => {
+              this.addWatcherProgress = false;
+
+              if (!this.addWatcherError) {
+                this.addWatcherVisible = false;
+              }
+
+              for (let email of emailsNew) {
+                this.selectedQuestion.watchers.push(email);
+              }
+
+              if (onAfter) {
+                onAfter();
+              }
+            })
+            .withFailureHandler((e) => {
+              this.addWatcherProgress = false;
+              this.addWatcherVisible = false;
+
+              if (!this.addWatcherError) {
+                this.addWatcherVisible = false;
+              }
+
+              if (onError) {
+                onError();
+              }
+
+              console.log('error');
+              console.log(e);
+            }).addWatchers(this.selectedQuestion.forumId, this.selectedQuestion.id, emailsNew);
+        }
+      },
+      removeWatcher(email, onAfter, onError) {
+        var index = this.selectedQuestion.watchers.indexOf(email);
+        this.removeWatcherProgress.push(email);
+
+        var i = this.removeWatcherProgress.indexOf(email);
+
+        google.script.run.withSuccessHandler(() => {
+            this.selectedQuestion.watchers.splice(index, 1);
+            this.removeWatcherProgress.splice(i, 1);
+
+            if (onAfter) {
+              onAfter();
+            }
+          })
+          .withFailureHandler((e) => {
+            this.removeWatcherProgress.splice(i, 1);
+
+            if (onError) {
+              onError();
+            }
+
+            console.log('error');
+            console.log(e);
+          }).removeWatcher(this.selectedQuestion.forumId, this.selectedQuestion.id, email);
+      },
+      stopWatching() {
+        if (this.stopWatchingProgress) {
+          return;
+        }
+
+        this.stopWatchingProgress = true;
+
+        var onAfter = () => {
+          this.stopWatchingProgress = false;
+        }
+
+        this.removeWatcher(this.sharedState.user.email, onAfter, onAfter);
+      },
+      startWatching() {
+        if (this.startWatchingProgress) {
+          return;
+        }
+
+        this.startWatchingProgress = true;
+
+        var onAfter = () => {
+          this.startWatchingProgress = false;
+          // this.selectedQuestion.watchers.push(this.sharedState.user.email);
+        }
+
+        this.addWatcher(this.sharedState.user.email, onAfter, onAfter)
+      },
+      setSelected(id) {
+        this.selectedId = id;
+
+        setTimeout(() => {
+          this.$refs['foo'].click();
+        }, 100);
+        
+        setTimeout(() => {
+          this.selectedId = null;
+        }, 5000);
+      }
+    },
+    template: `
+    <div>
+      <a :href="'#' + selectedId" ref="foo"></a>
+      
+      <div class="modal" :class="{'is-active': editItem}">
+        <div class="modal-background"></div>
+        <div class="modal-card edit-modal">
+          <header class="modal-card-head">
+            <p class="modal-card-title">{{ $t("message.edit") }}</p>
+          </header>
+          <section class="modal-card-body" v-if="editItem">
+            <div class="field" v-if="editItem.type == 'question'">
+              <label class="label">{{ $t("message.title") }}</label>
+              <input class="input" type="text" v-model="editItem.title" :disabled="saving">
+            </div>
+            <div class="field" v-if="editItem.type !== 'comment'">
+              <div class="control">
+                <label class="label">{{ $t("message.body") }}</label>
+                <quill-editor v-model="editItem.body" :disabled="saving"></quill-editor>
+              </div>
+            </div>
+            <div class="field" v-else>
+              <div class="control">
+                <input class="input" type="text" v-model="editItem.body" :disabled="saving">
+              </div>
+            </div>
+          </section>
+          <footer class="modal-card-foot">
+            <div class="field is-grouped">
+              <div class="control">
+                <button class="button is-info" :class="{'is-loading': saving}" @click.stop="editSave">{{ $t("message.save") }}</button>
+              </div>
+              <div class="control">
+                <button class="button" @click.stop="editClose" :disabled="saving">{{ $t("message.cancel") }}</button>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+    
+      <div class="forum-page" @click.stop="closeWatchers" v-if="sharedState.forum">
+        <div class="container forum-ans" v-if="selectedQuestion">
+          <nav class="level">
+            <nav class="level-level">
+              <div class="button is-info" @click.stop="showQuestions">{{ $t("message.backToQuestions") }}</div>
+            </nav>
+            <nav class="level-level">
+              <div class="dropdown is-right" :class="{'is-active': watchersVisible}">
+                <div class="dropdown-trigger">
+                  <button class="button" :class="{'is-info': selectedQuestion.watchers.includes(sharedState.user.email)}" aria-haspopup="true" aria-controls="dropdown-menu" @click.stop="toggleWatchers">
+                    <span><i class="fas fa-eye"></i> {{ selectedQuestion.watchers.length }}</span>
+                  </button>
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                  <div class="dropdown-content">
+                    <a href="#" class="dropdown-item" @click.stop="startWatching" v-if="!selectedQuestion.watchers.includes(sharedState.user.email)">
+                      {{ $t("message.startWatching") }} <span v-if="startWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
+                    </a>
+                    <a href="#" class="dropdown-item" @click.stop="stopWatching" v-else>
+                      {{ $t("message.stopWatching") }} <span v-if="stopWatchingProgress"><i class="fas fa-spinner fa-pulse"></i></span>
+                    </a>
+                    <hr class="dropdown-divider" v-if="selectedQuestion.watchers.length">
+                    <div class="dropdown-item watchers-dropdown-item" v-for="email in selectedQuestion.watchers">
+                      <div>{{ email }}</div>
+                      <div class="watchers-dropdown-item-progress" v-if="removeWatcherProgress.includes(email)">
+                        <span><i class="fas fa-spinner fa-pulse"></i></span>
+                      </div>
+                      <div class="watchers-dropdown-item-remove" @click.stop="removeWatcher(email)" v-else>
+                        <span><i class="fas fa-times"></i></span>
+                      </div>
+                    </div>
+                    <hr class="dropdown-divider">
+                    <a href="#" class="dropdown-item" @click.stop="openAddWatcher" v-if="!addWatcherVisible">
+                      <i class="fas fa-plus"></i> {{ $t("message.addWatcher") }}
+                    </a>
+                    <div class="dropdown-item" v-if="addWatcherVisible">
+                      <div class="field is-grouped">
+                        <p class="control is-expanded">
+                          <input type="email" name="email" autocomplete="email" class="input" :class="{'is-danger': addWatcherError}" :placeholder="$t('message.enterEmail')" v-model="newWatcher" :disabled="addWatcherProgress" @click.stop="">
+                        </p>
+                        <p class="control">
+                          <a class="button is-info" :class="{'is-loading': addWatcherProgress}" @click.stop="addWatcher(newWatcher)"  :title="$t('message.save')">
+                            <i class="fas fa-check"></i>
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </nav>
+          </nav>
+          <div class="forum-ans-title" v-html="highlight(selectedQuestion.title)"></div>
+          <div class="forum-ans-list">
+            <div 
+              class="forum-ans-row forum-ans-question"
+              :class="{'forum-selected-item': selectedQuestion.id == selectedId, 'forum-item-deleted': selectedQuestion.status == 'Deleted'}"
+            >
+              <vote :question="selectedQuestion" :parent="selectedQuestion" />
+              <answer :question="selectedQuestion" :item="selectedQuestion" :selected-id="selectedId" @edit="editOpen" :link="getQuestionLink()" @select="setSelected"/>
+            </div>
+          </div>
+          <div class="forum-ans-separator">{{ sharedState.forum.answers[selectedQuestion.id] ? sharedState.forum.answers[selectedQuestion.id].length : 0 }} {{ $t("message.answers2") }}</div>
+          <div class="forum-ans-list">
+            <div 
+              class="forum-ans-row" 
+              :id="ans.id" 
+              :class="{'forum-selected-item': ans.id == selectedId, 'forum-item-deleted': ans.status == 'Deleted'}"
+              v-for="(ans,index) in sortedAnswers"
+            >
+              <vote :question="selectedQuestion" :parent="ans" :nr="index + 1"/>
+              <answer :question="selectedQuestion" :item="ans" :selected-id="selectedId" @edit="editOpen" :link="getItemLink(ans)" @select="setSelected"/>
+            </div>
+          </div>
+          <div v-if="!sharedState.forum.am.isClosed">
+            <div class="forum-ans-text">{{ $t('message.yourAnswer') }}</div>
+            <quill-editor class="quill-restyle" v-model="newAnswerData.text" :disabled="saving"></quill-editor>
+            <div class="forum-ans-add">
+              <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text || newAnswerData.text == '<p><br></p>'">{{ $t('message.postYourAnswer') }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="container forum-ans" v-else>
+          <nav class="level">
+            <nav class="level-level">
+              <div class="button is-info" @click.stop="showQuestions">{{ $t("message.backToQuestions") }}</div>
+            </nav>
+          </nav>
+          <div class="forum-ans-title">{{ $t("message.questionNotFound") }}</div>
+        </div>
+      </div>
+    </div>
+    `
+  });
+</script>

@@ -1,0 +1,99 @@
+<script>
+var compQuestions = Vue.component('questions', {
+  mixins: [mixinUtils],
+  props: ['forumId'],
+  data() {
+    return {
+      sharedState: store.state,
+    }
+  },
+  computed: {
+    sortedQuestions() {
+      if (this.sharedState.forum){
+        this.sharedState.forum.questions.sort(function (a, b) {
+          var aKey = a.time;
+          var bKey = b.time;
+          return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
+        });
+
+        if (this.sharedState.searched){
+          return this.sharedState.forum.questions.filter((x)=>{
+            return this.sharedState.searched.includes(x.id);
+          })
+        }
+
+        return this.sharedState.forum.questions;
+      }
+
+      return [];
+    },
+  },
+  methods: {
+    openQuestion(q) {
+      router.push(`/${this.sharedState.forum.id}/${q.id}`);
+    },
+  },
+  template:
+  `
+  <div>
+    <div class="forum-page" v-if="sharedState.forum">
+      <div class="container">
+        <div class="notification is-info" v-if="sharedState.searched">
+          <button class="delete" @click.stop="clearSearch"></button>
+          {{ $t("message.filter") }}: 
+          <span class="tag is-light">
+            {{ sharedState.searchText }}
+            <button class="delete is-small" @click.stop="clearSearch"></button>
+          </span>
+        </div>
+        <nav class="level">
+          <nav class="level-level">
+            {{ $t("message.questions") }} ({{ sortedQuestions.length }})
+          </nav>
+        </nav>
+        <div class="forum-list" v-if="sortedQuestions.length">
+          <div class="forum-list-row" v-for="question in sortedQuestions" @click="openQuestion(question)">
+            <div class="forum-list-row-left">
+              <div class="forum-list-row-summary" v-if="sharedState.forum.scoredQuestions">
+                <div class="forum-list-row-summary-count">
+                  <span>{{ question.vote }}</span>
+                </div>
+                <div>{{ $t("message.votes") }}</div>
+              </div>
+              <div class="forum-list-row-summary"
+                :class="{'forum-list-row-summary-bestAns': sharedState.forum.scoredQuestions && question.bestAns}">
+                <div class="forum-list-row-summary-count">
+                  <span>{{ sharedState.forum.answers[question.id] ? sharedState.forum.answers[question.id].length : 0 }}</span>
+                </div>
+                <div>{{ $t("message.answers") }}</div>
+              </div>
+              <div class="forum-list-row-summary">
+                <div class="forum-list-row-summary-count">
+                  <span>{{ question.views }}</span>
+                </div>
+                <div>{{ $t("message.views") }}</div>
+              </div>
+            </div>
+            <div class="forum-list-row-content">
+              <div v-html="highlightText(question.title)"></div>
+              <div class="forum-ans-row-content-info">
+                <div class="forum-ans-row-content-info-left">
+                  <span class="info-deleted" v-if="question.status == 'Deleted'">{{ $t('message.deleted') }}</span>
+                  {{ $t("message.lastChange") }}: {{ sharedState.forum.lastChange[question.id] }}
+                </div>
+                <div class="forum-ans-row-content-info-right">
+                  {{ question.time }} <span class="user-name">{{ question.userName }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else>
+          {{ $t("message.noQuestions") }}
+        </div>
+      </div>
+    </div>
+  </div>
+  `
+});
+</script>

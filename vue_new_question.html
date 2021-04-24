@@ -1,0 +1,116 @@
+<script>
+  var compNewQuestion = Vue.component('v-new-topic', {
+    mixins: [mixinUtils],
+    data() {
+      return {
+        sharedState: store.state,
+        newTopicData: {
+          title: '',
+          text: ''
+        },
+        saving: false,
+      }
+    },
+    computed: {
+      topicTitleLengthIsValid() {
+        if (this.newTopicData.title.length > 100) {
+          return false;
+        }
+
+        return true;
+      },
+    },
+    methods: {
+      cancel() {
+        this.sharedState.newTopicFormVisible = false;
+        this.newTopicData.title = '';
+        this.newTopicData.text = '';
+      },
+      addQuestion() {
+        var self = this;
+
+        var text = this.postProcessAnsText(this.newTopicData.text);
+
+        var data = {
+          forumId: this.sharedState.forum.id,
+          title: this.newTopicData.title,
+          text: text
+        };
+
+        this.saving = true;
+        google.script.run.withSuccessHandler(function (data) {
+          self.sharedState.forum.questions.push(data);
+          self.newTopicData.title = '';
+          self.newTopicData.text = '';
+          self.saving = false;
+          self.sharedState.forum.answers[data.id] = [];
+          self.newTopicFormVisible = false;
+          self.sharedState.forum.lastChange[data.id] = data.time;
+
+          var notificationData = {
+            forumId: self.sharedState.forum.id,
+            forumName: self.sharedState.forum.name,
+            qId: data.id,
+            body: data.body,
+            qTitle: data.title
+          };
+
+          self.sharedState.newTopicFormVisible = false;
+          router.push(`/${self.sharedState.forum.id}/${data.id}`);
+
+          google.script.run.withSuccessHandler()
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e);
+              console.log(e.message);
+            }).forumAddEntryNotification('question', notificationData)
+        }).withFailureHandler(function (e) {
+          console.log('error');
+          console.log(e.message);
+          self.saving = false;
+        }).forumAddEntry('question', data);
+      },
+    },
+    template: `
+      <div>
+        <div class="modal" :class="{'is-active': sharedState.newTopicFormVisible}">
+          <div class="modal-background"></div>
+          <div class="modal-card edit-modal">
+            <header class="modal-card-head">
+              <p class="modal-card-title">{{ $t('message.AskApublicQuestion') }}</p>
+            </header>
+            <section class="modal-card-body">
+              <div class="field">
+                <label class="label">{{ $t("message.title") }}</label>
+                <div class="control">
+                  <div>{{ $t("message.newQuestionTitleInfo") }}</div>
+                  <input class="input" :class="{'is-danger': !topicTitleLengthIsValid}" type="text"
+                    placeholder="" v-model="newTopicData.title">
+                </div>
+              </div>
+              <p class="help is-danger" v-if="!topicTitleLengthIsValid">Text too long</p>
+              <div class="field">
+                <label class="label">{{ $t("message.body") }}</label>
+                <div class="control">
+                  <div>{{ $t("message.newQuestionBodyInfo") }}</div>
+                  <quill-editor v-model="newTopicData.text" :disabled="saving"></quill-editor>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <div class="field is-grouped">
+                <div class="control">
+                  <button class="button is-info" :class="{'is-loading': saving}" @click="addQuestion"
+                    :disabled="saving || !topicTitleLengthIsValid || !newTopicData.title || !newTopicData.text || newTopicData.text == '<p><br></p>'">{{ $t("message.save") }}</button>
+                </div>
+                <div class="control">
+                  <button class="button" @click="cancel" :disabled="saving">{{ $t("message.cancel") }}</button>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </div>
+      `
+  });
+</script>

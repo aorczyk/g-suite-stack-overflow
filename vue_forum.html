@@ -1,0 +1,40 @@
+<script>
+var compForum = Vue.component('forum', {
+    props: ['forumId'],
+    data() {
+      return {
+        sharedState: store.state,
+      }
+    },
+    created() {
+      this.sharedState.searchVisible = true;
+      this.sharedState.forumsButtonVisible = true;
+      this.sharedState.isSpinnerVisible = true;
+
+      google.script.run.withSuccessHandler((data) => {
+        this.sharedState.forum = data;
+        this.sharedState.isSpinnerVisible = false;
+      })
+      .withFailureHandler((e) => {
+        this.sharedState.isSpinnerVisible = false;
+        console.log('error');
+        console.log(e);
+        console.log(e.message);
+      }).getForumData(this.forumId);
+    },
+    template:
+    `
+    <div>
+      <v-new-topic/>
+      <router-view v-if="sharedState.forum && sharedState.forum.id"></router-view>
+
+      <div class="notification is-warning" v-if="sharedState.forum && sharedState.forum.accessDenied">
+        This forum is private. To access it please ask the owner for access rights.
+      </div>
+      <div class="notification is-warning" v-if="sharedState.forum && sharedState.forum.isClosed">
+        This forum is closed.
+      </div>
+    </div>
+    `
+});
+</script>

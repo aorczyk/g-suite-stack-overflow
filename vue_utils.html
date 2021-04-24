@@ -1,0 +1,112 @@
+<script>
+  function jsUcfirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  function closeImgOnEsc(e) {
+      if (e.code == 'Escape'){
+        closeImg();
+      }
+    }
+
+  function showImg(image){
+    document.getElementById('image-viewer-img').src = image.src;
+    document.getElementById('image-viewer').style.display = "block";
+    document.addEventListener('keydown', closeImgOnEsc);
+  }
+
+  function closeImg(){
+    document.getElementById('image-viewer').style.display = "none";
+    document.removeEventListener('keydown', closeImgOnEsc);
+  }
+
+  var mixinUtils = {
+    methods: {
+      postProcessAnsText(text){
+        let out = text;
+        const regex = /(<img.*?(?!onclick))[^>]*/g; 
+        const found = regex.exec(out);
+
+        if (found){
+          out = out.replace(regex, '$& onclick="showImg(this)"')
+        }
+
+        return out;
+      },
+      validateEmail(email) {
+          const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+          return re.test(String(email).toLowerCase());
+      },
+      search(){
+        if (!this.sharedState.searchText){
+          this.sharedState.searched = null;
+          return;
+        }
+
+        var reg = new RegExp(this.sharedState.searchText, 'i');
+        this.sharedState.isSpinnerVisible = true;
+
+        this.sharedState.searched = this.sharedState.forum.questions.filter((x)=>{
+          return x.title.search(reg) != -1 || x.body.search(reg) != -1;
+        }).map((x)=>{return x.id});
+
+        for (var entity of ['answers', 'comments']){
+          for (var id in this.sharedState.forum[entity]){
+            for (var item of this.sharedState.forum[entity][id]){
+              try {
+                if (item.body && item.body.search(reg) != -1){
+                  this.sharedState.searched.push(item.qId);
+                }
+              } catch (e){
+                console.log(e);
+              }
+
+            }
+          }
+        }
+
+        this.sharedState.isSpinnerVisible = false;
+
+        if (router.currentRoute.path != `/${this.sharedState.forum.id}`){
+          router.push(`/${this.sharedState.forum.id}`);
+        }
+      },
+      clearSearch() {
+        this.sharedState.searchText = '';
+        Vue.set(this.sharedState, 'searched', null);
+      },
+      highlight(string){
+        var out = string;
+
+        if (this.sharedState.searchText && this.sharedState.searched){
+          const regex = />([^><]*?)</gi;
+          const regexSearch = new RegExp(this.sharedState.searchText, 'ig');
+
+          var match = regex.exec(string);
+
+          while (match != null) {
+            let outPart = '>' + match[1].replace(regexSearch, '<span class="highlight">$&</span>') + '<';
+
+            if (outPart){
+              out = out.replace(match[0], outPart);
+            }
+
+            match = regex.exec(string);
+          }
+        }
+        return out;
+      },
+      highlightText(string){
+        var out = string;
+
+        if (this.sharedState.searchText && this.sharedState.searched){
+          const regexSearch = new RegExp(this.sharedState.searchText, 'ig');
+
+          out = string.replace(regexSearch, '<span class="highlight">$&</span>');
+        }
+
+        return out;
+      }
+    }
+  }
+</script>

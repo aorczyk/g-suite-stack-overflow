@@ -1,0 +1,139 @@
+<script>
+    var compNewForum = Vue.component('v-new-forum', {
+      props: ['data'],
+      data() {
+        return {
+          sharedState: store.state,
+          newForumDataTemplate: {
+            name: '',
+            description: '',
+            is_public: true,
+            scored_questions: false,
+            users: '',
+            moderators: '',
+            admins: ''
+          },
+          saving: false,
+          forumData: null
+        }
+      },
+      created (){
+        if (this.sharedState.editForum){
+          this.forumData = JSON.parse(JSON.stringify(this.sharedState.editForum));
+        } else {
+          this.forumData = this.newForumDataTemplate;
+        }
+      },
+      methods: {
+        forumAdd(){
+          this.saving = true;
+
+          if (this.sharedState.editForum){
+            google.script.run.withSuccessHandler((data)=>{
+              this.saving = false;
+              this.sharedState.newForumFormVisible = false;
+              this.sharedState.editForum = null;
+              this.$emit('reload');
+            }).withFailureHandler((e)=>{
+              console.log('error');
+              console.log(e.message);
+              this.saving = false;
+            }).editForum(this.forumData);
+          }
+          else {
+            google.script.run.withSuccessHandler((data)=>{
+              this.saving = false;
+              this.sharedState.newForumFormVisible = false;
+              this.sharedState.editForum = null;
+              this.$emit('reload');
+            }).withFailureHandler((e)=>{
+              console.log('error');
+              console.log(e.message);
+              this.saving = false;
+            }).addForum(this.forumData);
+          }
+
+        },
+        forumAddCancel(){
+          if (!this.saving){
+            this.sharedState.newForumFormVisible = false;
+            this.sharedState.editForum = null;
+          }
+        },
+      },
+      template:
+      `
+      <div>
+        <div class="modal" :class="{'is-active': true}">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title" v-if="!data">{{ $t("message.newForum") }}</p>
+              <p class="modal-card-title" v-else>{{ $t("message.editForum") }}</p>
+            </header>
+            <section class="modal-card-body">
+              <div class="field">
+                <label class="label">{{ $t("message.name") }}</label>
+                <div class="control">
+                  <input class="input" type="text"
+                    placeholder="" v-model="forumData.name">
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">{{ $t("message.description") }}</label>
+                <div class="control">
+                  <input class="input" type="text"
+                    placeholder="" v-model="forumData.description">
+                </div>
+              </div>
+              <div class="field">
+                <label class="checkbox">
+                  <input type="checkbox" v-model="forumData.scored_questions">
+                  {{ $t("message.scoredQuestions") }}
+                </label>
+              </div>
+              <div class="field">
+                <label class="checkbox">
+                  <input type="checkbox" v-model="forumData.is_public">
+                  {{ $t("message.isPublic") }}
+                </label>
+              </div>
+              <div class="field" v-if="!forumData.is_public">
+                <label class="label">{{ $t("message.users") }}</label>
+                <div class="control">
+                  <input class="input" type="text"
+                    placeholder="" v-model="forumData.users">
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">{{ $t("message.moderators") }}</label>
+                <div class="control">
+                  <input class="input" type="text"
+                    placeholder="" v-model="forumData.moderators">
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">{{ $t("message.admins") }}</label>
+                <div class="control">
+                  <input class="input" type="text"
+                    placeholder="" v-model="forumData.admins">
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <div class="field is-grouped">
+                <div class="control">
+                  <button class="button is-info" :class="{'is-loading': saving}" @click.stop="forumAdd"
+                    :disabled="saving || !forumData.name">{{ $t("message.save") }}</button>
+                </div>
+                <div class="control">
+                  <button class="button" @click.stop="forumAddCancel" :disabled="saving">{{ $t("message.cancel") }}</button>
+                </div>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </div>
+      `
+    });
+    </script>

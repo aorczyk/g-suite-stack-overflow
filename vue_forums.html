@@ -1,0 +1,62 @@
+<script>
+    var compForums = Vue.component('forums', {
+      props: ['forumId'],
+      data() {
+        return {
+          sharedState: store.state,
+          forums: [],
+        }
+      },
+      created() {
+        this.sharedState.searchVisible = false;
+        this.sharedState.forumsButtonVisible = false;
+
+        this.getForums();
+      },
+      methods: {
+        getForums() {
+          this.sharedState.isSpinnerVisible = true;
+
+          google.script.run.withSuccessHandler((data)=>{
+            this.forums = data;
+            this.sharedState.isSpinnerVisible = false;
+          }).getForums();
+        },
+        openForum(forum){
+          router.push(`/${forum.id}`);
+        },
+        editForum(forum){
+          this.sharedState.newForumFormVisible = true;
+          this.sharedState.editForum = forum;
+        }
+      },
+      template:
+      `
+      <div>
+        <v-new-forum @reload="getForums" v-if="sharedState.newForumFormVisible"/>
+
+        <div class="forum-page">
+          <div class="container">
+            <nav class="level">
+              <nav class="level-level">
+                {{ $t("message.forums") }}
+              </nav>
+            </nav>
+            <div class="forums-list">
+              <div class="forum-list-row" v-for="forum in forums" @click="openForum(forum)">
+                <div class="forum-list-row-content">
+                  <div>{{ forum.name }} <span v-if="!forum.is_public"><i class="fas fa-lock"></i></span> <span class="forums-edit-icon" v-if="forum.canEdit" @click.stop="editForum(forum)"><i class="fas fa-pen"></i></span></div>
+                  <div class="forum-ans-row-content-info">
+                    <div class="forum-ans-row-content-info-left">{{ forum.description }}</div>
+                    <div class="forum-ans-row-content-info-right">{{ forum.time }} <span
+                        class="user-name">{{ forum.userName }}</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      `
+    });
+    </script>

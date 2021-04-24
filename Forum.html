@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html class="has-navbar-fixed-top">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bulma -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+  <!-- Fontawesome -->
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  <!-- Vue -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script> -->
+  <!-- The latest version -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+  <!-- Vue router -->
+  <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+
+  <!-- Quill Editor-->
+  <!-- Include the Quill library -->
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  <!-- Include stylesheet -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+  <script src="https://unpkg.com/vue-i18n@8.14.0/dist/vue-i18n.min.js"></script>
+
+  <!-- Style -->
+  <style><?!= include('style.html'); ?></style>
+</head>
+
+<body>
+  <div id="image-viewer" class="modal" style="display: none">
+    <div class="modal-background"></div>
+    <div class="modal-content image-viewer-content">
+      <img id="image-viewer-img" src="">
+    </div>
+    <button class="modal-close is-large is-info" aria-label="close" onclick="closeImg()"></button>
+  </div>
+
+  <div id="app">
+    <spinner v-if="sharedState.isSpinnerVisible"></spinner>
+    <top-bar></top-bar>
+    <router-view></router-view>
+  </div>
+
+  <script>
+    var dataFromServer = <?!= JSON.stringify(dataFromServerTemplate) ?>;
+  </script>
+
+  <?!= include('vue_utils.html'); ?>
+  <?!= include('vue_components.html'); ?>
+  <?!= include('vue_store.html'); ?>
+  <?!= include('vue_new_question.html'); ?>
+  <?!= include('vue_new_forum.html'); ?>
+  <?!= include('vue_forums.html'); ?>
+  <?!= include('vue_questions.html'); ?>
+  <?!= include('vue_question.html'); ?>
+  <?!= include('vue_forum.html'); ?>
+  <?!= include('vue_topbar.html'); ?>
+  <?!= include('vue_quill.html'); ?>
+  <?!= include('vue_routes.html'); ?>
+  <?!= include('vue_i18n.html'); ?>
+
+  <script>
+    const i18n = new VueI18n({
+      locale: dataFromServer.language,
+      messages,
+    });
+
+    var app = new Vue({
+      i18n,
+      el: '#app',
+      router: router,
+      data: {
+        sharedState: store.state,
+        router: router,
+      },
+      created: function () {
+        // Router - Get the path from the string URL fragment appearing after the '#' character.
+        google.script.url.getLocation(function(location) {
+          var path = location.hash;
+
+          if (! path || path == '/'){
+            router.push('/forums');
+          } else {
+            router.push(path);
+          }
+        });
+      },
+      watch: {
+        // Router - Watching router's current route.
+        'router.currentRoute.path' () {
+           var path = router.currentRoute.path;
+           var now = new Date();
+           var state = {
+             'timestamp': now.getTime()
+           };
+           google.script.history.push(state, {}, path);
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
