@@ -193,12 +193,6 @@
         
         this.editItem = null;
       },
-      deleteItem(item){
-        item.status = 'Deleted';
-        // item.body = '';
-        // this.editItem = item;
-        // this.editSave();
-      },
       getItemLink(item) {
         return `${this.sharedState.forum.appUrl}#/${this.sharedState.forum.id}/${this.questionId}/${item.id}`;
       },
@@ -465,6 +459,14 @@
               <div class="button is-info" :class="{'is-loading': saving}" @click.stop="addAnswer" :disabled="saving || !newAnswerData.text || newAnswerData.text == '<p><br></p>'">{{ $t('message.postYourAnswer') }}</div>
             </div>
           </div>
+        </div>
+        <div class="container forum-ans" v-else>
+          <nav class="level">
+            <nav class="level-level">
+              <div class="button is-info" @click.stop="showQuestions">{{ $t("message.backToQuestions") }}</div>
+            </nav>
+          </nav>
+          <div class="forum-ans-title">{{ $t("message.questionNotFound") }}</div>
         </div>
       </div>
     </div>

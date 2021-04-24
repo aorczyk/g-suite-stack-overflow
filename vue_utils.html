@@ -10,8 +10,6 @@
     }
 
   function showImg(image){
-    // window.open("").document.write(image.outerHTML);
-
     document.getElementById('image-viewer-img').src = image.src;
     document.getElementById('image-viewer').style.display = "block";
     document.addEventListener('keydown', closeImgOnEsc);
