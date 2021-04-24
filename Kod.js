@@ -111,12 +111,12 @@ function getForums() {
     return out;
   });
 
-  try {
-    scriptProperties.setProperty('forumsData', JSON.stringify(forums));
-  } catch (e) {
-    Logger.log('ERROR: scriptProperties set forumsData');
-    Logger.log(forums);
-  }
+  // try {
+  //   scriptProperties.setProperty('forumsData', JSON.stringify(forums));
+  // } catch (e) {
+  //   Logger.log('ERROR: scriptProperties set forumsData');
+  //   Logger.log(forums);
+  // }
 
   return forums;
 }
