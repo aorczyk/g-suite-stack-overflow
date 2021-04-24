@@ -285,9 +285,9 @@ function onClickLog(forumId, type, source) {
 function getUser() {
   var email = Session.getActiveUser().getEmail();
 
-  // if (!email){
+  if (!email){
     email = 'guest.user@email.com';
-  // }
+  }
 
   return {
     id: email,
