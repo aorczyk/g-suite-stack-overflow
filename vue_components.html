@@ -432,6 +432,10 @@
     `
     <div>
       <div class="forum-ans-row-left" v-if="sharedState.forum.scoredQuestions">
+        <div>
+          <span class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</span>
+          <span class="forum-ans-row-left-question" v-else><i class="fas fa-chevron-circle-right"></i></span>
+        </div>
         <div class="forum-ans-row-left-vote" @click.stop="vote(parent, 1)"
         :class="{'forum-ans-row-left-vote-disabled': !canVote(parent)}">
           <i class="fas fa-caret-up" :title="$t('message.goodAns')"></i>
@@ -452,9 +456,9 @@
           <i class="fas fa-check" :title="$t('message.editForum')"></i>
         </div>
       </div>
-      <div class="forum-ans-row-left forum-ans-row-left-answer" v-else>
+      <div class="forum-ans-row-left" v-else>
         <span class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</span>
-        <span v-else><i class="fas fa-chevron-circle-right"></i></span>
+        <span class="forum-ans-row-left-question" v-else><i class="fas fa-chevron-circle-right"></i></span>
       </div>
     </div>
     `
