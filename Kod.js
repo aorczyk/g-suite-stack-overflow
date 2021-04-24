@@ -81,17 +81,17 @@ function getForums() {
   var forumsSql = getSqlForums();
   var user = getUser();
 
-  var scriptProperties = PropertiesService.getScriptProperties();
-  var forumsData = scriptProperties.getProperty('forumsData');
+  // var scriptProperties = PropertiesService.getScriptProperties();
+  // var forumsData = scriptProperties.getProperty('forumsData');
 
-  if (forumsData){
-    try {
-      return JSON.parse(forumsData);
-    } catch (e) {
-      Logger.log('ERROR: scriptProperties get forumsData');
-      Logger.log(forumsData);
-    }
-  }
+  // if (forumsData){
+  //   try {
+  //     return JSON.parse(forumsData);
+  //   } catch (e) {
+  //     Logger.log('ERROR: scriptProperties get forumsData');
+  //     Logger.log(forumsData);
+  //   }
+  // }
 
   var forums = forumsSql.select({
     table: 'Forums',
@@ -285,9 +285,9 @@ function onClickLog(forumId, type, source) {
 function getUser() {
   var email = Session.getActiveUser().getEmail();
 
-  if (!email){
+  // if (!email){
     email = 'guest.user@email.com';
-  }
+  // }
 
   return {
     id: email,
