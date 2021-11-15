@@ -3,7 +3,7 @@
 ### How it works?
 The application works on Google Apps Script application development platform. It's simple forum, similar to Stack Overflow. All data is stored in Spreadsheet file on your Google Drive. It's been desinged for G Suite users in given company, login to the app is not required.
 
-User can:
+### User can:
  - ask questions 
  - add answers
  - add comments and sub answers
@@ -11,6 +11,9 @@ User can:
  - vote questions and answers
  - add/remove watchers in given question (watchers get email notification about all changes done in question). In private forum watcher get access to the question.
  - create own forum (also private forum for selected users only)
+
+### Demo 
+[G Suite Stack Overflow - demo](https://script.google.com/macros/s/AKfycbyWtCNtAVY63giy_TQ_Akm7kwBZ_p0IZ4A-AEPZFTPy7E0m7pI/exec#/forums)
  
 ### How to install?
 1. Install Clasp from [https://github.com/google/clasp](https://github.com/google/clasp)
