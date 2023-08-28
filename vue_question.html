@@ -136,6 +136,9 @@
               console.log('error');
               console.log(e.message);
             }).forumAddEntryNotification('answer', notificationData)
+
+            // Adding the user to the watchers list.
+            self.addWatcher(self.sharedState.user.email, null, null, true)
         }).withFailureHandler(function (e) {
           console.log('error');
           console.log(e.message);
@@ -214,7 +217,7 @@
         this.addWatcherVisible = true;
         this.addWatcherError = false;
       },
-      addWatcher(emails, onAfter, onError) {
+      addWatcher(emails, onAfter, onError, silent) {
         emails = emails.split(',');
 
         var emailsFailed = [];
@@ -271,7 +274,7 @@
 
               console.log('error');
               console.log(e);
-            }).addWatchers(this.selectedQuestion.forumId, this.selectedQuestion.id, emailsNew);
+            }).addWatchers(this.selectedQuestion.forumId, this.selectedQuestion.id, emailsNew, silent);
         }
       },
       removeWatcher(email, onAfter, onError) {
@@ -336,6 +339,9 @@
         setTimeout(() => {
           this.selectedId = null;
         }, 5000);
+      },
+      canRemoveWatcher(email) {
+        return this.sharedState.forum.isModerator || this.sharedState.forum.isAdmin || email == this.sharedState.user.email
       }
     },
     template: `
@@ -405,7 +411,7 @@
                       <div class="watchers-dropdown-item-progress" v-if="removeWatcherProgress.includes(email)">
                         <span><i class="fas fa-spinner fa-pulse"></i></span>
                       </div>
-                      <div class="watchers-dropdown-item-remove" @click.stop="removeWatcher(email)" v-else>
+                      <div class="watchers-dropdown-item-remove" @click.stop="removeWatcher(email)" v-else-if="canRemoveWatcher(email)">
                         <span><i class="fas fa-times"></i></span>
                       </div>
                     </div>

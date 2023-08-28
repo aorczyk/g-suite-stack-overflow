@@ -363,7 +363,12 @@ function getForumData(id) {
     lastChange: {},
     forumLastChange: '-',
     views: {},
-    scoredQuestions: am.scored_questions
+    scoredQuestions: am.scored_questions,
+    isModerator: isModerator,
+    isAdmin: isAdmin,
+    isUser: isUser,
+    isOwner: isOwner,
+    isWatcher: isWatcher,
   };
 
   var forumData = am.sql.select({
@@ -514,6 +519,9 @@ function forumAddEntry(type, data) {
     row['body'] = data.text;
     row['watchers'].push(user.email);
     
+    // Adding to the watchers list.
+    // addWatchers(data.forumId, data.qId, [user.email], true)
+
   } else if (type == 'question') {
     row['title'] = data.title;
     row['body'] = data.text;
