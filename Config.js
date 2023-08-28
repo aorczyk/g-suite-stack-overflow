@@ -2,13 +2,13 @@ var logoImgData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD
 
 var APP_CONFIG = {
   // H
-  // appUrl: 'https://script.google.com/a/hurra.com/macros/s/AKfycbymamxkkbMz1I6-7hFf7TffIMBXgOdFqYlicNIjcaMEA5K0I2Y/exec',
+  appUrl: 'https://script.google.com/a/macros/zibi.pl/s/AKfycbxCgxq-yrCJuMd8TM2Ri8Fp0IG7IPcgC_VvFfNXomD11ASIcJ7kfp4o/exec',
   // settingsUrl: ''
   faviconUrl: 'https://icons-for-free.com/iconfiles/png/512/stackoverflow-1321215626484539706.png',
   logoImg: logoImgData,
   pageTitle: 'G Suite Stack Overflow',
   appTitle: 'G Suite Stack Overflow',
-  language: 'en'
+  language: 'pl'
 };
 
 if (!APP_CONFIG.settingsUrl){

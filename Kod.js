@@ -95,7 +95,14 @@ function getForums() {
 
   var forums = forumsSql.select({
     table: 'Forums',
-    where: [{'is_public': true}, {'user_id': user.email}, {'watchers': function(x){return x.includes(user.email)}}],
+    where: [
+      {'is_public': true}, 
+      {'user_id': user.email}, 
+      {'watchers': function(x){return x.includes(user.email)}},
+      {'admins': function(x){return x.includes(user.email)}},
+      {'moderators': function(x){return x.includes(user.email)}},
+      {'users': function(x){return x.includes(user.email)}},
+    ],
     orderBy: {'name': 'asc'}
   }).map((x)=>{
     // Postprocess
@@ -107,6 +114,10 @@ function getForums() {
     var isOwner = out.user_id === user.email;
 
     out.canEdit = isAdmin || isOwner;
+
+    out.users = out.users.join(',');
+    out.admins = out.admins.join(',');
+    out.moderators = out.moderators.join(',');
 
     return out;
   });
@@ -178,7 +189,8 @@ function editForum(data){
       is_public: data.is_public,
       scored_questions: data.scored_questions,
       users: typeof data.users === 'string' ? data.users.split(',') : [],
-      moderators: typeof data.moderators === 'string' ? data.moderators.split(',') : []
+      moderators: typeof data.moderators === 'string' ? data.moderators.split(',') : [],
+      admins: typeof data.admins === 'string' ? data.admins.split(',') : [],
     }
   });
 
