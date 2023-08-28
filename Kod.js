@@ -419,6 +419,7 @@ function getForumData(id) {
       watchers: isArray(row['watchers']) ? row['watchers'] : [],
       userName: getUserNameFromEmail(row['user_id']),
       canEdit: row['user_id'] === user.email || isModerator || isAdmin || isOwner,
+      isPinned: row['is_pinned'],
       // scoredQuestions: am.scored_questions
     }
 
@@ -588,6 +589,45 @@ function forumVote(forumId, id, value) {
 }
 
 
+function forumLikeItem(forumId, id) {
+  var user = getUser();
+  var am = getForum(forumId);
+
+  var row = am.sql.select({
+    table: 'Forum',
+    where: {
+      'id': id
+    }
+  })[0];
+
+  var votes = row.get('vote');
+
+  let index;
+
+  for (let i=0; i < votes.length; i++){
+    let item = votes[i];
+    if (item.userId == user.email){
+      index = i;
+      break;
+    }
+  }
+
+  if (!index){
+    votes.push({
+      time: new Date(),
+      userId: user.email,
+      value: 1
+    });
+  } else {
+    votes.splice(index, 1)
+  }
+
+  row.set({
+    'vote': votes
+  });
+}
+
+
 function forumBestAns(forumId, qId, id) {
   var am = getForum(forumId);
 
@@ -607,6 +647,23 @@ function forumBestAns(forumId, qId, id) {
     'best_ans': id
   });
 }
+
+
+function forumPinQuestion(forumId, qId, pinned) {
+  var am = getForum(forumId);
+
+  var row = am.sql.select({
+    table: 'Forum',
+    where: {
+      'id': qId
+    }
+  })[0];
+
+  row.set({
+    'is_pinned': pinned
+  });
+}
+
 
 // Sending email after new entry
 function forumAddEntryNotification(type, data) {

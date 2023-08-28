@@ -12,7 +12,17 @@ var compQuestions = Vue.component('questions', {
       if (this.sharedState.forum){
         this.sharedState.forum.questions.sort(function (a, b) {
           var aKey = a.time;
+
+          if (a.isPinned != ""){
+            aKey = 'A ' + aKey;
+          } 
+
           var bKey = b.time;
+
+          if (b.isPinned != ""){
+            bKey = 'A ' + bKey;
+          } 
+
           return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
         });
 
@@ -52,7 +62,7 @@ var compQuestions = Vue.component('questions', {
           </nav>
         </nav>
         <div class="forum-list" v-if="sortedQuestions.length">
-          <div class="forum-list-row" v-for="question in sortedQuestions" @click="openQuestion(question)">
+          <div class="forum-list-row" :class="{'forum-list-row-pinned': question.isPinned}" v-for="question in sortedQuestions" @click="openQuestion(question)">
             <div class="forum-list-row-left">
               <div class="forum-list-row-summary" v-if="sharedState.forum.scoredQuestions">
                 <div class="forum-list-row-summary-count">
