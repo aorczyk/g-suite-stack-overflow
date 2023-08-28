@@ -389,6 +389,11 @@
         saving: false
       }
     },
+    computed: {
+      canCheckQuestion() {
+        return this.sharedState.user.email == this.question.userId || this.sharedState.forum.isModerator || this.sharedState.forum.isAdmin
+      },
+    },
     methods: {
       vote(item, value) {
 
@@ -412,20 +417,26 @@
           }).forumVote(this.sharedState.forum.id, item.id, value);
       },
       canVote(item) {
-        if (this.saving || (item.userId == this.sharedState.user.email || item.votedBy.indexOf(this.sharedState.user.email) != -1)) {
+        if (this.saving || (item.userId == this.sharedState.user.email || item.votedBy.indexOf(this.sharedState.user.email) != -1 || this.sharedState.forum.isModerator || this.sharedState.forum.isAdmin)) {
           return false;
         }
 
         return true;
       },
       bestAns(item) {
-        Vue.set(this.question, 'bestAns', item.id);
+        let id = item.id;
+
+        if (this.question.bestAns == id){
+          id = null
+        }
+
+        Vue.set(this.question, 'bestAns', id);
 
         google.script.run.withSuccessHandler()
           .withFailureHandler(function (e) {
             console.log('error');
             console.log(e);
-          }).forumBestAns(this.sharedState.forum.id, this.question.id, item.id);
+          }).forumBestAns(this.sharedState.forum.id, this.question.id, id);
       },
     },
     template: 
@@ -457,8 +468,14 @@
         </div>
       </div>
       <div class="forum-ans-row-left" v-else>
-        <span class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</span>
-        <span class="forum-ans-row-left-question" v-else><i class="fas fa-chevron-circle-right"></i></span>
+        <div class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</div>
+        <div class="forum-ans-row-left-question" v-else>
+          <div><i class="fas fa-chevron-circle-right"></i></div>
+          <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : question.bestAns == parent.id}" @click.stop="bestAns(parent)" v-if="canCheckQuestion">
+            <i class="fas fa-check" :title="$t('message.checkedAns')"></i>
+          </div>
+        </div>
+
       </div>
     </div>
     `

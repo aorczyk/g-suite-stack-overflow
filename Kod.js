@@ -598,6 +598,11 @@ function forumBestAns(forumId, qId, id) {
     }
   })[0];
 
+  // Toggle
+  // if (row.get('best_ans') == id){
+  //   id = null
+  // }
+
   row.set({
     'best_ans': id
   });
