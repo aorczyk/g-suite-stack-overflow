@@ -434,6 +434,11 @@
           item.votedBy = resp
           Vue.set(item, 'vote', item.votedBy.length);
           this.savingLike = false;
+
+          // Adding the user to the watchers list.
+          if (item.votedBy.includes(this.sharedState.user.email) && !item.watchers.includes(this.sharedState.user.email)){
+            item.watchers.push(this.sharedState.user.email)
+          }
         })
         .withFailureHandler(function (e) {
           console.log('error');

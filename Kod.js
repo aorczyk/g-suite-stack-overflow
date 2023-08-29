@@ -618,6 +618,9 @@ function forumLikeItem(forumId, id) {
       userId: user.email,
       value: 1
     });
+
+    // Adding to the watchers list.
+    addWatchers(forumId, id, [user.email], true)
   } else {
     votes.splice(index, 1)
   }
