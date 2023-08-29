@@ -188,9 +188,9 @@ function editForum(data){
       description: data.description,
       is_public: data.is_public,
       scored_questions: data.scored_questions,
-      users: typeof data.users === 'string' ? data.users.split(',') : [],
-      moderators: typeof data.moderators === 'string' ? data.moderators.split(',') : [],
-      admins: typeof data.admins === 'string' ? data.admins.split(',') : [],
+      users: typeof data.users === 'string' ? data.users.replace(/;/g,',').replace(/ /g,'').split(',') : [],
+      moderators: typeof data.moderators === 'string' ? data.moderators.replace(/;/g,',').replace(/ /g,'').split(',') : [],
+      admins: typeof data.admins === 'string' ? data.admins.replace(/;/g,',').replace(/ /g,'').split(',') : [],
     }
   });
 
