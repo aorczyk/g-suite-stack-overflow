@@ -612,7 +612,7 @@ function forumLikeItem(forumId, id) {
     }
   }
 
-  if (!index){
+  if (index == null){
     votes.push({
       time: new Date(),
       userId: user.email,
@@ -625,6 +625,8 @@ function forumLikeItem(forumId, id) {
   row.set({
     'vote': votes
   });
+
+  return votes.map(x => x.userId)
 }
 
 
@@ -993,7 +995,7 @@ function forumSheetCreate(forumId) {
 
     var sql = new SqlAbstract();
 
-    var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers','views'];
+    var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers','views','is_pinned'];
     sql.createDB({
       spreadsheet: ssForumData.getUrl(),
       tables: [

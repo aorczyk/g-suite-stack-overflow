@@ -383,10 +383,11 @@
   
   Vue.component('vote', {
     props: ['parent', 'question','nr'],
-    data: function(){
+    data(){
       return {
         sharedState: store.state,
-        saving: false
+        saving: false,
+        savingLike: false
       }
     },
     computed: {
@@ -396,6 +397,9 @@
       canPin() {
         return this.sharedState.forum.isModerator || this.sharedState.forum.isAdmin
       },
+      likeChecked(){
+        return this.parent.votedBy.includes(this.sharedState.user.email)
+      }
     },
     methods: {
       vote(item, value) {
@@ -419,27 +423,22 @@
             self.saving = false;
           }).forumVote(this.sharedState.forum.id, item.id, value);
       },
-      like(item, value) {
-
-        let index = item.votedBy.indexOf(this.sharedState.user.email)
-
-        if (!this.canVote(item)) {
-          return;
+      like(item) {
+        if (this.savingLike){
+          return
         }
 
-        Vue.set(item, 'vote', item.vote + value);
-        item.votedBy.push(this.sharedState.user.email);
-
-        this.saving = true;
-
         var self = this;
-        google.script.run.withSuccessHandler(function (resp) {
+        this.savingLike = true;
+        google.script.run.withSuccessHandler((resp) => {
           item.votedBy = resp
+          Vue.set(item, 'vote', item.votedBy.length);
+          this.savingLike = false;
         })
         .withFailureHandler(function (e) {
           console.log('error');
           console.log(e);
-          self.saving = false;
+          this.savingLike = false;
         }).forumLikeItem(this.sharedState.forum.id, item.id);
       },
       canVote(item) {
@@ -524,6 +523,13 @@
           
           <div class="forum-ans-row-left-pin" :class="{'forum-ans-row-left-pinned' : question.isPinned}" @click.stop="pin" v-if="canPin">
             <i class="fas fa-thumbtack" :title="$t('message.pinnedQuestion')"></i>
+          </div>
+
+          <div class="forum-ans-row-left-pin" :class="{'forum-ans-row-left-pinned' : likeChecked}" @click.stop="like(parent)">
+            <span class="action-icon" v-if="savingLike">
+              <i class="fas fa-spinner fa-pulse"></i>
+            </span>
+            <span v-else><i class="fas fa-thumbs-up"></i></span>
           </div>
         </div>
       </div>

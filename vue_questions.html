@@ -64,7 +64,7 @@ var compQuestions = Vue.component('questions', {
         <div class="forum-list" v-if="sortedQuestions.length">
           <div class="forum-list-row" :class="{'forum-list-row-pinned': question.isPinned}" v-for="question in sortedQuestions" @click="openQuestion(question)">
             <div class="forum-list-row-left">
-              <div class="forum-list-row-summary" v-if="sharedState.forum.scoredQuestions">
+              <div class="forum-list-row-summary">
                 <div class="forum-list-row-summary-count">
                   <span>{{ question.vote }}</span>
                 </div>
