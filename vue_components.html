@@ -520,11 +520,17 @@
       </div>
       <div class="forum-ans-row-left" v-else>
         <div class="forum-ans-row-left-answer-nr" v-if="nr">{{ nr }}</div>
-        <div class="forum-ans-row-left-question" v-else>
+        
+        <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : question.bestAns == parent.id}" @click.stop="bestAns(parent)" v-if="canCheckQuestion">
+          <i class="fas fa-check" :title="$t('message.checkedAns')"></i>
+        </div>
+        <div class="forum-ans-row-left-bestAns forum-ans-row-left-bestAns-selected" v-else-if="question.bestAns == parent.id">
+          <i class="fas fa-check" :title="$t('message.editForum')"></i>
+        </div>
+
+        <!-- Visible only for question -->
+        <div class="forum-ans-row-left-question" v-if="!nr">
           <div><i class="fas fa-chevron-circle-right"></i></div>
-          <div class="forum-ans-row-left-bestAns" :class="{'forum-ans-row-left-bestAns-selected-owner' : question.bestAns == parent.id}" @click.stop="bestAns(parent)" v-if="canCheckQuestion">
-            <i class="fas fa-check" :title="$t('message.checkedAns')"></i>
-          </div>
           
           <div class="forum-ans-row-left-pin" :class="{'forum-ans-row-left-pinned' : question.isPinned}" @click.stop="pin" v-if="canPin">
             <i class="fas fa-thumbtack" :title="$t('message.pinnedQuestion')"></i>

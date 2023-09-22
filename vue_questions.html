@@ -14,14 +14,22 @@ var compQuestions = Vue.component('questions', {
           var aKey = a.time;
 
           if (a.isPinned != ""){
-            aKey = 'A ' + aKey;
+            aKey = 'AA ' + aKey;
           } 
+
+          if (!a.bestAns){
+            aKey = 'A ' + aKey;
+          }
 
           var bKey = b.time;
 
           if (b.isPinned != ""){
-            bKey = 'A ' + bKey;
+            bKey = 'AA ' + bKey;
           } 
+
+          if (!b.bestAns){
+            bKey = 'A ' + bKey;
+          }
 
           return aKey > bKey ? -1 : aKey < bKey ? 1 : 0;
         });
