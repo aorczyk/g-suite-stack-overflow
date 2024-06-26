@@ -754,7 +754,7 @@ function sendEmail(email, sendTo) {
   GmailApp.sendEmail('', email.topic, '', {
     bcc: sendTo.join(','),
     // replyTo: user.email,
-    name: 'G Suite Stack Overflow',
+    name: 'Platforma Zibi Share',
     htmlBody: email.text
   });
 
