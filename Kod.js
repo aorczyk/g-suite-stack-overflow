@@ -138,7 +138,7 @@ function addForum(data){
 
   var forumId = Utilities.getUuid();
 
-  var forumSheetUrl = forumSheetCreate(forumId);
+  var forumSheetUrl = forumSheetCreate(data.name);
 
   var row = {
     'time': new Date(),
@@ -152,7 +152,8 @@ function addForum(data){
     'admins': data.admins.split(','),
     'forum_data_url': forumSheetUrl,
     'watchers': data.admins.split(','),
-    'scored_questions': data.scored_questions
+    'scored_questions': data.scored_questions,
+    'images_folder_id': ''
   };
 
   forumsSql.insert({
@@ -162,6 +163,9 @@ function addForum(data){
 
   var scriptProperties = PropertiesService.getScriptProperties();
   scriptProperties.deleteProperty('forumsData');
+
+  createForumImageFolder(row);
+
 
   return true;
 }
@@ -486,10 +490,67 @@ function getForumData(id) {
   return out;
 }
 
+function createForumImageFolder(forum) {
+  var parentFolder = getContainingFolderForStandaloneScript();
+  var newFolder = DriveApp.createFolder('Forum Images - ' + forum.name);
+  newFolder.moveTo(parentFolder);
+
+  var folderId = newFolder.getId()
+
+  if (forum.id) {
+    var forumsSql = getSqlForums();
+    forumsSql.update({
+      table: 'Forums',
+      where: {id: forum.id},
+      set: {
+        images_folder_id: folderId
+      }
+    });
+  }
+
+  return folderId
+}
+
+
+function createUserImageFolder(forum, user) {
+  var parentFolder = DriveApp.getFolderById(forum.images_folder_id);
+
+  var userName = getUserNameFromEmail(user.email)
+  var folders = parentFolder.getFoldersByName(userName);
+
+  if (!folders.hasNext()){
+    var newFolder = DriveApp.createFolder(userName);
+    newFolder.moveTo(parentFolder);
+    return newFolder;
+  } else {
+    return folders.next()
+  }
+}
+
+function processBody(user, am, body) {
+  if (/<img\s+src="(data:[^"]+)"/.test(body)) {
+    if (!am.images_folder_id) {
+      am.images_folder_id = createForumImageFolder(am)
+    }
+  
+    var userImageFolder = createUserImageFolder(am, user);
+  
+    for (const match of body.matchAll(/<img\s+src="(data:[^"]+)"/g)) {
+      let file = this.dataURLtoFile(match[1], new Date().getTime(), userImageFolder.getId())
+  
+      let url = 'https://drive.google.com/thumbnail?id=' + file.id + '&sz=w1000';
+      body = body.replace(match[1], url)
+    }
+  }
+
+  return body
+}
 
 function forumAddEntry(type, data) {
   var user = getUser();
   var am = getForum(data.forumId);
+
+  data.text = processBody(user, am, data.text)
 
   var row = {
     'forum_id': data.forumId,
@@ -787,6 +848,8 @@ function editSave(item) {
 
   if (item.status == 'Deleted'){
     item.status = '';
+  } else {
+    item.body = processBody(user, am, item.body)
   }
 
   // History
@@ -986,39 +1049,51 @@ function removeWatcher(forumId, qId, email) {
 }
 
 
+function getContainingFolderForStandaloneScript() {
+  // Get the ID of the standalone script
+  var scriptId = ScriptApp.getScriptId();
+  
+  // Get the file object
+  var file = DriveApp.getFileById(scriptId);
+  
+  // Get the parent folder of the file
+  var folder = file.getParents().next();
+  
+  // Log the folder name (or do something else with it)
+  // Logger.log('Folder name: ' + folder.getName());
+  // Logger.log('Folder ID: ' + folder.getId());
+
+  return folder
+}
+
+
 function forumSheetCreate(forumId) {
-  var folderName = 'G Suite Stack Overflow';
+  var folder = getContainingFolderForStandaloneScript();
+  var ssForumData = SpreadsheetApp.create('Forum Data - ' + forumId);
+  DriveApp.getFileById(ssForumData.getId()).moveTo(folder);
 
-  var folderIterator = DriveApp.getFoldersByName(folderName);
+  var sql = new SqlAbstract();
 
-  if (folderIterator.hasNext()){
-    var folder = folderIterator.next();
-    var ssForumData = SpreadsheetApp.create('Forum Data - ' + forumId);
-    DriveApp.getFileById(ssForumData.getId()).moveTo(folder);
+  var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers','views','is_pinned'];
+  sql.createDB({
+    spreadsheet: ssForumData.getUrl(),
+    tables: [
+      {
+        name: 'Forum',
+        columns: forumColumns
+      },
+      {
+        name: 'History',
+        columns: forumColumns
+      },
+      {
+        name: 'DocOpenLog',
+        columns: ['forum_id','time','user_id','action','source']
+      },
+    ]
+  });
 
-    var sql = new SqlAbstract();
-
-    var forumColumns = ['forum_id','type','id','question_id','answer_id','time','user_id','status','title','body','attachment','vote','best_ans','changed_time','changed_by','watchers','views','is_pinned'];
-    sql.createDB({
-      spreadsheet: ssForumData.getUrl(),
-      tables: [
-        {
-          name: 'Forum',
-          columns: forumColumns
-        },
-        {
-          name: 'History',
-          columns: forumColumns
-        },
-        {
-          name: 'DocOpenLog',
-          columns: ['forum_id','time','user_id','action','source']
-        },
-      ]
-    });
-
-    return ssForumData.getUrl();
-  }
+  return ssForumData.getUrl();
 }
 
 
@@ -1043,7 +1118,7 @@ function appInstall() {
       tables: [
         {
           name: 'Forums',
-          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators','admins','watchers','scored_questions']
+          columns: ['time','id','user_id','name','description','forum_data_url','is_public','is_closed','users','moderators','admins','watchers','scored_questions','images_folder_id']
         }
       ]
     })
@@ -1060,5 +1135,62 @@ function appInstall() {
   }
   else {
     throw 'Folder already exists.';
+  }
+}
+
+
+function dataURLtoFile(dataurl, filename, folderId) {
+  var arr = dataurl.split(",")
+  var mimeType = arr[0].match(/:(.*?);/)[1]
+  var bytes = Utilities.base64Decode(arr[arr.length - 1])
+
+  var blob = Utilities.newBlob(bytes, mimeType, filename);
+  var driveFile = DriveApp.createFile(blob);
+  driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  var folder = DriveApp.getFolderById(folderId);
+  driveFile.moveTo(folder)
+
+  return {id: driveFile.getId(), url: driveFile.getUrl(), type: driveFile.getMimeType()};
+}
+
+
+function migrateImages() {
+  var id = '1e3186ab-e3f4-4aff-99cc-4dde0147f0b6';
+  var id2 = 'ddca3224-4809-48a0-a2b2-f129b37baa20';
+
+  var user = getUser();
+  
+  var am = getForum(id);
+  var am2 = getForum(id2);
+
+  if (!am){
+    return {}
+  }
+
+  if (am.is_closed){
+    return {
+      isClosed: true
+    };
+  }
+
+  var forumData = am.sql.select({
+    table: 'Forum',
+    where: {
+      'forum_id': id
+    }
+  });
+
+  for (var n in forumData) {
+    var row = forumData[n].get();
+
+    row.body = processBody({email: row.user_id}, am, row.body)
+
+    // row.set({body: body})
+
+    am2.sql.insert({
+      table: 'Forum',
+      values: row
+    });
   }
 }
