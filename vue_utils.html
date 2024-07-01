@@ -106,6 +106,53 @@
         }
 
         return out;
+      },
+      uploadReplaceImages(text) {
+        let size = this.getSize(text);
+
+        if (size > 100) {
+          alert(i18n.t('message.tooLargeDatatoSend'))
+          return Promise.reject()
+        }
+
+        if (size > 30) {
+          alert(i18n.t('message.largeDatatoSend'))
+        }
+
+        return this.uploadingImages(this.sharedState.forum.id, text).then(urls => {
+          for (let item of urls) {
+            text = text.replace(item[0], item[1])
+          }
+
+          return text;
+        })
+      },
+      uploadingImages(forumId, body) {
+        let promises = [];
+
+        for (const match of body.matchAll(/<img\s+src="(data:[^"]+)"/g)) {
+          promises.push(this.saveDataImage(forumId, match[1]))
+        }
+
+        return Promise.all(promises)
+      },
+      saveDataImage(forumId, imageData) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler((url) => {
+              resolve([imageData, url])
+            })
+            .withFailureHandler(function (e) {
+              console.log('error');
+              console.log(e.message);
+              reject(e.message)
+            }).saveDataImage(forumId, imageData)
+        })
+      },
+      getSize(str) {
+        let size = new Blob([str]).size;
+
+        return (size / Math.pow(2, 20))
       }
     }
   }

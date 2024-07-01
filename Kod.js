@@ -537,7 +537,6 @@ function processBody(user, am, body) {
   
     for (const match of body.matchAll(/<img\s+src="(data:[^"]+)"/g)) {
       let file = this.dataURLtoFile(match[1], new Date().getTime(), userImageFolder.getId())
-  
       let url = 'https://drive.google.com/thumbnail?id=' + file.id + '&sz=w1000';
       body = body.replace(match[1], url)
     }
@@ -1193,4 +1192,22 @@ function migrateImages() {
       values: row
     });
   }
+}
+
+
+function saveDataImage(forumId, imageData) {
+  var user = getUser();
+  var am = getForum(forumId);
+
+  if (!am.images_folder_id) {
+    am.images_folder_id = createForumImageFolder(am)
+  }
+  
+  var userImageFolder = createUserImageFolder(am, user);
+  
+  let file = this.dataURLtoFile(imageData, new Date().getTime(), userImageFolder.getId())
+
+  let url = 'https://drive.google.com/thumbnail?id=' + file.id + '&sz=w1000';
+
+  return url
 }

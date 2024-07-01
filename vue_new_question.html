@@ -26,10 +26,21 @@
         this.newTopicData.title = '';
         this.newTopicData.text = '';
       },
-      addQuestion() {
+      async addQuestion() {
+        if (this.saving) {
+          return
+        }
+
         var self = this;
+        this.saving = true;
 
         var text = this.postProcessAnsText(this.newTopicData.text);
+
+        await this.uploadReplaceImages(text).then(newText => {
+          text = newText
+        }).catch(err => {
+          this.saving = false;
+        })
 
         var data = {
           forumId: this.sharedState.forum.id,
@@ -37,7 +48,6 @@
           text: text
         };
 
-        this.saving = true;
         google.script.run.withSuccessHandler(function (data) {
           self.sharedState.forum.questions.push(data);
           self.newTopicData.title = '';

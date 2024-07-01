@@ -1,5 +1,6 @@
 <script>
   Vue.component('quill-editor', {
+    // mixins: [mixinUtils],
     props: {
       value: {
         type: String,
@@ -10,7 +11,8 @@
     data() {
       return {
         editor: null,
-        updated: false
+        updated: false,
+        // sharedState: store.state
       }
     },
     mounted(){
@@ -92,6 +94,36 @@
       update() {
         this.updated = true;
         this.$emit('input', this.editor.getText() ? this.editor.root.innerHTML : '');
+
+        // let text = this.editor.getText() ? this.editor.root.innerHTML : ''
+
+        // if (/<img\s+src="(data:[^"]+)"/.test(text)) {
+        //   this.$emit('loading', true);
+        //   this.editor.enable(false);
+
+        //   this.sharedState.isSpinnerVisible = true;
+
+        //   console.log('uploadingImages')
+
+        //   this.uploadingImages(this.sharedState.forum.id, text).then(urls => {
+        //     for (let item of urls) {
+        //       text = text.replace(item[0], item[1])
+        //     }
+
+        //     this.editor.root.innerHTML = text;
+
+        //     console.log('uploadingImages end')
+        //   }).finally(() => {
+        //     this.$emit('loading', false);
+        //     this.editor.enable(true);
+
+        //     this.$emit('input', text);
+
+        //     this.sharedState.isSpinnerVisible = false;
+        //   });
+        // } else {
+        //   this.$emit('input', text);
+        // }
       }
     },
     template:

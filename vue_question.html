@@ -87,10 +87,21 @@
       showQuestions() {
         router.push(`/${this.sharedState.forum.id}`);
       },
-      addAnswer() {
+      async addAnswer() {
+        if (this.saving) {
+          return
+        }
+
         var self = this;
+        this.saving = true;
 
         var text = this.postProcessAnsText(this.newAnswerData.text);
+
+        await this.uploadReplaceImages(text).then(newText => {
+          text = newText
+        }).catch(err => {
+          this.saving = false;
+        })
 
         var data = {
           forumId: this.sharedState.forum.id,
@@ -102,7 +113,6 @@
           return;
         }
 
-        this.saving = true;
         google.script.run.withSuccessHandler(function (data) {
           if (!self.sharedState.forum.answers[self.selectedQuestion.id]) {
             Vue.set(self.sharedState.forum.answers, self.selectedQuestion.id, []);
@@ -149,11 +159,21 @@
         this.editItem = item;
         this.editItemTmp = JSON.parse(JSON.stringify(item));
       },
-      editSave() {
+      async editSave() {
+        if (this.saving) {
+          return;
+        }
+
         var self = this;
         this.saving = true;
 
         this.editItem.body = this.postProcessAnsText(this.editItem.body);
+
+        await this.uploadReplaceImages(this.editItem.body).then(newText => {
+          this.editItem.body = newText
+        }).catch(err => {
+          this.saving = false;
+        })
 
         google.script.run.withSuccessHandler(function (item) {
             Vue.set(self.editItem, 'edited', item.edited);
