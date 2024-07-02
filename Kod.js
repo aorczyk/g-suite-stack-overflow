@@ -1155,15 +1155,13 @@ function dataURLtoFile(dataurl, filename, folderId) {
 
 
 function migrateImages() {
-  var id = '1e3186ab-e3f4-4aff-99cc-4dde0147f0b6';
-  var id2 = 'ddca3224-4809-48a0-a2b2-f129b37baa20';
+  // var id = '5f1ed05e-437e-4200-b9a5-2400cb2ec630';
+  // var id2 = '65bec39a-f554-4876-b1b1-e9aba695f011';
 
-  var user = getUser();
-  
   var am = getForum(id);
   var am2 = getForum(id2);
 
-  if (!am){
+  if (!am || !am2){
     return {}
   }
 
@@ -1174,7 +1172,8 @@ function migrateImages() {
   }
 
   var forumData = am.sql.select({
-    table: 'Forum',
+    // table: 'Forum',
+    table: 'History',
     where: {
       'forum_id': id
     }
@@ -1188,7 +1187,8 @@ function migrateImages() {
     // row.set({body: body})
 
     am2.sql.insert({
-      table: 'Forum',
+      // table: 'Forum',
+      table: 'History',
       values: row
     });
   }
