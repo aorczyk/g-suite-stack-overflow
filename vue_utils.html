@@ -121,7 +121,9 @@
 
         return this.uploadingImages(this.sharedState.forum.id, text).then(urls => {
           for (let item of urls) {
-            text = text.replace(item[0], item[1])
+            if (item) {
+              text = text.replace(item[0], item[1])
+            }
           }
 
           return text;
@@ -145,7 +147,8 @@
             .withFailureHandler(function (e) {
               console.log('error');
               console.log(e.message);
-              reject(e.message)
+              // reject(e.message)
+              resolve(null)
             }).saveDataImage(forumId, imageData)
         })
       },
